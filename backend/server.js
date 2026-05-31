@@ -962,6 +962,360 @@ app.post("/admin/auto-ingest", async (req, res) => {
 });
 
 
+
+
+
+
+// Official source search: configured official CSV/API URL only, no fake local fallback
+app.post("/admin/official-search", async (req, res) => {
+  const officialSources = [
+    {
+      id: "iarc_gco_globocan",
+      name: "IARC Global Cancer Observatory / GLOBOCAN",
+      url: "https://gco.iarc.who.int/",
+      type: "official_global_cancer_observatory"
+    },
+    {
+      id: "iarc_cancer_today",
+      name: "IARC Cancer Today",
+      url: "https://gco.iarc.who.int/today/",
+      type: "official_globocan_data_visualization"
+    },
+    {
+      id: "ecis",
+      name: "European Cancer Information System",
+      url: "https://ecis.jrc.ec.europa.eu/",
+      type: "official_european_cancer_information_system"
+    },
+    {
+      id: "ecis_data_explorer",
+      name: "ECIS Data Explorer",
+      url: "https://ecis.jrc.ec.europa.eu/data-explorer",
+      type: "official_european_data_explorer"
+    }
+  ];
+
+  const officialDataUrl = req.body?.officialDataUrl || process.env.OFFICIAL_CANCER_DATA_URL;
+  const officialDataName = req.body?.officialDataName || process.env.OFFICIAL_CANCER_DATA_NAME || "Configured Official Cancer Dataset";
+  const officialSourceName = req.body?.officialSourceName || process.env.OFFICIAL_CANCER_SOURCE_NAME || "configured_official_source";
+
+  const isEmptyCell = (value) => {
+    const text = String(value ?? "").trim().toLowerCase();
+
+    return (
+      text === "" ||
+      text === "nan" ||
+      text === "null" ||
+      text === "undefined" ||
+      text === "none" ||
+      text === "n/a" ||
+      text === "na" ||
+      text === "-"
+    );
+  };
+
+  const parseCsvLine = (line) => {
+    const result = [];
+    let current = "";
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i += 1) {
+      const char = line[i];
+      const next = line[i + 1];
+
+      if (char === '"' && insideQuotes && next === '"') {
+        current += '"';
+        i += 1;
+      } else if (char === '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char === "," && !insideQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+
+    result.push(current.trim());
+    return result;
+  };
+
+  const parseCsvText = (text) => {
+    const lines = String(text || "")
+      .replace(/^\uFEFF/, "")
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0);
+
+    if (!lines.length) return { columns: [], rows: [] };
+
+    const columns = parseCsvLine(lines[0]);
+    const rows = lines.slice(1).map((line) => {
+      const values = parseCsvLine(line);
+      const row = {};
+
+      columns.forEach((column, index) => {
+        row[column] = values[index] || "";
+      });
+
+      return row;
+    });
+
+    return { columns, rows };
+  };
+
+  const normalizeNumericCell = (value) => {
+    if (isEmptyCell(value)) return "";
+
+    const text = String(value)
+      .trim()
+      .replace("%", "")
+      .replace(/\s+/g, "")
+      .replace(",", ".");
+
+    const number = Number(text);
+
+    if (!Number.isFinite(number)) return String(value).trim();
+
+    return String(number);
+  };
+
+  const normalizeJsonPayload = (payload) => {
+    if (Array.isArray(payload)) return payload;
+
+    if (Array.isArray(payload?.rows)) return payload.rows;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.results)) return payload.results;
+    if (Array.isArray(payload?.records)) return payload.records;
+    if (Array.isArray(payload?.value)) return payload.value;
+
+    return [];
+  };
+
+  const cleanRows = (rows) => {
+    const numericColumns = new Set([
+      "Yillik_Vaka_Hizi_100Bin",
+      "Yillik_Olum_Hizi_100Bin",
+      "Bes_Yillik_Sagkalim_Yuzdesi",
+      "incidence",
+      "mortality",
+      "survival",
+      "new_cases",
+      "deaths",
+      "prevalence",
+      "rate",
+      "count",
+      "value",
+      "Value",
+      "NumericValue",
+      "Low",
+      "High"
+    ]);
+
+    const requiredAnyColumns = [
+      "Bolge",
+      "Ulke_Sehir",
+      "region",
+      "location",
+      "country",
+      "Country",
+      "Kanser_Turu",
+      "cancerType",
+      "Cancer",
+      "cancer",
+      "Population",
+      "population",
+      "SpatialDim",
+      "IndicatorCode",
+      "TimeDim"
+    ];
+
+    return (rows || [])
+      .map((row) => {
+        const cleaned = {};
+
+        Object.entries(row || {}).forEach(([key, value]) => {
+          if (key.startsWith("_")) return;
+
+          if (numericColumns.has(key)) {
+            cleaned[key] = normalizeNumericCell(value);
+          } else {
+            cleaned[key] = isEmptyCell(value) ? "" : String(value).trim();
+          }
+        });
+
+        return cleaned;
+      })
+      .filter((row) => {
+        const hasContent = Object.values(row).some((value) => !isEmptyCell(value));
+        const hasRequiredSignal = requiredAnyColumns.some((column) => !isEmptyCell(row[column]));
+
+        return hasContent && hasRequiredSignal;
+      });
+  };
+
+  const checkSource = async (source) => {
+    try {
+      if (typeof fetch !== "function") {
+        return {
+          ...source,
+          reachable: false,
+          status: "fetch_unavailable"
+        };
+      }
+
+      const response = await fetch(source.url, {
+        method: "GET",
+        headers: {
+          "User-Agent": "OncoConnectAI/1.0 official-source-check"
+        }
+      });
+
+      return {
+        ...source,
+        reachable: response.ok,
+        status: response.status,
+        contentType: response.headers.get("content-type") || ""
+      };
+    } catch (error) {
+      return {
+        ...source,
+        reachable: false,
+        status: "error",
+        error: error.message
+      };
+    }
+  };
+
+  try {
+    const sourceChecks = await Promise.all(officialSources.map(checkSource));
+
+    if (!officialDataUrl) {
+      return res.status(409).json({
+        success: false,
+        officialDataCreated: false,
+        error:
+          "OFFICIAL_CANCER_DATA_URL is not configured. No dataset was created. Add a verified downloadable CSV/API URL in backend/.env first.",
+        nextStep:
+          "Set OFFICIAL_CANCER_DATA_URL, OFFICIAL_CANCER_DATA_NAME and OFFICIAL_CANCER_SOURCE_NAME in backend/.env, then restart backend.",
+        sources: sourceChecks
+      });
+    }
+
+    if (typeof fetch !== "function") {
+      return res.status(500).json({
+        success: false,
+        officialDataCreated: false,
+        error: "Node fetch is unavailable in this runtime. Use Node 18+ or install a fetch polyfill.",
+        sources: sourceChecks
+      });
+    }
+
+    const response = await fetch(officialDataUrl, {
+      method: "GET",
+      headers: {
+        "User-Agent": "OncoConnectAI/1.0 official-data-import",
+        "Accept": "text/csv, application/json, text/plain;q=0.9, */*;q=0.8"
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        officialDataCreated: false,
+        error: `Configured official data URL returned HTTP ${response.status}. Dataset was not created.`,
+        officialDataUrl,
+        sources: sourceChecks
+      });
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    const bodyText = await response.text();
+
+    let parsedRows = [];
+    let columns = [];
+
+    if (contentType.includes("application/json") || officialDataUrl.toLowerCase().includes(".json")) {
+      const json = JSON.parse(bodyText);
+      parsedRows = normalizeJsonPayload(json);
+      columns = Array.from(
+        parsedRows.reduce((set, row) => {
+          Object.keys(row || {}).forEach((key) => set.add(key));
+          return set;
+        }, new Set())
+      );
+    } else {
+      const parsed = parseCsvText(bodyText);
+      parsedRows = parsed.rows;
+      columns = parsed.columns;
+    }
+
+    const cleanedRows = cleanRows(parsedRows);
+
+    if (!cleanedRows.length) {
+      return res.status(422).json({
+        success: false,
+        officialDataCreated: false,
+        error:
+          "Configured official data URL was read, but zero valid rows remained after cleaning. Dataset was not created.",
+        inputRows: parsedRows.length,
+        sources: sourceChecks
+      });
+    }
+
+    const removedRows = parsedRows.length - cleanedRows.length;
+    const finalColumns = Array.from(
+      cleanedRows.reduce((set, row) => {
+        Object.keys(row).forEach((key) => set.add(key));
+        return set;
+      }, new Set(columns))
+    );
+
+    const dataset = {
+      id: `official_configured_draft_${Date.now()}`,
+      name: officialDataName,
+      originalName: officialDataUrl.split("/").pop() || "official_configured_source",
+      uploadedAt: new Date().toISOString(),
+      rowCount: cleanedRows.length,
+      columns: finalColumns,
+      rows: cleanedRows,
+      previewRows: cleanedRows.slice(0, 25),
+      qualityFlag: removedRows > 0 ? `official_url_cleaned_${removedRows}_rows_removed` : "official_url_clean_validated",
+      sourceName: officialSourceName,
+      sourceUrl: officialDataUrl,
+      published: false,
+      automationMeta: {
+        mode: "configured_official_csv_api_import",
+        fetchedAt: new Date().toISOString(),
+        contentType,
+        inputRows: parsedRows.length,
+        outputRows: cleanedRows.length,
+        removedRows,
+        emptyValuesBlocked: true,
+        nanValuesBlocked: true,
+        publishReady: true,
+        autoPublished: false,
+        sourceChecks
+      }
+    };
+
+    return res.json({
+      success: true,
+      officialDataCreated: true,
+      message: `Official configured draft created with ${cleanedRows.length} valid rows. Removed ${removedRows} invalid/empty rows.`,
+      dataset,
+      sources: sourceChecks
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      officialDataCreated: false,
+      error: error.message || "Configured official data import failed.",
+      sources: []
+    });
+  }
+});
+
+
 app.listen(5050, () => {
   console.log("Server running on port 5050");
 });

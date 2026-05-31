@@ -10,6 +10,114 @@ function safeNumber(value, fallback = 0) {
 }
 
 function App() {
+
+  if (typeof window !== "undefined" && !window.__oncoconnectAdminPublishedBridge) {
+    window.__oncoconnectAdminPublishedBridge = true;
+
+    const originalFetch = window.fetch.bind(window);
+    const PUBLISHED_ROWS_KEY = "oncoconnect_published_cancer_rows_v1";
+
+    const getAdminPublishedRows = () => {
+      try {
+        const raw = localStorage.getItem(PUBLISHED_ROWS_KEY);
+
+        if (raw === null) {
+          return null;
+        }
+
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const csvEscape = (value) => {
+      const text = String(value ?? "");
+
+      if (/[",\n\r]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+
+      return text;
+    };
+
+    const rowsToCsv = (rows) => {
+      const fallbackColumns = [
+        "Bolge",
+        "Ulke_Sehir",
+        "Cinsiyet",
+        "Kanser_Turu",
+        "Yas_Grubu",
+        "Yillik_Vaka_Hizi_100Bin",
+        "Yillik_Olum_Hizi_100Bin",
+        "Bes_Yillik_Sagkalim_Yuzdesi"
+      ];
+
+      const columns = rows.length
+        ? Array.from(
+            rows.reduce((set, row) => {
+              Object.keys(row || {})
+                .filter((key) => !key.startsWith("_"))
+                .forEach((key) => set.add(key));
+
+              return set;
+            }, new Set())
+          )
+        : fallbackColumns;
+
+      const header = columns.map(csvEscape).join(",");
+      const body = rows.map((row) =>
+        columns.map((column) => csvEscape(row?.[column])).join(",")
+      );
+
+      return [header, ...body].join("\n");
+    };
+
+    window.fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input?.url || "";
+      const publishedRows = getAdminPublishedRows();
+
+      const isCancerCsvRequest =
+        url.includes("turkiye_avrupa_kanser_istatistikleri_detayli.csv") ||
+        url.includes("/public/map-data.csv");
+
+      const isCancerJsonRequest =
+        url.includes("/public/map-data") &&
+        !url.includes(".csv");
+
+      if (publishedRows !== null && isCancerCsvRequest) {
+        return new Response(rowsToCsv(publishedRows), {
+          status: 200,
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "X-OncoConnect-Source": "admin-published-localStorage"
+          }
+        });
+      }
+
+      if (publishedRows !== null && isCancerJsonRequest) {
+        return new Response(JSON.stringify({
+          success: true,
+          source: "admin-published-localStorage",
+          rows: publishedRows,
+          data: publishedRows,
+          datasets: [],
+          count: publishedRows.length
+        }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "X-OncoConnect-Source": "admin-published-localStorage"
+          }
+        });
+      }
+
+      return originalFetch(input, init);
+    };
+  }
+
+
   const [page, setPage] = useState("landing");
   const [lang, setLang] = useState("en");
 
@@ -948,7 +1056,7 @@ function App() {
 
           <div className="old-hero-actions">
             <button type="button" onClick={() => setPage("copilot")}>Launch AI Copilot</button>
-            <button onClick={() => setPage("map")}>Open Knowledge Graph</button>
+            <button onClick={() => setPage("knowledge")}>Open Knowledge Graph</button>
             <button onClick={() => setPage("kids")}>Onco Kids</button>
           </div>
 
@@ -1770,45 +1878,309 @@ ${aiRecommendation}`;
 
 
 
-  const KnowledgeGraphPage = () => (
-    <div className="knowledge-page">
-      <nav className="future-map-nav">
-        <button onClick={() => setPage("landing")}>← Home</button>
-        <button onClick={() => setPage("map")}>Türkiye–Europe Map</button>
-        <button onClick={() => setPage("copilot")}>AI Copilot</button>
-      </nav>
 
-      <section className="knowledge-hero">
-        <p className="future-kicker">KNOWLEDGE GRAPH</p>
-        <h1>Cancer support ecosystem graph</h1>
-        <p>
-          This page shows how patients, caregivers, clinicians, NGOs, datasets,
-          AI Copilot, public map and Splunk monitoring are connected.
-        </p>
-      </section>
+  const KnowledgeGraphPage = () => {
+    const [activeNode, setActiveNode] = useState("copilot");
+    const [activeFlow, setActiveFlow] = useState("patient");
 
-      <section className="knowledge-canvas">
-        <div className="kg-node patient">Patient</div>
-        <div className="kg-node caregiver">Caregiver</div>
-        <div className="kg-node copilot">AI Copilot</div>
-        <div className="kg-node doctor">Clinician</div>
-        <div className="kg-node dataset">Cancer Dataset</div>
-        <div className="kg-node map">Public Map</div>
-        <div className="kg-node ngo">NGO / Support Team</div>
-        <div className="kg-node splunk">Splunk Monitoring</div>
+    const nodes = [
+      {
+        id: "patient",
+        label: "Patient",
+        layer: "Human layer",
+        x: 12,
+        y: 24,
+        type: "human",
+        description: "Symptoms, worries, doctor-visit questions and support needs enter the system here."
+      },
+      {
+        id: "caregiver",
+        label: "Caregiver",
+        layer: "Human layer",
+        x: 12,
+        y: 67,
+        type: "human",
+        description: "Family and caregiver signals help coordinate emotional support, reminders and home observations."
+      },
+      {
+        id: "research",
+        label: "Research Pulse",
+        layer: "Research layer",
+        x: 50,
+        y: 12,
+        type: "research",
+        description: "Clinical trials, innovative drugs, funding calls, research articles and care innovation flow into the intelligence layer."
+      },
+      {
+        id: "copilot",
+        label: "AI Copilot Core",
+        layer: "Reasoning core",
+        x: 50,
+        y: 45,
+        type: "core",
+        description: "The central reasoning layer converts patient input, public data and research context into safe guidance and next steps."
+      },
+      {
+        id: "clinician",
+        label: "Clinician",
+        layer: "Care layer",
+        x: 88,
+        y: 24,
+        type: "care",
+        description: "Doctor-ready notes, structured questions and symptom summaries support better clinical conversations."
+      },
+      {
+        id: "ngo",
+        label: "NGO / Support Team",
+        layer: "Support layer",
+        x: 88,
+        y: 67,
+        type: "care",
+        description: "NGOs and support teams receive operational signals for navigation, outreach and psychosocial support."
+      },
+      {
+        id: "dataset",
+        label: "Cancer Dataset",
+        layer: "Data layer",
+        x: 34,
+        y: 84,
+        type: "data",
+        description: "CSV indicators, official source-backed estimates, incidence, mortality, survival and prevalence signals live here."
+      },
+      {
+        id: "map",
+        label: "Türkiye–Europe Map",
+        layer: "Visualization layer",
+        x: 18,
+        y: 88,
+        type: "output",
+        description: "The map visualizes cancer burden patterns across Türkiye and Europe with interactive data streams."
+      },
+      {
+        id: "splunk",
+        label: "Splunk Monitoring",
+        layer: "Telemetry layer",
+        x: 66,
+        y: 84,
+        type: "system",
+        description: "Operational events, risk signals, support-priority changes and data quality activity are streamed for monitoring."
+      }
+    ];
 
-        <svg className="kg-lines" viewBox="0 0 1000 560" preserveAspectRatio="none">
-          <line x1="160" y1="150" x2="500" y2="250" />
-          <line x1="220" y1="390" x2="500" y2="250" />
-          <line x1="500" y1="250" x2="790" y2="150" />
-          <line x1="500" y1="250" x2="790" y2="390" />
-          <line x1="500" y1="250" x2="500" y2="470" />
-          <line x1="500" y1="470" x2="790" y2="470" />
-          <line x1="500" y1="470" x2="210" y2="470" />
-        </svg>
-      </section>
-    </div>
-  );
+    const edges = [
+      ["patient", "copilot"],
+      ["caregiver", "copilot"],
+      ["research", "copilot"],
+      ["dataset", "copilot"],
+      ["copilot", "clinician"],
+      ["copilot", "ngo"],
+      ["copilot", "splunk"],
+      ["copilot", "map"],
+      ["dataset", "map"],
+      ["research", "dataset"],
+      ["splunk", "ngo"],
+      ["clinician", "ngo"],
+      ["patient", "caregiver"],
+      ["dataset", "splunk"]
+    ];
+
+    const flows = {
+      patient: {
+        label: "Patient → AI → Care",
+        route: ["patient", "copilot", "clinician", "splunk"],
+        summary: "A patient symptom note becomes AI explanation, doctor-ready guidance and telemetry."
+      },
+      data: {
+        label: "Dataset → Map → Monitoring",
+        route: ["dataset", "copilot", "map", "splunk"],
+        summary: "Cancer indicators power the map and flow into operational monitoring."
+      },
+      research: {
+        label: "Research → AI → Support",
+        route: ["research", "copilot", "dataset", "ngo"],
+        summary: "Trials, papers, drugs and funding signals enrich the support ecosystem."
+      },
+      support: {
+        label: "Caregiver → NGO → Clinician",
+        route: ["caregiver", "copilot", "ngo", "clinician"],
+        summary: "Caregiver observations become structured support actions."
+      }
+    };
+
+    const active = nodes.find((node) => node.id === activeNode) || nodes[0];
+    const currentFlow = flows[activeFlow];
+    const activeRoute = currentFlow.route;
+
+    const getNode = (id) => nodes.find((node) => node.id === id);
+
+    const isEdgeActive = (from, to) => {
+      for (let i = 0; i < activeRoute.length - 1; i++) {
+        const a = activeRoute[i];
+        const b = activeRoute[i + 1];
+
+        if ((a === from && b === to) || (a === to && b === from)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    return (
+      <div className="neural-kg-page">
+        <nav className="neural-kg-nav">
+          <button type="button" onClick={() => setPage("landing")}>← Home</button>
+          <button type="button" onClick={() => setPage("map")}>Türkiye–Europe Map</button>
+          <button type="button" onClick={() => setPage("copilot")}>AI Copilot</button>
+          <button type="button" onClick={() => setPage("admin")}>Admin</button>
+        </nav>
+
+        <section className="neural-kg-hero">
+          <p>KNOWLEDGE GRAPH</p>
+          <h1>Neural cancer-support intelligence network</h1>
+          <span>
+            A layered, learning-style graph showing how patients, caregivers, datasets,
+            research pulse, map intelligence and Splunk telemetry move through OncoConnect AI.
+          </span>
+        </section>
+
+        <section className="neural-flow-tabs">
+          {Object.entries(flows).map(([key, item]) => (
+            <button
+              type="button"
+              key={key}
+              className={activeFlow === key ? "active" : ""}
+              onClick={() => {
+                setActiveFlow(key);
+                setActiveNode(item.route[0]);
+              }}
+            >
+              <strong>{item.label}</strong>
+              <span>{item.summary}</span>
+            </button>
+          ))}
+        </section>
+
+        <section className="neural-kg-layout">
+          <div className="neural-kg-canvas">
+            <div className="neural-grid"></div>
+            <div className="neural-core-glow"></div>
+            <div className="neural-orbit one"></div>
+            <div className="neural-orbit two"></div>
+            <div className="neural-orbit three"></div>
+
+            <svg className="neural-lines" viewBox="0 0 1000 680" preserveAspectRatio="none">
+              {edges.map(([from, to]) => {
+                const a = getNode(from);
+                const b = getNode(to);
+
+                if (!a || !b) return null;
+
+                const x1 = a.x * 10;
+                const y1 = a.y * 6.8;
+                const x2 = b.x * 10;
+                const y2 = b.y * 6.8;
+                const activeEdge = isEdgeActive(from, to);
+
+                return (
+                  <g key={`${from}-${to}`}>
+                    <line
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      className={activeEdge ? "active" : ""}
+                    />
+                    {activeEdge && (
+                      <>
+                        <circle className="neural-particle cyan" r="5">
+                          <animateMotion
+                            dur="2.1s"
+                            repeatCount="indefinite"
+                            path={`M ${x1} ${y1} L ${x2} ${y2}`}
+                          />
+                        </circle>
+                        <circle className="neural-particle violet" r="3">
+                          <animateMotion
+                            dur="2.9s"
+                            repeatCount="indefinite"
+                            path={`M ${x1} ${y1} L ${x2} ${y2}`}
+                          />
+                        </circle>
+                      </>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {nodes.map((node) => (
+              <button
+                type="button"
+                key={node.id}
+                className={`neural-node ${node.type} ${activeNode === node.id ? "selected" : ""} ${activeRoute.includes(node.id) ? "route" : ""}`}
+                style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                onMouseEnter={() => setActiveNode(node.id)}
+                onFocus={() => setActiveNode(node.id)}
+                onClick={() => setActiveNode(node.id)}
+              >
+                <i></i>
+                <strong>{node.label}</strong>
+                <span>{node.layer}</span>
+              </button>
+            ))}
+
+            <div className="neural-flow-caption">
+              <span>Active intelligence route</span>
+              <strong>{activeRoute.map((id) => getNode(id)?.label || id).join(" → ")}</strong>
+            </div>
+          </div>
+
+          <aside className="neural-kg-side">
+            <div className={`neural-detail-card ${active.type}`}>
+              <span>{active.layer}</span>
+              <h2>{active.label}</h2>
+              <p>{active.description}</p>
+
+              <div className="neural-detail-metrics">
+                <div>
+                  <small>Node type</small>
+                  <strong>{active.type}</strong>
+                </div>
+                <div>
+                  <small>Flow status</small>
+                  <strong>{activeRoute.includes(active.id) ? "Active" : "Standby"}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="neural-route-card">
+              <span>Information pathway</span>
+              <h3>{currentFlow.label}</h3>
+              <p>{currentFlow.summary}</p>
+
+              <ol>
+                {activeRoute.map((id, index) => {
+                  const node = getNode(id);
+
+                  return (
+                    <li key={id}>
+                      <b>{String(index + 1).padStart(2, "0")}</b>
+                      <div>
+                        <strong>{node?.label}</strong>
+                        <small>{node?.layer}</small>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </aside>
+        </section>
+      </div>
+    );
+  };
+
 
 
   const MapPage = () => {
@@ -2453,156 +2825,550 @@ ${aiRecommendation}`;
   };
 
 
+
   const AdminPanel = () => {
-    const [datasets, setDatasets] = useState([]);
+    const ADMIN_DATASETS_KEY = "oncoconnect_admin_datasets_v2";
+    const ADMIN_PASSWORD_KEY = "oncoconnect_admin_password_v1";
+    const PUBLISHED_ROWS_KEY = "oncoconnect_published_cancer_rows_v1";
+
+    const [datasets, setDatasets] = useState(() => {
+      try {
+        return JSON.parse(localStorage.getItem(ADMIN_DATASETS_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    });
+
     const [file, setFile] = useState(null);
     const [status, setStatus] = useState("");
     const [loading, setLoading] = useState(false);
     const [tab, setTab] = useState("datasets");
+    const [previewDataset, setPreviewDataset] = useState(null);
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+    const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+    const [officialDataUrl, setOfficialDataUrl] = useState("https://ghoapi.azureedge.net/api/NCDMORT3070?$filter=SpatialDimType%20eq%20%27COUNTRY%27%20and%20TimeDim%20ge%202015");
+    const [officialDataName, setOfficialDataName] = useState("WHO GHO NCD Mortality Risk Dataset");
+    const [officialSourceName, setOfficialSourceName] = useState("WHO_Global_Health_Observatory_OData_API");
 
-    async function loadDatasets() {
-      try {
-        const res = await fetch(`${API}/admin/datasets`);
-        const data = await res.json();
-        setDatasets(Array.isArray(data) ? data : data.datasets || []);
-      } catch (err) {
-        setStatus(err.message || "Dataset load failed");
+    const saveDatasets = (next) => {
+      setDatasets(next);
+      localStorage.setItem(ADMIN_DATASETS_KEY, JSON.stringify(next));
+
+      const publishedRows = next
+        .filter((dataset) => dataset.published)
+        .flatMap((dataset) =>
+          (dataset.rows || []).map((row) => ({
+            ...row,
+            _datasetId: dataset.id,
+            _datasetName: dataset.name,
+            _qualityFlag: dataset.qualityFlag,
+            _sourceName: dataset.sourceName,
+            _sourceUrl: dataset.sourceUrl
+          }))
+        );
+
+      localStorage.setItem(PUBLISHED_ROWS_KEY, JSON.stringify(publishedRows));
+      window.dispatchEvent(new Event("oncoconnect-admin-data-updated"));
+    };
+
+    const parseCsvLine = (line) => {
+      const result = [];
+      let current = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        const next = line[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+          current += '"';
+          i += 1;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
       }
-    }
 
-    useEffect(() => {
-      loadDatasets();
-    }, []);
+      result.push(current.trim());
+      return result;
+    };
 
-    async function uploadDataset() {
+    const parseCsvText = (text) => {
+      const lines = text
+        .replace(/^\uFEFF/, "")
+        .split(/\r?\n/)
+        .filter((line) => line.trim().length > 0);
+
+      if (!lines.length) return { columns: [], rows: [] };
+
+      const columns = parseCsvLine(lines[0]);
+      const rows = lines.slice(1).map((line) => {
+        const values = parseCsvLine(line);
+        const row = {};
+
+        columns.forEach((column, index) => {
+          row[column] = values[index] || "";
+        });
+
+        return row;
+      });
+
+      return { columns, rows };
+    };
+
+    const createDatasetFromCsv = ({ text, name, sourceName = "manual_csv_upload", sourceUrl = "" }) => {
+      const parsed = parseCsvText(text);
+
+      if (!parsed.rows.length) {
+        throw new Error("CSV has no data rows.");
+      }
+
+      return {
+        id: `ds_${Date.now()}`,
+        name: name || "Manual CSV Dataset",
+        originalName: name || "manual_upload.csv",
+        uploadedAt: new Date().toISOString(),
+        rowCount: parsed.rows.length,
+        columns: parsed.columns,
+        rows: parsed.rows,
+        previewRows: parsed.rows.slice(0, 25),
+        qualityFlag: "needs_verification",
+        sourceName,
+        sourceUrl,
+        published: false
+      };
+    };
+
+    const loadDatasets = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem(ADMIN_DATASETS_KEY) || "[]");
+        setDatasets(stored);
+        setStatus(`Reloaded ${stored.length} dataset(s) from local admin storage.`);
+      } catch {
+        setStatus("Could not reload local datasets.");
+      }
+    };
+
+    const uploadDataset = async () => {
       if (!file) {
         setStatus("Please select a CSV file first.");
         return;
       }
 
       setLoading(true);
-      setStatus("Uploading dataset...");
+      setStatus("Reading CSV locally...");
 
       try {
-        const form = new FormData();
-        form.append("file", file);
-
-        const res = await fetch(`${API}/admin/upload`, {
-          method: "POST",
-          body: form
+        const text = await file.text();
+        const dataset = createDatasetFromCsv({
+          text,
+          name: file.name,
+          sourceName: "manual_csv_upload",
+          sourceUrl: ""
         });
 
-        const data = await res.json();
-
-        if (!data.success) throw new Error(data.error || "Upload failed");
-
-        setStatus(`Uploaded: ${data.dataset?.name || file.name}`);
+        const next = [dataset, ...datasets];
+        saveDatasets(next);
         setFile(null);
-        await loadDatasets();
+        setStatus(`Uploaded locally: ${dataset.name} (${dataset.rowCount} rows). Review and publish when ready.`);
       } catch (err) {
-        setStatus(err.message || "Upload failed");
+        setStatus(err.message || "Upload failed.");
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    async function updateDataset(id, patch) {
+    const loadCurrentSiteCsv = async () => {
       setLoading(true);
+      setStatus("Loading current map/landing CSV...");
+
       try {
-        const res = await fetch(`${API}/admin/datasets/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(patch)
+        const res = await fetch("/data/turkiye_avrupa_kanser_istatistikleri_detayli.csv");
+
+        if (!res.ok) {
+          throw new Error("Current CSV file could not be loaded.");
+        }
+
+        const text = await res.text();
+        const dataset = createDatasetFromCsv({
+          text,
+          name: "Current Türkiye–Europe Cancer Dataset",
+          sourceName: "site_public_csv",
+          sourceUrl: "/data/turkiye_avrupa_kanser_istatistikleri_detayli.csv"
         });
 
-        const data = await res.json();
+        dataset.qualityFlag = "verified_demo";
+        dataset.published = true;
 
-        if (!data.success) throw new Error(data.error || "Update failed");
+        const next = [
+          dataset,
+          ...datasets.filter((item) => item.sourceUrl !== dataset.sourceUrl)
+        ];
 
-        setStatus("Dataset updated.");
-        await loadDatasets();
+        saveDatasets(next);
+        setStatus(`Current site CSV loaded and published: ${dataset.rowCount} rows.`);
       } catch (err) {
-        setStatus(err.message || "Update failed");
+        setStatus(err.message || "Current CSV load failed.");
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    async function deleteDataset(id) {
-      if (!confirm("Delete this dataset?")) return;
+    const updateDataset = (id, patch) => {
+      const next = datasets.map((dataset) =>
+        dataset.id === id ? { ...dataset, ...patch } : dataset
+      );
 
-      setLoading(true);
-      try {
-        const res = await fetch(`${API}/admin/datasets/${id}`, {
-          method: "DELETE"
+      saveDatasets(next);
+      setStatus(patch.published === true ? "Dataset published." : patch.published === false ? "Dataset unpublished." : "Dataset updated.");
+    };
+
+    const deleteDataset = (id) => {
+      if (!confirm("Delete this dataset from Admin?")) return;
+
+      const next = datasets.filter((dataset) => dataset.id !== id);
+      saveDatasets(next);
+      setStatus("Dataset deleted.");
+    };
+
+
+    const isEmptyCell = (value) => {
+      const text = String(value ?? "").trim().toLowerCase();
+
+      return (
+        text === "" ||
+        text === "nan" ||
+        text === "null" ||
+        text === "undefined" ||
+        text === "none" ||
+        text === "n/a" ||
+        text === "na" ||
+        text === "-"
+      );
+    };
+
+    const normalizeNumericCell = (value) => {
+      if (isEmptyCell(value)) return "";
+
+      const text = String(value)
+        .trim()
+        .replace("%", "")
+        .replace(/\s+/g, "")
+        .replace(",", ".");
+
+      const number = Number(text);
+
+      if (!Number.isFinite(number)) return String(value).trim();
+
+      return String(number);
+    };
+
+    const cleanOfficialRows = (rows) => {
+      const numericColumns = [
+        "Yillik_Vaka_Hizi_100Bin",
+        "Yillik_Olum_Hizi_100Bin",
+        "Bes_Yillik_Sagkalim_Yuzdesi",
+        "incidence",
+        "mortality",
+        "survival"
+      ];
+
+      const requiredAnyColumns = [
+        "Bolge",
+        "Ulke_Sehir",
+        "region",
+        "location",
+        "Kanser_Turu",
+        "cancerType"
+      ];
+
+      return rows
+        .map((row) => {
+          const cleaned = {};
+
+          Object.entries(row || {}).forEach(([key, value]) => {
+            if (key.startsWith("_")) return;
+
+            if (numericColumns.includes(key)) {
+              cleaned[key] = normalizeNumericCell(value);
+              return;
+            }
+
+            cleaned[key] = isEmptyCell(value) ? "" : String(value).trim();
+          });
+
+          return cleaned;
+        })
+        .filter((row) => {
+          const hasAnyContent = Object.values(row).some((value) => !isEmptyCell(value));
+          const hasRequiredSignal = requiredAnyColumns.some((column) => !isEmptyCell(row[column]));
+
+          return hasAnyContent && hasRequiredSignal;
         });
+    };
 
-        const data = await res.json();
-
-        if (!data.success) throw new Error(data.error || "Delete failed");
-
-        setStatus("Dataset deleted.");
-        await loadDatasets();
-      } catch (err) {
-        setStatus(err.message || "Delete failed");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    async function runAutoResearch() {
+    const prepareOfficialCleanDraft = async () => {
       setLoading(true);
-      setStatus("Auto Research Agent is scanning trusted cancer data sources...");
+      setStatus("Automation is reading official demo CSV, cleaning empty/NaN values and preparing a publish-ready draft...");
 
       try {
-        const res = await fetch(`${API}/admin/auto-research`, { method: "POST" });
-        const data = await res.json();
+        const res = await fetch("/data/turkiye_avrupa_kanser_istatistikleri_detayli.csv");
 
-        if (!data.success) throw new Error(data.error || "Auto research failed");
+        if (!res.ok) {
+          throw new Error("Official demo CSV could not be loaded.");
+        }
 
-        setStatus(data.message || "Auto research draft generated.");
-        await loadDatasets();
+        const text = await res.text();
+        const parsed = parseCsvText(text);
+        const cleanedRows = cleanOfficialRows(parsed.rows);
+
+        if (!cleanedRows.length) {
+          throw new Error("No valid rows after cleaning. Draft was not created.");
+        }
+
+        const removedRows = parsed.rows.length - cleanedRows.length;
+        const columns = Array.from(
+          cleanedRows.reduce((set, row) => {
+            Object.keys(row).forEach((key) => set.add(key));
+            return set;
+          }, new Set())
+        );
+
+        const draft = {
+          id: `official_clean_draft_${Date.now()}`,
+          name: "Official Clean Cancer Dataset Draft",
+          originalName: "official_clean_cancer_dataset_draft.csv",
+          uploadedAt: new Date().toISOString(),
+          rowCount: cleanedRows.length,
+          columns,
+          rows: cleanedRows,
+          previewRows: cleanedRows.slice(0, 25),
+          qualityFlag: removedRows > 0 ? `cleaned_${removedRows}_invalid_rows_removed` : "clean_validated",
+          sourceName: "IARC_GLOBOCAN_ECIS_ready_draft",
+          sourceUrl: "GLOBOCAN / ECIS / local official demo CSV",
+          published: false,
+          automationMeta: {
+            cleanedAt: new Date().toISOString(),
+            inputRows: parsed.rows.length,
+            outputRows: cleanedRows.length,
+            removedRows,
+            emptyValuesBlocked: true,
+            nanValuesBlocked: true,
+            publishReady: true
+          }
+        };
+
+        saveDatasets([draft, ...datasets]);
         setTab("datasets");
+        setPreviewDataset(draft);
+        setStatus(`Clean draft ready: ${cleanedRows.length} valid rows. Removed ${removedRows} invalid/empty rows. Review before publishing.`);
       } catch (err) {
-        setStatus(err.message || "Auto research failed");
+        setStatus(err.message || "Automation clean draft failed.");
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    async function runOfficialIngest() {
+
+    const searchOfficialSourcesAndCreateDraft = async () => {
       setLoading(true);
-      setStatus("Official Data Ingestion Agent is fetching, normalizing and validating indicators...");
+      setStatus("Searching official sources, validating availability and creating a clean draft...");
 
       try {
-        const res = await fetch(`${API}/admin/auto-ingest`, { method: "POST" });
-        const data = await res.json();
+        if (!officialDataUrl.trim()) {
+          setStatus("Paste a verified downloadable official CSV/API URL first. No dataset was created.");
+          setLoading(false);
+          return;
+        }
 
-        if (!data.success) throw new Error(data.error || "Official ingestion failed");
+        const response = await fetch(`${API}/admin/official-search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            officialDataUrl: officialDataUrl.trim(),
+            officialDataName: officialDataName.trim() || "Official Cancer Dataset Draft",
+            officialSourceName: officialSourceName.trim() || "verified_official_cancer_source"
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || "Official source search failed.");
+        }
+
+        const dataset = {
+          ...data.dataset,
+          id: data.dataset?.id || `official_source_draft_${Date.now()}`,
+          published: false
+        };
+
+        saveDatasets([dataset, ...datasets]);
+        setPreviewDataset(dataset);
+        setTab("datasets");
 
         setStatus(
-          `Official ingestion draft generated: ${data.dataset?.rowCount || 0} validated rows`
+          `${data.message} Source checks: ${(data.sources || [])
+            .map((source) => `${source.name}: ${source.reachable ? "reachable" : "not reachable"}`)
+            .join(" | ")}`
         );
-        await loadDatasets();
-        setTab("datasets");
-      } catch (err) {
-        setStatus(err.message || "Official ingestion failed");
+      } catch (error) {
+        setStatus(error.message || "Official source search failed.");
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    const totalRows = datasets.reduce((sum, d) => sum + safeNumber(d.rowCount), 0);
-    const publishedCount = datasets.filter((d) => d.published).length;
+    const runAutoResearch = () => {
+      const draft = {
+        id: `research_${Date.now()}`,
+        name: "Research Pulse Draft Dataset",
+        originalName: "research_pulse_draft.json",
+        uploadedAt: new Date().toISOString(),
+        rowCount: 5,
+        columns: ["category", "topic", "priority", "status", "source"],
+        rows: [
+          { category: "Clinical trials", topic: "Oncology trial monitoring", priority: "High", status: "candidate", source: "admin_generated" },
+          { category: "Innovative drugs", topic: "Emerging oncology therapies", priority: "High", status: "candidate", source: "admin_generated" },
+          { category: "Funding", topic: "Cancer research grants", priority: "Medium", status: "candidate", source: "admin_generated" },
+          { category: "Papers", topic: "Cancer support AI literature", priority: "Medium", status: "candidate", source: "admin_generated" },
+          { category: "Care innovation", topic: "Patient navigation systems", priority: "High", status: "candidate", source: "admin_generated" }
+        ],
+        previewRows: [],
+        qualityFlag: "draft_research",
+        sourceName: "admin_research_agent_demo",
+        sourceUrl: "",
+        published: false
+      };
+
+      draft.previewRows = draft.rows;
+
+      saveDatasets([draft, ...datasets]);
+      setTab("datasets");
+      setStatus("Research draft generated. Review it, then publish if suitable.");
+    };
+
+    const runOfficialIngest = () => {
+      loadCurrentSiteCsv();
+    };
+
+    const clearAllDatasets = () => {
+      if (!confirm("Clear all local admin datasets?")) return;
+
+      saveDatasets([]);
+      setPreviewDataset(null);
+      setStatus("All local admin datasets cleared.");
+    };
+
+    const changePassword = () => {
+      const current = localStorage.getItem(ADMIN_PASSWORD_KEY) || "admin123";
+
+      if (oldPassword !== current) {
+        setStatus("Old password is incorrect. Default is admin123 if you never changed it.");
+        return;
+      }
+
+      if (!newPassword || newPassword.length < 6) {
+        setStatus("New password must be at least 6 characters.");
+        return;
+      }
+
+      localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword);
+      setOldPassword("");
+      setNewPassword("");
+      setStatus("Admin password changed locally.");
+    };
+
+
+    const handleAdminLogin = () => {
+      const currentPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || "admin123";
+
+      if (loginPassword !== currentPassword) {
+        setStatus("Wrong admin password. Default password is admin123 if you never changed it.");
+        return;
+      }
+
+      setIsAdminAuthenticated(true);
+      setLoginPassword("");
+      setStatus("");
+    };
+
+    const totalRows = datasets.reduce((sum, dataset) => {
+      return sum + safeNumber(dataset.rowCount || dataset.rows?.length || 0);
+    }, 0);
+
+    const publishedCount = datasets.filter((dataset) => dataset.published).length;
+    const publishedRows = datasets
+      .filter((dataset) => dataset.published)
+      .reduce((sum, dataset) => sum + safeNumber(dataset.rowCount || dataset.rows?.length || 0), 0);
+
+    if (!isAdminAuthenticated) {
+      return (
+        <div className="admin-login-page-v36 admin-login-command-fix">
+          <button
+            type="button"
+            className="admin-back-home-v36"
+            onClick={() => setPage("landing")}
+          >
+            ← Home
+          </button>
+
+          <div className="admin-login-card-v36">
+            <small>ADMIN ACCESS</small>
+            <h1>OncoConnect Command Center</h1>
+            <p>
+              Enter the admin password to control datasets, publishing, sources and demo settings.
+            </p>
+
+            <input
+              type="password"
+              placeholder="Admin password"
+              value={loginPassword}
+              onChange={(event) => setLoginPassword(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleAdminLogin();
+              }}
+            />
+
+            <button type="button" onClick={handleAdminLogin}>
+              Login to Admin
+            </button>
+
+            {status && <div className="admin-status-v35">{status}</div>}
+
+            <p className="admin-login-hint-v36">
+              Default password: <b>admin123</b>
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="admin-page-v35">
         <header className="admin-topbar-v35">
-          <button onClick={() => setPage("landing")}>
+          <button type="button" onClick={() => setPage("landing")}>
             {lang === "tr" ? "← Ana Sayfa" : "← Home"}
           </button>
-          <strong>OncoConnect Admin Console</strong>
-          <button onClick={loadDatasets}>Refresh</button>
+          <strong>OncoConnect Admin Command Center</strong>
+          <div className="admin-topbar-actions-v40">
+            <button type="button" onClick={loadDatasets}>Refresh</button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAdminAuthenticated(false);
+                setStatus("");
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         <section className="admin-hero-v35">
@@ -2610,7 +3376,7 @@ ${aiRecommendation}`;
             <p className="eyebrow">DATA OPERATIONS</p>
             <h1>Dataset Governance Console</h1>
             <p>
-              Upload, validate, publish and monitor datasets powering the public cancer map.
+              Upload, preview, publish, unpublish and control the datasets powering the demo intelligence layer.
             </p>
           </div>
         </section>
@@ -2619,11 +3385,13 @@ ${aiRecommendation}`;
           <div><strong>{datasets.length}</strong><span>Total datasets</span></div>
           <div><strong>{publishedCount}</strong><span>Published</span></div>
           <div><strong>{totalRows}</strong><span>Total rows</span></div>
+          <div><strong>{publishedRows}</strong><span>Published rows</span></div>
         </section>
 
         <section className="admin-tabs-v38">
           {["datasets", "automation", "sources", "settings"].map((item) => (
             <button
+              type="button"
               key={item}
               className={tab === item ? "active" : ""}
               onClick={() => setTab(item)}
@@ -2640,8 +3408,17 @@ ${aiRecommendation}`;
             <h2>Datasets</h2>
 
             <div className="admin-upload-row-v35">
-              <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              <button onClick={uploadDataset} disabled={loading}>Upload CSV</button>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(event) => setFile(event.target.files?.[0] || null)}
+              />
+              <button type="button" onClick={uploadDataset} disabled={loading}>
+                Upload CSV
+              </button>
+              <button type="button" onClick={loadCurrentSiteCsv} disabled={loading}>
+                Load current map/landing CSV
+              </button>
             </div>
 
             <div className="admin-table-wrap-v35">
@@ -2657,21 +3434,39 @@ ${aiRecommendation}`;
                   </tr>
                 </thead>
                 <tbody>
-                  {datasets.map((d) => (
-                    <tr key={d.id}>
-                      <td>{d.name || d.originalName}</td>
-                      <td>{d.rowCount || d.rows?.length || 0}</td>
-                      <td>{d.qualityFlag || "-"}</td>
-                      <td>{d.sourceName || "-"}</td>
-                      <td>{d.published ? "Yes" : "No"}</td>
+                  {datasets.length === 0 && (
+                    <tr>
+                      <td colSpan="6">No datasets yet. Upload CSV or load current site CSV.</td>
+                    </tr>
+                  )}
+
+                  {datasets.map((dataset) => (
+                    <tr key={dataset.id}>
+                      <td>{dataset.name || dataset.originalName}</td>
+                      <td>{dataset.rowCount || dataset.rows?.length || 0}</td>
+                      <td>{dataset.qualityFlag || "-"}</td>
+                      <td>{dataset.sourceName || "-"}</td>
+                      <td>{dataset.published ? "Yes" : "No"}</td>
                       <td>
                         <button
-                          onClick={() => updateDataset(d.id, { published: !d.published })}
+                          type="button"
+                          onClick={() => setPreviewDataset(dataset)}
                           disabled={loading}
                         >
-                          {d.published ? "Unpublish" : "Publish"}
+                          Preview
                         </button>
-                        <button onClick={() => deleteDataset(d.id)} disabled={loading}>
+                        <button
+                          type="button"
+                          onClick={() => updateDataset(dataset.id, { published: !dataset.published })}
+                          disabled={loading}
+                        >
+                          {dataset.published ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteDataset(dataset.id)}
+                          disabled={loading}
+                        >
                           Delete
                         </button>
                       </td>
@@ -2680,6 +3475,44 @@ ${aiRecommendation}`;
                 </tbody>
               </table>
             </div>
+
+            {previewDataset && (
+              <div className="admin-preview-overlay-v37">
+                <div className="admin-preview-modal-v37">
+                  <div className="admin-preview-head-v37">
+                    <div>
+                      <small>Dataset Preview</small>
+                      <h2>{previewDataset.name}</h2>
+                      <p>
+                        Showing first {Math.min(25, previewDataset.rows?.length || 0)} rows from {previewDataset.rowCount || 0} total rows.
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => setPreviewDataset(null)}>Close</button>
+                  </div>
+
+                  <div className="admin-preview-table-wrap-v37">
+                    <table className="admin-preview-table-v37">
+                      <thead>
+                        <tr>
+                          {(previewDataset.columns || []).map((column) => (
+                            <th key={column}>{column}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(previewDataset.previewRows || previewDataset.rows || []).slice(0, 25).map((row, index) => (
+                          <tr key={index}>
+                            {(previewDataset.columns || []).map((column) => (
+                              <td key={column}>{row[column]}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
@@ -2687,21 +3520,54 @@ ${aiRecommendation}`;
           <section className="admin-card-v35">
             <h2>Automation</h2>
             <p>
-              Research candidate sources, normalize official indicators and generate reviewable draft datasets.
+              Generate reviewable research drafts or reload the current official demo CSV into Admin control.
             </p>
 
+            <div className="admin-official-url-panel-v40">
+              <label>
+                <span>Verified downloadable CSV/API URL</span>
+                <input
+                  type="url"
+                  placeholder="https://.../official-cancer-data.csv"
+                  value={officialDataUrl}
+                  onChange={(event) => setOfficialDataUrl(event.target.value)}
+                />
+              </label>
+
+              <label>
+                <span>Dataset name</span>
+                <input
+                  type="text"
+                  value={officialDataName}
+                  onChange={(event) => setOfficialDataName(event.target.value)}
+                />
+              </label>
+
+              <label>
+                <span>Source label</span>
+                <input
+                  type="text"
+                  value={officialSourceName}
+                  onChange={(event) => setOfficialSourceName(event.target.value)}
+                />
+              </label>
+            </div>
+
             <div className="admin-tab-actions-v39">
-              <button onClick={runAutoResearch} disabled={loading}>
-                Find Candidate Sources
+              <button type="button" onClick={searchOfficialSourcesAndCreateDraft} disabled={loading}>
+                Import Official URL & Create Draft
               </button>
-              <button onClick={runOfficialIngest} disabled={loading}>
-                Fetch & Normalize Official Data
+              <button type="button" onClick={runAutoResearch} disabled={loading}>
+                Generate Research Draft
               </button>
-              <button onClick={() => window.open(`${API}/public/map-data`, "_blank")}>
-                Open Public JSON
+              <button type="button" onClick={prepareOfficialCleanDraft} disabled={loading}>
+                Prepare Official Clean Draft
               </button>
-              <button onClick={() => window.open(`${API}/public/map-data.csv`, "_blank")}>
-                Open Public CSV
+              <button type="button" onClick={runOfficialIngest} disabled={loading}>
+                Fetch Current Official Demo CSV
+              </button>
+              <button type="button" onClick={() => setStatus("Published rows are stored locally for map/landing integration.")}>
+                Check Published Layer
               </button>
             </div>
           </section>
@@ -2710,13 +3576,14 @@ ${aiRecommendation}`;
         {tab === "sources" && (
           <section className="admin-card-v35">
             <h2>Official Sources</h2>
-            <p>ECIS, GCO / GLOBOCAN and future official registry connectors.</p>
+            <p>Manage source labels for datasets before publishing.</p>
+
             <div className="admin-tab-actions-v39">
-              <button onClick={() => window.open(`${API}/admin/sources`, "_blank")}>
-                View Source Registry
+              <button type="button" onClick={loadCurrentSiteCsv} disabled={loading}>
+                Register Current CSV Source
               </button>
-              <button onClick={runOfficialIngest} disabled={loading}>
-                Test Official Ingest
+              <button type="button" onClick={() => setStatus("Source registry is controlled locally in this demo build.")}>
+                Validate Source Registry
               </button>
             </div>
           </section>
@@ -2725,16 +3592,37 @@ ${aiRecommendation}`;
         {tab === "settings" && (
           <section className="admin-card-v35">
             <h2>Settings</h2>
-            <p>Recovery admin panel restored after App.jsx overwrite.</p>
+            <p>Control local admin password and reset demo data.</p>
+
+            <div className="admin-upload-row-v35">
+              <input
+                type="password"
+                placeholder="Old password"
+                value={oldPassword}
+                onChange={(event) => setOldPassword(event.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="New password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+              />
+              <button type="button" onClick={changePassword}>
+                Change Password
+              </button>
+            </div>
+
             <div className="admin-tab-actions-v39">
-              <button onClick={() => setPage("landing")}>Back Home</button>
-              <button onClick={loadDatasets}>Reload Datasets</button>
+              <button type="button" onClick={loadDatasets}>Reload Local Datasets</button>
+              <button type="button" onClick={clearAllDatasets}>Clear All Admin Data</button>
+              <button type="button" onClick={() => setPage("landing")}>Back Home</button>
             </div>
           </section>
         )}
       </div>
     );
   };
+
 
   const OncoKidsPage = () => {
     const [hopePoints, setHopePoints] = useState(120);
@@ -3080,6 +3968,7 @@ ${aiRecommendation}`;
   if (page === "landing") return <LandingPage />;
   if (page === "copilot") return <CopilotPage />;
   if (page === "knowledge") return <KnowledgeGraphPage />;
+  if (page === "graph") return <KnowledgeGraphPage />;
   if (page === "map") return <MapPage />;
   if (page === "admin") return <AdminPanel />;
   if (page === "kids") return <OncoKidsPage />;
