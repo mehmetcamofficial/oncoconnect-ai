@@ -1,0 +1,38 @@
+[
+  {
+    "source_id": "globocan_2022_turkiye_factsheet",
+    "source_name": "GLOBOCAN 2022 Türkiye Fact Sheet",
+    "publisher": "IARC / Global Cancer Observatory",
+    "type": "official_country_fact_sheet",
+    "url": "https://gco.iarc.who.int/media/globocan/factsheets/populations/792-turkiye-fact-sheet.pdf",
+    "status": "seeded",
+    "notes": "Use only rows manually verified from official fact sheet."
+  },
+  {
+    "source_id": "gco_cancer_today",
+    "source_name": "GLOBOCAN Cancer Today",
+    "publisher": "IARC / Global Cancer Observatory",
+    "type": "official_global_data_explorer",
+    "url": "https://gco.iarc.who.int/today/",
+    "status": "source_registry_only",
+    "notes": "Use exported tables from the official explorer; do not fabricate country rows."
+  },
+  {
+    "source_id": "ecis_data_explorer",
+    "source_name": "European Cancer Information System Data Explorer",
+    "publisher": "European Commission / JRC",
+    "type": "official_european_data_explorer",
+    "url": "https://ecis.jrc.ec.europa.eu/explorer.php",
+    "status": "source_registry_only",
+    "notes": "Use exported ECIS tables for Europe incidence, mortality, prevalence and survival."
+  },
+  {
+    "source_id": "canscreen5_turkiye_country_factsheet",
+    "source_name": "CanScreen5 Türkiye Country Fact Sheet",
+    "publisher": "IARC / CanScreen5",
+    "type": "official_country_screening_factsheet",
+    "url": "https://canscreen5.iarc.fr/?page=countryfactsheet&q=TUR",
+    "status": "seeded",
+    "notes": "Seeded rate rows from the public country factsheet."
+  }
+]
