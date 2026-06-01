@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "id": "chemotherapy_patient_data",
+      "name": "Chemotherapy Patient Data",
+      "file": "/data/chemotherapy_patient_data.csv",
+      "splunk_source": "chemotherapy_patient_data.csv",
+      "domain": "Chemotherapy symptom monitoring",
+      "description": "Patient-level chemotherapy symptom and treatment signal dataset for AI support analysis."
+    },
+    {
+      "id": "thyrotrack_mv_processed_dataset",
+      "name": "ThyroTrack MV Processed Dataset",
+      "file": "/data/thyrotrack_mv_processed_dataset.csv",
+      "splunk_source": "ThyroTrack-MV Processed Dataset.csv",
+      "domain": "Thyroid monitoring intelligence",
+      "description": "Processed thyroid monitoring dataset for AI signal extraction and risk visualization."
+    },
+    {
+      "id": "oncoconnect_ai_copilot_events",
+      "name": "OncoConnect AI Copilot Events",
+      "file": null,
+      "splunk_source": "oncoconnect_ai_copilot",
+      "domain": "AI workflow telemetry",
+      "description": "Copilot-generated workflow events, risk scores, red flags and report actions."
+    }
+  ]
+}
