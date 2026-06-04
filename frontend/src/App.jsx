@@ -1531,7 +1531,231 @@ function App() {
     const [lastCopilotAction, setLastCopilotAction] = useState(trText("AI recommendation ready", "AI önerisi hazır"));
     const [copilotActionLog, setCopilotActionLog] = useState([]);
     const [simulationRunning, setSimulationRunning] = useState(false);
-    const [simulationStep, setSimulationStep] = useState(0);
+
+  // GLOBAL_PIPELINE_IDLE_CONTROLLER_V93
+  useEffect(() => {
+    const forceIdle = () => {
+      document.body.classList.add("pipeline-force-idle-v93");
+    };
+
+    const releaseIdle = () => {
+      document.body.classList.remove("pipeline-force-idle-v93");
+    };
+
+    window.__forcePipelineIdleV93 = forceIdle;
+    window.__releasePipelineIdleV93 = releaseIdle;
+
+    forceIdle();
+
+    return () => {
+      document.body.classList.remove("pipeline-force-idle-v93");
+    };
+  }, []);
+
+
+  const [executionStepV86, setExecutionStepV86] = useState(-1);
+  const [pipelineResetModeV90, setPipelineResetModeV90] = useState(true);
+  const [pipelineHardIdleV99, setPipelineHardIdleV99] = useState(true);
+  const [pipelineResetKeyV100, setPipelineResetKeyV100] = useState(0);
+  const isPipelineIdleV92 = pipelineResetModeV90 || lastCopilotAction === trText("Ready for new analysis.", "Yeni analiz için hazır.");
+  const isPipelineIdleV95 = pipelineResetModeV90 || executionStepV86 === -1 || lastCopilotAction === trText("Ready for new analysis.", "Yeni analiz için hazır.");
+  const isPipelineIdleV97 = pipelineHardIdleV99 || pipelineResetModeV90 || executionStepV86 < 0 || lastCopilotAction === trText("Ready for new analysis.", "Yeni analiz için hazır.");
+  const pipelineIdleFinalV100 = pipelineHardIdleV99 || pipelineResetModeV90 || executionStepV86 < 0;
+  const [shareFeedbackV86, setShareFeedbackV86] = useState("");
+  const [trendRangeV119, setTrendRangeV119] = useState("30");
+
+  const trendSeriesV119 = useMemo(() => {
+    const ranges = {
+      "7": {
+        labels: ["Jun 1", "Jun 2", "Jun 3", "Jun 4", "Jun 5", "Jun 6", "Today"],
+        fatigue: "62,74 150,66 238,82 326,58 414,78 502,76 590,72",
+        pain: "62,108 150,106 238,112 326,94 414,108 502,106 590,104",
+        nausea: "62,142 150,140 238,148 326,134 414,144 502,142 590,140",
+        mood: "62,170 150,168 238,164 326,156 414,160 502,158 590,152"
+      },
+      "30": {
+        labels: ["May 10", "May 17", "May 24", "May 31", "Jun 7", "Today"],
+        fatigue: "62,70 98,52 134,58 170,50 206,78 242,70 278,52 314,72 350,96 386,94 422,108 458,70 494,90 590,88",
+        pain: "62,108 98,108 134,84 170,104 206,120 242,118 278,112 314,124 350,124 386,124 422,124 458,98 494,126 590,126",
+        nausea: "62,144 98,142 134,144 170,154 206,164 242,170 278,156 314,172 350,156 386,156 422,162 458,152 494,166 590,164",
+        mood: "62,172 98,176 134,170 170,170 206,178 242,180 278,174 314,178 350,172 386,162 422,176 458,168 494,160 590,160"
+      },
+      "90": {
+        labels: ["Mar", "Apr", "May", "Jun", "Last week", "Today"],
+        fatigue: "62,82 120,76 178,66 236,58 294,50 352,66 410,60 468,74 526,66 590,62",
+        pain: "62,112 120,108 178,104 236,98 294,94 352,100 410,96 468,102 526,98 590,94",
+        nausea: "62,142 120,140 178,138 236,136 294,132 352,138 410,134 468,136 526,132 590,130",
+        mood: "62,174 120,172 178,170 236,166 294,164 352,160 410,158 468,154 526,150 590,146"
+      }
+    };
+
+    return ranges[trendRangeV119] || ranges["30"];
+  }, [trendRangeV119]);
+  const [visibleRecommendationV106, setVisibleRecommendationV106] = useState("");
+
+  const clearExecutionTimersV86 = () => {
+    if (window.__oncoExecutionTimersV86) {
+      window.__oncoExecutionTimersV86.forEach((timer) => window.clearTimeout(timer));
+    }
+    window.__oncoExecutionTimersV86 = [];
+  };
+
+  const resetExecutionPipelineV86 = () => {
+    clearExecutionTimersV86();
+
+    if (window.__oncoExecutionTimersV80) {
+      window.__oncoExecutionTimersV80.forEach((timer) => window.clearTimeout(timer));
+      window.__oncoExecutionTimersV80 = [];
+    }
+
+    if (window.__oncoExecutionTimersV81) {
+      window.__oncoExecutionTimersV81.forEach((timer) => window.clearTimeout(timer));
+      window.__oncoExecutionTimersV81 = [];
+    }
+
+    if (window.__oncoExecutionTimersV83) {
+      window.__oncoExecutionTimersV83.forEach((timer) => window.clearTimeout(timer));
+      window.__oncoExecutionTimersV83 = [];
+    }
+
+    if (window.__oncoExecutionTimersV84) {
+      window.__oncoExecutionTimersV84.forEach((timer) => window.clearTimeout(timer));
+      window.__oncoExecutionTimersV84 = [];
+    }
+
+    setPipelineResetModeV90(true);
+    setExecutionStepV86(-1);
+
+    window.setTimeout(() => { setPipelineResetModeV90(true); setExecutionStepV86(-1); }, 50);
+    window.setTimeout(() => { setPipelineResetModeV90(true); setExecutionStepV86(-1); }, 200);
+    window.setTimeout(() => { setPipelineResetModeV90(true); setExecutionStepV86(-1); }, 600);
+  };
+
+  const startExecutionPipelineV86 = () => {
+    setPipelineHardIdleV99(false);
+    setPipelineResetModeV90(false);
+    setPipelineResetModeV90(false);
+    setPipelineResetModeV90(false);
+    window.__releasePipelineIdleV93?.();
+    clearExecutionTimersV86();
+    setPipelineResetModeV90(false);
+    setPipelineResetModeV90(false);
+    setExecutionStepV86(0);
+
+    window.__oncoExecutionTimersV86 = [
+      window.setTimeout(() => setExecutionStepV86(1), 1300),
+      window.setTimeout(() => setExecutionStepV86(2), 2600),
+      window.setTimeout(() => setExecutionStepV86(3), 3900),
+      window.setTimeout(() => setExecutionStepV86(4), 5200),
+    ];
+  };
+
+  const handleShareV86 = async () => {
+    const shareTitle = "OncoConnect AI Copilot";
+    const shareText = trText(
+      "OncoConnect AI Copilot care intelligence dashboard",
+      "OncoConnect AI Copilot bakım zekâ paneli"
+    );
+    const shareUrl = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        setShareFeedbackV86(trText("Shared", "Paylaşıldı"));
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedbackV86(trText("Link copied", "Bağlantı kopyalandı"));
+      } else {
+        window.prompt(trText("Copy this link", "Bu bağlantıyı kopyalayın"), shareUrl);
+        setShareFeedbackV86(trText("Link ready", "Bağlantı hazır"));
+      }
+
+      window.setTimeout(() => setShareFeedbackV86(""), 2200);
+    } catch (error) {
+      setShareFeedbackV86(trText("Share cancelled", "Paylaşım iptal edildi"));
+      window.setTimeout(() => setShareFeedbackV86(""), 2200);
+    }
+  };
+
+  const runCareCockpitAnalysisV86 = () => {
+    setLastCopilotAction(trText("Analysis started.", "Analiz başladı."));
+    startExecutionPipelineV86();
+    runCareCockpitAnalysisV27();
+  };
+
+  
+
+  // FORCE_PIPELINE_INITIAL_READY_V91
+  useEffect(() => {
+    setSimulationRunning(false);
+    setPipelineResetModeV90?.(true);
+    setExecutionStepV86?.(-1);
+    window.__forcePipelineIdleV93?.();
+    setLastCopilotAction(trText("Ready for new analysis.", "Yeni analiz için hazır."));
+  }, []);
+
+  const startNewSimulationV86 = () => {
+    clearExecutionTimersV86();
+    setVisibleRecommendationV106("");
+    setPipelineHardIdleV99(true);
+    setPipelineResetKeyV100((value) => value + 1);
+
+    setPipelineResetModeV90(true);
+    setExecutionStepV86(-1);
+    setSimulationRunning(false);
+    setLastCopilotAction(trText("Ready for new analysis.", "Yeni analiz için hazır."));
+
+    window.setTimeout(() => {
+      setVisibleRecommendationV106("");
+      setPipelineHardIdleV99(true);
+      setPipelineResetKeyV100((value) => value + 1);
+      setPipelineResetModeV90(true);
+      setExecutionStepV86(-1);
+      setSimulationRunning(false);
+      setLastCopilotAction(trText("Ready for new analysis.", "Yeni analiz için hazır."));
+    }, 120);
+  };
+
+  // PIPELINE_INITIAL_IDLE_V87
+  useEffect(() => {
+    resetExecutionPipelineV86();
+  }, []);
+
+
+const [executionStepV80, setExecutionStepV80] = useState(-1);
+const startExecutionPipelineV80 = () => {
+    if (window.__oncoExecutionTimersV80) {
+      window.__oncoExecutionTimersV80.forEach((timer) => window.clearTimeout(timer));
+    }
+
+    setExecutionStepV80(0);
+
+    window.__oncoExecutionTimersV80 = [
+      window.setTimeout(() => setExecutionStepV80(1), 1200),
+      window.setTimeout(() => setExecutionStepV80(2), 2400),
+      window.setTimeout(() => setExecutionStepV80(3), 3600),
+      window.setTimeout(() => setExecutionStepV80(4), 5000),
+    ];
+  };
+
+const [executionStepV75, setExecutionStepV75] = useState(-1);
+
+  const runExecutionPipelineV78 = () => {
+    setExecutionStepV75(0);
+
+    window.setTimeout(() => setExecutionStepV75(1), 1300);
+    window.setTimeout(() => setExecutionStepV75(2), 2600);
+    window.setTimeout(() => setExecutionStepV75(3), 3900);
+    window.setTimeout(() => setExecutionStepV75(4), 5200);
+  };
+
+
+
+const [simulationStep, setSimulationStep] = useState(0);
     const [reportGenerated, setReportGenerated] = useState(false);
     const [eventSent, setEventSent] = useState(false);
     const [mapRows, setMapRows] = useState([]);
@@ -1786,6 +2010,963 @@ function App() {
       .replace(/\s+/g, " ")
       .trim();
 
+    // COPILOT AI POWER DASHBOARD v10 START
+    const aiPowerSources = [
+      {
+        id: "chemotherapy_patient_data",
+        name: "Chemotherapy Patient Data",
+        file: "/data/chemotherapy_patient_data.csv",
+        splunkSource: "chemotherapy_patient_data.csv",
+        domain: trText("Chemotherapy symptom monitoring", "Kemoterapi semptom takibi"),
+        status: trText("Indexed / ready", "Indexlendi / hazır"),
+        signal: trText("Fatigue, nausea, pain, treatment-stage signals", "Yorgunluk, bulantı, ağrı ve tedavi aşaması sinyalleri")
+      },
+      {
+        id: "thyrotrack_mv_processed_dataset",
+        name: "ThyroTrack MV Processed Dataset",
+        file: "/data/thyrotrack_mv_processed_dataset.csv",
+        splunkSource: "ThyroTrack-MV Processed Dataset.csv",
+        domain: trText("Thyroid monitoring intelligence", "Tiroid takip zekâsı"),
+        status: trText("Indexed / ready", "Indexlendi / hazır"),
+        signal: trText("Thyroid monitoring, risk-category and longitudinal pattern signals", "Tiroid takibi, risk kategorisi ve zamansal örüntü sinyalleri")
+      },
+      {
+        id: "oncoconnect_ai_copilot_events",
+        name: "OncoConnect AI Copilot Events",
+        file: null,
+        splunkSource: "oncoconnect_ai_copilot",
+        domain: trText("AI workflow telemetry", "AI iş akışı telemetrisi"),
+        status: trText("Live event preview", "Canlı olay önizlemesi"),
+        signal: trText("Risk score, red flags, scenario, report and action events", "Risk skoru, kırmızı bayraklar, senaryo, rapor ve aksiyon olayları")
+      }
+    ];
+
+    const aiScenarioModifier =
+      caseScenario === "chemo_fever" ? 18 :
+      caseScenario === "side_effects" ? 14 :
+      caseScenario === "appointment_prep" ? 10 :
+      caseScenario === "caregiver_support" ? 8 :
+      caseScenario === "child_explanation" ? 7 :
+      6;
+
+    const aiPowerBreakdown = [
+      {
+        label: trText("Symptom signal", "Semptom sinyali"),
+        value: symptomScore,
+        max: 70,
+        detail: trText("Derived from fatigue, pain, nausea and mood sliders.", "Yorgunluk, ağrı, bulantı ve ruh hali kaydırıcılarından türetilir.")
+      },
+      {
+        label: trText("Dataset signal", "Veri seti sinyali"),
+        value: dataSignal,
+        max: 30,
+        detail: trText("Public data and indexed dataset context used as non-diagnostic support context.", "Kamu verisi ve indexlenmiş veri seti bağlamı tanı dışı destek bağlamı olarak kullanılır.")
+      },
+      {
+        label: trText("Red flag signal", "Kırmızı bayrak sinyali"),
+        value: Math.min(100, redFlags.length * 25),
+        max: 100,
+        detail: trText("Safety flags increase urgency and trigger safer recommendations.", "Güvenlik bayrakları aciliyeti artırır ve daha güvenli önerileri tetikler.")
+      },
+      {
+        label: trText("Scenario modifier", "Senaryo katsayısı"),
+        value: aiScenarioModifier,
+        max: 20,
+        detail: selectedScenarioLabel
+      }
+    ];
+
+    const aiPowerQueries = [
+      {
+        title: trText("Chemotherapy symptom analytics", "Kemoterapi semptom analitiği"),
+        source: "chemotherapy_patient_data.csv",
+        query: 'index=oncoconnect source="chemotherapy_patient_data.csv" | stats count avg(fatigue) avg(nausea) avg(pain) by treatment_stage'
+      },
+      {
+        title: trText("ThyroTrack monitoring intelligence", "ThyroTrack takip zekâsı"),
+        source: "ThyroTrack-MV Processed Dataset.csv",
+        query: 'index=oncoconnect source="ThyroTrack-MV Processed Dataset.csv" | stats count avg(tsh) avg(t3) avg(t4) by risk_category'
+      },
+      {
+        title: trText("AI Copilot workflow telemetry", "AI Copilot iş akışı telemetrisi"),
+        source: "oncoconnect_ai_copilot",
+        query: 'index=oncoconnect source="oncoconnect_ai_copilot" | stats count avg(support_score) by risk_level scenario'
+      }
+    ];
+
+    const aiPowerEvidence = [
+      trText("Current symptom sliders and red flag checklist", "Mevcut semptom kaydırıcıları ve kırmızı bayrak kontrol listesi"),
+      trText("Selected role, goal, cancer type, treatment stage and scenario", "Seçilen rol, hedef, kanser türü, tedavi aşaması ve senaryo"),
+      trText("Chemotherapy patient dataset indexed as Splunk source", "Splunk kaynağı olarak indexlenmiş kemoterapi hasta veri seti"),
+      trText("ThyroTrack processed monitoring dataset indexed as Splunk source", "Splunk kaynağı olarak indexlenmiş işlenmiş ThyroTrack takip veri seti"),
+      trText("OncoConnect AI Copilot telemetry payload", "OncoConnect AI Copilot telemetri payload’u")
+    ];
+
+    // AI POWER REAL DATA v11 START
+    const [aiPowerRealData, setAiPowerRealData] = useState(null);
+    const [aiPowerRealDataStatus, setAiPowerRealDataStatus] = useState("loading");
+
+    useEffect(() => {
+      let mounted = true;
+
+      fetch("/data/ai_power_dataset_summary.json")
+        .then((res) => {
+          if (!res.ok) throw new Error(`AI Power summary HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          if (!mounted) return;
+          setAiPowerRealData(data);
+          setAiPowerRealDataStatus("loaded");
+        })
+        .catch(() => {
+          if (!mounted) return;
+          setAiPowerRealDataStatus("error");
+        });
+
+      return () => {
+        mounted = false;
+      };
+    }, []);
+
+    const aiPowerRealDatasets = aiPowerRealData?.datasets || [];
+
+    const formatAiPowerNumber = (value) => {
+      const num = Number(value || 0);
+      return new Intl.NumberFormat("en-US").format(Math.round(num));
+    };
+
+    const formatAiPowerDecimal = (value) => {
+      const num = Number(value || 0);
+      return Number.isFinite(num) ? num.toFixed(2) : "0.00";
+    };
+
+    const aiPowerTrendPoints = (trend = []) => {
+      if (!trend.length) return "";
+      return trend.map((item, index) => {
+        const x = trend.length === 1 ? 50 : (index / (trend.length - 1)) * 100;
+        const y = 100 - Math.max(0, Math.min(100, Number(item.relative || 0)));
+        return `${x},${y}`;
+      }).join(" ");
+    };
+
+    // AI DATA PROVENANCE PDF v12 START
+    const aiDataLineageRows = [
+      {
+        layer: trText("City / public cancer context", "Şehir / kamu kanser bağlamı"),
+        source: "turkiye_avrupa_kanser_istatistikleri_detayli.csv",
+        usedFor: trText("city dropdown, incidence, mortality, 5-year survival and map ranking", "şehir seçimi, insidans, mortalite, 5 yıllık sağkalım ve harita sıralaması"),
+        columns: "Ulke_Sehir, Kanser_Turu, Yas_Grubu, Yillik_Vaka_Hizi_100Bin, Yillik_Olum_Hizi_100Bin, Bes_Yillik_Sagkalim_Yuzdesi"
+      },
+      {
+        layer: trText("Chemotherapy analytics", "Kemoterapi analitiği"),
+        source: "chemotherapy_patient_data.csv",
+        usedFor: trText("symptom burden, tumor-stage distribution and treatment context", "semptom yükü, tümör evresi dağılımı ve tedavi bağlamı"),
+        columns: "Nausea_Severity, Tumor_Stage, Tumor_Response, Overall_Survival_Months, Cycles_Completed"
+      },
+      {
+        layer: trText("Thyroid monitoring analytics", "Tiroid takip analitiği"),
+        source: "thyrotrack_mv_processed_dataset.csv",
+        usedFor: trText("thyroid signal bars, monitoring-risk distribution and correlation preview", "tiroid sinyal barları, takip-risk dağılımı ve korelasyon önizlemesi"),
+        columns: "Nodule_Size_mm, TSH_Risk_Level, Reverse_T3_Index, Recurrence_Risk, Symptom_Onset_Duration"
+      },
+      {
+        layer: trText("AI workflow telemetry", "AI iş akışı telemetrisi"),
+        source: "oncoconnect_ai_copilot",
+        usedFor: trText("risk score, red flags, scenario, report and audit trail", "risk skoru, kırmızı bayraklar, senaryo, rapor ve denetim izi"),
+        columns: "support_score, risk_level, red_flags, scenario, event_type, timestamp"
+      }
+    ];
+
+    const publicDataHasMatch = typeof selectedPublicData !== "undefined" && Boolean(selectedPublicData);
+    const publicDataNoMatchMessage = trText(
+      "No matching public row was found for the selected city, cancer type and age filters. The Copilot keeps the case workflow active, but public incidence/mortality/survival context is shown as unavailable.",
+      "Seçilen şehir, kanser türü ve yaş filtreleri için eşleşen kamu veri satırı bulunamadı. Copilot vaka akışını çalıştırmaya devam eder; ancak kamu insidans/mortalite/sağkalım bağlamı kullanılamıyor olarak gösterilir."
+    );
+
+    const aiPowerColumnMeaning = {
+      Nausea_Severity: trText("chemotherapy symptom burden bar", "kemoterapi semptom yükü barı"),
+      Tumor_Stage: trText("chemotherapy risk/prognosis distribution", "kemoterapi risk/prognoz dağılımı"),
+      Tumor_Response: trText("treatment response context", "tedavi yanıtı bağlamı"),
+      Overall_Survival_Months: trText("survival-context signal, not a personal prediction", "sağkalım bağlam sinyali, kişisel tahmin değildir"),
+      Nodule_Size_mm: trText("thyroid nodule morphology signal", "tiroid nodül morfoloji sinyali"),
+      TSH_Risk_Level: trText("thyroid monitoring risk distribution", "tiroid takip risk dağılımı"),
+      Reverse_T3_Index: trText("hormone-related monitoring signal", "hormon ilişkili takip sinyali"),
+      Recurrence_Risk: trText("monitoring/prognosis proxy, not a diagnosis", "takip/prognoz vekil sinyali, tanı değildir")
+    };
+
+    const getAiPowerColumnMeaning = (label) => aiPowerColumnMeaning[label] || trText("dataset-derived feature", "veri setinden türetilmiş özellik");
+
+    const buildRealDataEvidenceHtml = () => {
+      const datasets = aiPowerRealData?.datasets || [];
+
+      if (!datasets.length) {
+        return `
+          <section class="report-section report-real-data-evidence">
+            <h2>REAL DATA EVIDENCE</h2>
+            <p class="report-muted">AI Power dataset summary was not loaded in the browser session.</p>
+          </section>
+        `;
+      }
+
+      const datasetCards = datasets.map((dataset) => {
+        const metrics = (dataset.key_metrics || [])
+          .slice(0, 5)
+          .map((metric) => `
+            <li>
+              <b>${escapeReportHtml(metric.label)}</b>
+              <span>avg ${escapeReportHtml(formatAiPowerDecimal(metric.value))} · ${escapeReportHtml(getAiPowerColumnMeaning(metric.label))}</span>
+            </li>
+          `)
+          .join("");
+
+        const risks = (dataset.risk_distribution || [])
+          .slice(0, 4)
+          .map((risk) => `
+            <li>
+              <b>${escapeReportHtml(risk.label)}</b>
+              <span>${escapeReportHtml(risk.percent)}% · ${escapeReportHtml(String(risk.count || ""))} rows</span>
+            </li>
+          `)
+          .join("");
+
+        const correlations = (dataset.correlations || [])
+          .slice(0, 4)
+          .map((corr) => `
+            <li>
+              <b>${escapeReportHtml(corr.x)} ↔ ${escapeReportHtml(corr.y)}</b>
+              <span>r=${escapeReportHtml(corr.r)} · ${escapeReportHtml(corr.strength)}</span>
+            </li>
+          `)
+          .join("");
+
+        return `
+          <article class="report-real-data-card">
+            <h3>${escapeReportHtml(dataset.name)}</h3>
+            <div class="report-real-kpis">
+              <div><small>Rows</small><b>${escapeReportHtml(formatAiPowerNumber(dataset.row_count))}</b></div>
+              <div><small>Columns</small><b>${escapeReportHtml(dataset.column_count)}</b></div>
+              <div><small>Numeric columns</small><b>${escapeReportHtml(dataset.numeric_columns_detected)}</b></div>
+              <div><small>Checksum</small><b>${escapeReportHtml(dataset.sha256_prefix)}</b></div>
+            </div>
+            <p><b>Source:</b> ${escapeReportHtml(dataset.source)}</p>
+            <p><b>Risk source:</b> ${escapeReportHtml(dataset.risk_source)}</p>
+            <h4>Key dataset-derived features</h4>
+            <ul>${metrics || "<li><span>No key metric preview available.</span></li>"}</ul>
+            <h4>Risk / prognosis distribution</h4>
+            <ul>${risks || "<li><span>No risk distribution preview available.</span></li>"}</ul>
+            <h4>Top correlations</h4>
+            <ul>${correlations || "<li><span>No strong correlation detected in preview sample.</span></li>"}</ul>
+          </article>
+        `;
+      }).join("");
+
+      return `
+        <section class="report-section report-real-data-evidence">
+          <h2>REAL DATA EVIDENCE</h2>
+          <p class="report-muted">
+            These analytics are generated from committed CSV dataset summaries. They support explainability and auditability, but they are not diagnostic predictions or clinical triage decisions.
+          </p>
+          <div class="report-lineage-table">
+            ${aiDataLineageRows.map((row) => `
+              <div>
+                <b>${escapeReportHtml(row.layer)}</b>
+                <span>${escapeReportHtml(row.source)}</span>
+                <small>${escapeReportHtml(row.usedFor)}</small>
+                <code>${escapeReportHtml(row.columns)}</code>
+              </div>
+            `).join("")}
+          </div>
+          ${!publicDataHasMatch ? `<div class="report-warning">${escapeReportHtml(publicDataNoMatchMessage)}</div>` : ""}
+          <div class="report-real-data-grid">
+            ${datasetCards}
+          </div>
+        </section>
+      `;
+    };
+    // ACCESS LIFESTYLE PERFORMANCE v14 START
+    const [accessLifestyleContextV14, setAccessLifestyleContextV14] = useState(null);
+    const [accessLifestyleErrorV14, setAccessLifestyleErrorV14] = useState("");
+
+    useEffect(() => {
+      let cancelled = false;
+
+      Promise.all([
+        fetch("/data/ai_system_context_v14.json").then((response) => {
+          if (!response.ok) throw new Error("ai_system_context_v14.json not loaded");
+          return response.json();
+        }),
+        fetch("/data/nhs_cancer_waiting_times_summary_v14.json").then((response) => {
+          if (!response.ok) throw new Error("nhs_cancer_waiting_times_summary_v14.json not loaded");
+          return response.json();
+        }),
+        fetch("/data/cancer_treatment_performance_summary_v14.json").then((response) => {
+          if (!response.ok) throw new Error("cancer_treatment_performance_summary_v14.json not loaded");
+          return response.json();
+        }),
+        fetch("/data/colorectal_lifestyle_summary_v14.json").then((response) => {
+          if (!response.ok) throw new Error("colorectal_lifestyle_summary_v14.json not loaded");
+          return response.json();
+        })
+      ])
+        .then(([system, nhs, treatment, crc]) => {
+          if (!cancelled) {
+            setAccessLifestyleContextV14({ system, nhs, treatment, crc });
+            setAccessLifestyleErrorV14("");
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setAccessLifestyleErrorV14(error.message || "v14 context could not be loaded");
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    const v14Context = accessLifestyleContextV14;
+    const v14Nhs = v14Context?.nhs;
+    const v14Treatment = v14Context?.treatment;
+    const v14Crc = v14Context?.crc;
+    const v14System = v14Context?.system;
+
+    const v14NhsTables = v14Nhs?.tables ? Object.entries(v14Nhs.tables).map(([id, table]) => ({ id, ...table })) : [];
+    const v14NhsHighlights = v14NhsTables.slice(0, 5).map((table) => ({
+      label: table.description,
+      total: table.total_patients_or_pathways,
+      performance: table.weighted_performance_percent,
+      after: table.after_standard,
+      insight: table.weighted_performance_percent < 80
+        ? trText("High access-pressure context", "Yüksek erişim baskısı bağlamı")
+        : trText("Treatment pathway performance context", "Tedavi yolu performans bağlamı")
+    }));
+
+    const v14TreatmentKpis = v14Treatment?.kpis || {};
+    const v14CrcRiskBreakdowns = v14Crc?.risk_group_breakdowns || {};
+    const v14CrcLifestyleRows = v14CrcRiskBreakdowns.Lifestyle || [];
+    const v14TreatmentStages = v14Treatment?.stage_distribution || [];
+
+    const v14IntelligenceEdges = [
+      {
+        layer: trText("Access pressure", "Erişim baskısı"),
+        from: "NHS waiting-time pathways",
+        to: trText("care escalation question", "bakım yükseltme sorusu"),
+        why: trText("Waiting-time performance adds system-level pressure context to patient/caregiver actions.", "Bekleme süresi performansı hasta/bakıcı aksiyonlarına sistem düzeyi baskı bağlamı ekler."),
+        action: trText("Ask when the next appointment, diagnostic result or treatment decision should happen and what to do if it is delayed.", "Sonraki randevu, tanı sonucu veya tedavi kararının ne zaman olması gerektiğini ve gecikirse ne yapılacağını sor.")
+      },
+      {
+        layer: trText("Treatment performance", "Tedavi performansı"),
+        from: "Diagnosis / stage / regimen KPIs",
+        to: trText("cohort-level treatment context", "kohort düzeyi tedavi bağlamı"),
+        why: trText("Treatment response, cycles and follow-up visits explain journey intensity without recommending a treatment.", "Tedavi yanıtı, döngüler ve takip ziyaretleri tedavi önermeden yolculuk yoğunluğunu açıklar."),
+        action: trText("Prepare questions about expected response timing, follow-up frequency and side-effect monitoring.", "Beklenen yanıt zamanı, takip sıklığı ve yan etki izleme hakkında sorular hazırla.")
+      },
+      {
+        layer: trText("Lifestyle / prevention", "Yaşam tarzı / önleme"),
+        from: "CRC diet, BMI, family history and comorbidities",
+        to: trText("screening and prevention discussion", "tarama ve önleme görüşmesi"),
+        why: trText("Lifestyle and family-history fields convert raw risk factors into non-diagnostic awareness prompts.", "Yaşam tarzı ve aile öyküsü alanları ham risk faktörlerini tanısal olmayan farkındalık uyarılarına dönüştürür."),
+        action: trText("Discuss screening history, family history, activity, BMI and diet pattern with a clinician.", "Tarama geçmişi, aile öyküsü, aktivite, BMI ve beslenme örüntüsünü klinisyenle konuş.")
+      }
+    ];
+
+    const v14ActionPath = {
+      who: String(role || "").toLowerCase().includes("caregiver")
+        ? trText("Caregiver should coordinate questions, appointment timing and daily symptom/lifestyle notes.", "Bakıcı soruları, randevu zamanını ve günlük semptom/yaşam tarzı notlarını koordine etmeli.")
+        : trText("Patient should use this as a structured preparation note for the care team.", "Hasta bunu bakım ekibi için yapılandırılmış hazırlık notu olarak kullanmalı."),
+      where: v14Nhs
+        ? trText("Access pressure is shown from NHS provider-based pathway data and should be treated as system-level context.", "Erişim baskısı NHS provider-based pathway verisinden gösterilir ve sistem düzeyi bağlam olarak ele alınmalıdır.")
+        : trText("Access-pressure context is not loaded.", "Erişim baskısı bağlamı yüklenmedi."),
+      why: trText("The graph now connects patient input, public burden, waiting-time access, treatment performance and lifestyle-prevention signals.", "Graf artık hasta girdisini, kamu yükünü, bekleme süresi erişimini, tedavi performansını ve yaşam tarzı/önleme sinyallerini bağlıyor."),
+      what: trText("Generate a concise care conversation plan: delay questions, treatment journey questions, symptom tracking and prevention/screening prompts.", "Kısa bir bakım görüşmesi planı üret: gecikme soruları, tedavi yolculuğu soruları, semptom takibi ve önleme/tarama uyarıları."),
+      safety: trText("Do not use these datasets as diagnosis, personal prognosis, treatment selection or emergency triage.", "Bu veri setlerini tanı, kişisel prognoz, tedavi seçimi veya acil triyaj olarak kullanma.")
+    };
+
+    const buildAccessLifestylePerformanceHtmlV14 = () => {
+      if (!v14Context) {
+        return `
+          <section class="report-section report-v14-system-map">
+            <h2>ACCESS, LIFESTYLE & TREATMENT PERFORMANCE INTELLIGENCE</h2>
+            <p class="report-muted">v14 context was not loaded in this browser session.</p>
+          </section>
+        `;
+      }
+
+      const accessRows = v14NhsHighlights.map((item) => `
+        <div>
+          <b>${escapeReportHtml(item.label)}</b>
+          <span>${escapeReportHtml(formatAiPowerNumber(item.total))} pathways · ${escapeReportHtml(item.performance)}% within standard</span>
+          <small>${escapeReportHtml(item.insight)} · ${escapeReportHtml(formatAiPowerNumber(item.after))} after standard</small>
+        </div>
+      `).join("");
+
+      const lifestyleRows = v14CrcLifestyleRows.slice(0, 5).map((item) => `
+        <div>
+          <b>${escapeReportHtml(item.label)}</b>
+          <span>${escapeReportHtml(item.crc_risk_rate_percent)}% CRC risk flag rate · ${escapeReportHtml(formatAiPowerNumber(item.count))} rows</span>
+        </div>
+      `).join("");
+
+      const edgeRows = v14IntelligenceEdges.map((edge) => `
+        <div>
+          <b>${escapeReportHtml(edge.layer)}: ${escapeReportHtml(edge.from)} → ${escapeReportHtml(edge.to)}</b>
+          <span>${escapeReportHtml(edge.why)}</span>
+          <small>${escapeReportHtml(edge.action)}</small>
+        </div>
+      `).join("");
+
+      return `
+        <section class="report-section report-v14-system-map">
+          <h2>ACCESS, LIFESTYLE & TREATMENT PERFORMANCE INTELLIGENCE</h2>
+          <p class="report-muted">v14 adds NHS waiting-time access pressure, cancer treatment performance KPIs and colorectal lifestyle/prevention context to the relational AI graph.</p>
+          <h3>New relationship layers</h3>
+          <div class="report-v14-edges">${edgeRows}</div>
+          <h3>NHS access pressure</h3>
+          <div class="report-v14-grid">${accessRows}</div>
+          <h3>Treatment performance context</h3>
+          <div class="report-v14-kpis">
+            <div><small>Average response score</small><b>${escapeReportHtml(v14TreatmentKpis.avg_response_score)}</b></div>
+            <div><small>Average cycles</small><b>${escapeReportHtml(v14TreatmentKpis.avg_cycles)}</b></div>
+            <div><small>Avg. response days</small><b>${escapeReportHtml(v14TreatmentKpis.avg_time_to_response_days)}</b></div>
+            <div><small>Avg. follow-up visits</small><b>${escapeReportHtml(v14TreatmentKpis.avg_follow_up_visits)}</b></div>
+          </div>
+          <h3>Colorectal lifestyle / prevention context</h3>
+          <div class="report-v14-grid">${lifestyleRows}</div>
+          <h3>Smart action path</h3>
+          <div class="report-action-output">
+            <div><b>Who</b><span>${escapeReportHtml(v14ActionPath.who)}</span></div>
+            <div><b>Where</b><span>${escapeReportHtml(v14ActionPath.where)}</span></div>
+            <div><b>Why</b><span>${escapeReportHtml(v14ActionPath.why)}</span></div>
+            <div><b>What</b><span>${escapeReportHtml(v14ActionPath.what)}</span></div>
+            <div><b>Safety</b><span>${escapeReportHtml(v14ActionPath.safety)}</span></div>
+          </div>
+        </section>
+      `;
+    };
+    // ACCESS LIFESTYLE PERFORMANCE v14 END
+
+    // AI RELATIONAL INTELLIGENCE GRAPH v13 START
+    const [relationAnswers, setRelationAnswers] = useState({});
+
+    const setRelationAnswer = (questionId, option) => {
+      setRelationAnswers((prev) => ({
+        ...prev,
+        [questionId]: option
+      }));
+    };
+
+    const relationAnswerValues = Object.values(relationAnswers || {});
+    const relationUrgencyBoost = relationAnswerValues.reduce((total, item) => total + Number(item?.weight || 0), 0);
+    const relationalPriorityScore = Math.min(100, Math.max(0, supportScore + relationUrgencyBoost));
+    const relationalPriorityLabel =
+      redFlags.length > 0 || relationalPriorityScore >= 75
+        ? trText("Urgent safety conversation", "Acil güvenlik görüşmesi")
+        : relationalPriorityScore >= 55
+          ? trText("High monitoring priority", "Yüksek takip önceliği")
+          : relationalPriorityScore >= 35
+            ? trText("Structured follow-up priority", "Yapılandırılmış takip önceliği")
+            : trText("Routine tracking priority", "Rutin takip önceliği");
+
+    const aiRelationNodes = [
+      {
+        id: "patient",
+        label: trText("Patient / caregiver input", "Hasta / bakıcı girdisi"),
+        type: trText("Current case", "Mevcut vaka"),
+        detail: `${city || trText("All locations", "Tüm konumlar")} · ${ageGroup}`,
+        strength: Math.max(12, Math.min(100, symptomScore))
+      },
+      {
+        id: "public",
+        label: trText("Public cancer context", "Kamu kanser bağlamı"),
+        type: "CSV",
+        detail: trText("city, age, incidence, mortality, survival", "şehir, yaş, insidans, mortalite, sağkalım"),
+        strength: Math.max(8, Math.min(100, dataSignal * 3))
+      },
+      {
+        id: "chemo",
+        label: trText("Chemotherapy cohort signal", "Kemoterapi kohort sinyali"),
+        type: "CSV",
+        detail: trText("stage, nausea, neutropenia, response, survival context", "evre, bulantı, nötropeni, yanıt, sağkalım bağlamı"),
+        strength: cancerType ? 72 : 48
+      },
+      {
+        id: "thyro",
+        label: trText("ThyroTrack monitoring signal", "ThyroTrack takip sinyali"),
+        type: "CSV",
+        detail: trText("nodule size, TSH risk, recurrence risk, symptom timeline", "nodül boyutu, TSH riski, nüks riski, semptom zaman çizgisi"),
+        strength: String(cancerType || "").toLowerCase().includes("thyroid") ? 88 : 54
+      },
+      {
+        id: "safety",
+        label: trText("Safety override", "Güvenlik önceliği"),
+        type: trText("Red flags", "Kırmızı bayraklar"),
+        detail: redFlags.length ? redFlags.join(", ") : trText("No red flag selected", "Kırmızı bayrak seçilmedi"),
+        strength: redFlags.length ? 100 : 24
+      },
+      {
+        id: "output",
+        label: trText("AI support output", "AI destek çıktısı"),
+        type: trText("Action", "Aksiyon"),
+        detail: relationalPriorityLabel,
+        strength: relationalPriorityScore
+      }
+    ];
+
+    const aiRelationEdges = [
+      {
+        from: "Patient input",
+        to: "Symptom burden",
+        source: trText("Current Copilot answers", "Mevcut Copilot yanıtları"),
+        relation: trText("fatigue / pain / nausea / mood increase support priority", "yorgunluk / ağrı / bulantı / ruh hali destek önceliğini artırır"),
+        why: trText("Symptoms define the immediate communication need before the doctor visit.", "Semptomlar doktor görüşmesi öncesindeki acil iletişim ihtiyacını belirler."),
+        action: trText("Track severity, timing and change since yesterday.", "Şiddeti, zamanlamayı ve dünden bugüne değişimi takip et.")
+      },
+      {
+        from: "City + age group",
+        to: "Public cancer context",
+        source: "turkiye_avrupa_kanser_istatistikleri_detayli.csv",
+        relation: trText("adds population-level incidence / mortality / survival context", "popülasyon düzeyi insidans / mortalite / sağkalım bağlamı ekler"),
+        why: trText("This explains regional context but does not calculate personal medical risk.", "Bu bölgesel bağlamı açıklar; kişisel tıbbi risk hesaplamaz."),
+        action: trText("Use it as awareness context, not as diagnosis.", "Bunu tanı değil farkındalık bağlamı olarak kullan.")
+      },
+      {
+        from: "Cancer type + treatment stage",
+        to: "Chemotherapy cohort signal",
+        source: "chemotherapy_patient_data.csv",
+        relation: trText("links tumor stage, nausea severity, neutropenia and response context", "tümör evresi, bulantı şiddeti, nötropeni ve yanıt bağlamını ilişkilendirir"),
+        why: trText("Treatment-stage and side-effect patterns help prepare better questions for the care team.", "Tedavi aşaması ve yan etki örüntüleri bakım ekibi için daha iyi soru hazırlamaya yardımcı olur."),
+        action: trText("Ask whether nausea, fever, low immunity or weakness should change follow-up timing.", "Bulantı, ateş, düşük bağışıklık veya halsizliğin takip zamanını değiştirip değiştirmediğini sor.")
+      },
+      {
+        from: "Thyroid monitoring features",
+        to: "Follow-up priority",
+        source: "thyrotrack_mv_processed_dataset.csv",
+        relation: trText("connects nodule size, TSH risk level, recurrence risk and symptom duration", "nodül boyutu, TSH risk düzeyi, nüks riski ve semptom süresini bağlar"),
+        why: trText("Longitudinal monitoring signals support follow-up planning, especially for thyroid-related cases.", "Zamansal takip sinyalleri özellikle tiroid ilişkili vakalarda takip planlamasını destekler."),
+        action: trText("Clarify which lab, scan or symptom change should trigger earlier review.", "Hangi laboratuvar, görüntüleme veya semptom değişiminin daha erken kontrol gerektirdiğini netleştir.")
+      },
+      {
+        from: "Red flags",
+        to: "Safety override",
+        source: trText("User-selected safety checklist", "Kullanıcının seçtiği güvenlik listesi"),
+        relation: trText("overrides routine guidance when severe or worsening signs are present", "şiddetli veya kötüleşen bulgular varsa rutin yönlendirmeyi geçersiz kılar"),
+        why: trText("Safety signals should be escalated before any analytics interpretation.", "Güvenlik sinyalleri her türlü analitik yorumdan önce yükseltilmelidir."),
+        action: trText("Contact oncology team, clinic or emergency support according to local guidance.", "Yerel yönlendirmeye göre onkoloji ekibi, klinik veya acil destek ile iletişime geç.")
+      }
+    ];
+
+    const relationalQuestionFlow = [
+      {
+        id: "observer",
+        question: trText("Who is completing this support check?", "Bu destek kontrolünü kim dolduruyor?"),
+        reason: trText("The output changes depending on whether the patient or caregiver will act.", "Çıktı, aksiyonu hastanın mı bakım verenin mi alacağına göre değişir."),
+        options: [
+          { label: trText("Patient", "Hasta"), value: "patient", weight: 0 },
+          { label: trText("Caregiver / family member", "Bakıcı / aile yakını"), value: "caregiver", weight: 4 },
+          { label: trText("Clinician / navigator", "Klinisyen / hasta yönlendirici"), value: "clinician", weight: 2 }
+        ]
+      },
+      {
+        id: "change",
+        question: trText("What changed most compared with yesterday or the last visit?", "Düne veya son kontrole göre en çok ne değişti?"),
+        reason: trText("Change over time is often more important than a single value.", "Zaman içindeki değişim çoğu zaman tek bir değerden daha önemlidir."),
+        options: [
+          { label: trText("Symptoms are stable", "Semptomlar stabil"), value: "stable", weight: 0 },
+          { label: trText("Symptoms are worse", "Semptomlar kötüleşti"), value: "worse", weight: 12 },
+          { label: trText("New symptom appeared", "Yeni semptom çıktı"), value: "new_symptom", weight: 14 }
+        ]
+      },
+      {
+        id: "support",
+        question: trText("What does the patient need most right now?", "Hastanın şu anda en çok neye ihtiyacı var?"),
+        reason: trText("The system converts the answer into a concrete doctor/caregiver action.", "Sistem yanıtı somut doktor/bakıcı aksiyonuna dönüştürür."),
+        options: [
+          { label: trText("Prepare doctor questions", "Doktor soruları hazırlamak"), value: "questions", weight: 2 },
+          { label: trText("Understand side effects", "Yan etkileri anlamak"), value: "side_effects", weight: 6 },
+          { label: trText("Decide whether to seek urgent help", "Acil destek gerekip gerekmediğini anlamak"), value: "urgent_help", weight: 18 }
+        ]
+      },
+      {
+        id: "home_capacity",
+        question: trText("Can the patient drink, eat, move and communicate normally?", "Hasta normal şekilde içebiliyor, yiyebiliyor, hareket ve iletişim kurabiliyor mu?"),
+        reason: trText("Reduced home capacity strengthens the safety and caregiver action path.", "Evde bakım kapasitesinin düşmesi güvenlik ve bakıcı aksiyon yolunu güçlendirir."),
+        options: [
+          { label: trText("Yes, mostly normal", "Evet, çoğunlukla normal"), value: "normal", weight: 0 },
+          { label: trText("Partly limited", "Kısmen sınırlı"), value: "limited", weight: 8 },
+          { label: trText("No, clearly worse", "Hayır, belirgin kötü"), value: "worse_capacity", weight: 18 }
+        ]
+      }
+    ];
+
+    const observerAnswer = relationAnswers.observer?.value || role;
+    const changeAnswer = relationAnswers.change?.value || "not_selected";
+    const supportAnswer = relationAnswers.support?.value || "not_selected";
+    const homeCapacityAnswer = relationAnswers.home_capacity?.value || "not_selected";
+
+    const relationalActionOutput = {
+      who: observerAnswer === "caregiver"
+        ? trText("Caregiver / family member should help document symptoms and contact the care team if safety signs are present.", "Bakıcı / aile yakını semptomları belgelemeye yardım etmeli ve güvenlik bulguları varsa bakım ekibiyle iletişime geçmeli.")
+        : observerAnswer === "clinician"
+          ? trText("Clinician / navigator should review red flags, symptom trend and dataset context before advising next steps.", "Klinisyen / yönlendirici sonraki adımı önermeden önce kırmızı bayrakları, semptom trendini ve veri bağlamını gözden geçirmeli.")
+          : trText("Patient should track symptoms clearly and use the prepared questions during the next care-team contact.", "Hasta semptomları net takip etmeli ve hazırlanan soruları bir sonraki bakım ekibi görüşmesinde kullanmalı."),
+      where: city
+        ? trText(`Use ${city} public cancer context only as population-level awareness.`, `${city} kamu kanser bağlamını sadece popülasyon düzeyi farkındalık olarak kullan.`)
+        : trText("No city is selected; public context is shown at broader dataset level.", "Şehir seçilmedi; kamu bağlamı daha geniş veri seti düzeyinde gösterilir."),
+      why: redFlags.length
+        ? trText("Red flags are present, so safety escalation is more important than routine analytics.", "Kırmızı bayraklar mevcut; bu yüzden güvenlik yükseltmesi rutin analitikten daha önemlidir.")
+        : changeAnswer === "worse" || changeAnswer === "new_symptom"
+          ? trText("The patient/caregiver reported worsening or new symptoms, increasing follow-up priority.", "Hasta/bakıcı kötüleşme veya yeni semptom bildirdi; bu takip önceliğini artırır.")
+          : trText("Current signals support structured tracking and better doctor-visit preparation.", "Mevcut sinyaller yapılandırılmış takip ve daha iyi doktor görüşmesi hazırlığını destekler."),
+      what: supportAnswer === "urgent_help" || homeCapacityAnswer === "worse_capacity" || redFlags.length
+        ? trText("Prepare a concise safety message and contact the oncology team, clinic or emergency support according to local guidance.", "Kısa bir güvenlik mesajı hazırla ve yerel yönlendirmeye göre onkoloji ekibi, klinik veya acil destekle iletişime geç.")
+        : supportAnswer === "side_effects"
+          ? trText("Track side-effect severity, timing, treatment cycle and medication adherence before the next call or visit.", "Bir sonraki arama/görüşmeden önce yan etki şiddetini, zamanlamayı, tedavi döngüsünü ve ilaç uyumunu takip et.")
+          : trText("Use the generated doctor questions and symptom summary as a structured communication aid.", "Üretilen doktor sorularını ve semptom özetini yapılandırılmış iletişim desteği olarak kullan."),
+      when: relationalPriorityScore >= 75
+        ? trText("Now / same day if symptoms are severe, new or worsening.", "Semptomlar şiddetli, yeni veya kötüleşiyorsa şimdi / aynı gün.")
+        : relationalPriorityScore >= 55
+          ? trText("Soon; do not wait for routine follow-up if symptoms continue to worsen.", "Yakında; semptomlar kötüleşmeye devam ederse rutin kontrolü bekleme.")
+          : trText("At the next planned contact, unless new safety signs appear.", "Yeni güvenlik bulguları çıkmadıkça bir sonraki planlı görüşmede.")
+    };
+
+    const buildRelationalEvidenceHtml = () => {
+      const answerRows = relationalQuestionFlow.map((q) => {
+        const selected = relationAnswers[q.id];
+        return `
+          <div>
+            <b>${escapeReportHtml(q.question)}</b>
+            <span>${escapeReportHtml(selected?.label || "Not selected")}</span>
+            <small>${escapeReportHtml(q.reason)}</small>
+          </div>
+        `;
+      }).join("");
+
+      const edgeRows = aiRelationEdges.map((edge) => `
+        <div>
+          <b>${escapeReportHtml(edge.from)} → ${escapeReportHtml(edge.to)}</b>
+          <span>${escapeReportHtml(edge.source)}</span>
+          <small>${escapeReportHtml(edge.relation)}</small>
+          <p>${escapeReportHtml(edge.why)}</p>
+          <em>${escapeReportHtml(edge.action)}</em>
+        </div>
+      `).join("");
+
+      return `
+        <section class="report-section report-relational-evidence">
+          <h2>RELATIONAL AI EVIDENCE MAP</h2>
+          <p class="report-muted">
+            This section explains how OncoConnect AI connects current case inputs, public cancer context, chemotherapy cohort signals, thyroid monitoring signals and safety rules into a non-diagnostic support graph.
+          </p>
+
+          <div class="report-relational-score">
+            <div><small>Relational priority</small><b>${escapeReportHtml(relationalPriorityScore)}/100</b></div>
+            <div><small>Interpretation</small><b>${escapeReportHtml(relationalPriorityLabel)}</b></div>
+          </div>
+
+          <h3>Relationship reasoning</h3>
+          <div class="report-relational-edges">${edgeRows}</div>
+
+          <h3>Patient / caregiver answers</h3>
+          <div class="report-relational-answers">${answerRows}</div>
+
+          <h3>Action output</h3>
+          <div class="report-action-output">
+            <div><b>Who</b><span>${escapeReportHtml(relationalActionOutput.who)}</span></div>
+            <div><b>Where</b><span>${escapeReportHtml(relationalActionOutput.where)}</span></div>
+            <div><b>Why</b><span>${escapeReportHtml(relationalActionOutput.why)}</span></div>
+            <div><b>What</b><span>${escapeReportHtml(relationalActionOutput.what)}</span></div>
+            <div><b>When</b><span>${escapeReportHtml(relationalActionOutput.when)}</span></div>
+          </div>
+
+          <p class="report-muted">
+            These outputs are communication and support aids only. They are not diagnosis, treatment selection, emergency triage or personal survival prediction.
+          </p>
+        </section>
+      `;
+    };
+    // DATA TO MEANING UX v15 START
+    const contextModeV15 = publicDataHasMatch
+      ? trText("Exact public context match", "Tam kamu veri eşleşmesi")
+      : trText("Broader context mode", "Geniş bağlam modu");
+
+    const contextModeDetailV15 = publicDataHasMatch
+      ? trText(
+          "The selected city, age group and cancer filters matched a public statistics row.",
+          "Seçilen şehir, yaş grubu ve kanser filtreleri kamu istatistik satırıyla eşleşti."
+        )
+      : trText(
+          "No exact public statistics row was found, so the system keeps the care workflow active and uses broader dataset, treatment and lifestyle signals instead of showing a dead end.",
+          "Tam kamu istatistik satırı bulunamadı; bu yüzden sistem çıkmaz mesajı göstermek yerine bakım akışını aktif tutar ve daha geniş veri seti, tedavi ve yaşam tarzı sinyallerini kullanır."
+        );
+
+    const dataToMeaningCardsV15 = [
+      {
+        label: trText("Current patient signal", "Mevcut hasta sinyali"),
+        raw: trText("Symptom sliders, red flags and selected scenario", "Semptom sliderları, kırmızı bayraklar ve seçilen senaryo"),
+        meaning: redFlags.length
+          ? trText("Safety signals override routine interpretation.", "Güvenlik sinyalleri rutin yorumu geçersiz kılar.")
+          : symptomScore >= 40
+            ? trText("Symptoms suggest close monitoring and structured care-team communication.", "Semptomlar yakın takip ve yapılandırılmış bakım ekibi iletişimi gerektirir.")
+            : trText("Symptoms support routine tracking and better preparation.", "Semptomlar rutin takip ve daha iyi hazırlığı destekler."),
+        action: redFlags.length
+          ? trText("Prepare a same-day safety message for the care team.", "Bakım ekibi için aynı gün güvenlik mesajı hazırla.")
+          : trText("Track timing, severity and change before the next visit.", "Bir sonraki görüşmeden önce zamanlama, şiddet ve değişimi takip et."),
+        score: Math.max(8, Math.min(100, symptomScore))
+      },
+      {
+        label: trText("Public / access context", "Kamu / erişim bağlamı"),
+        raw: trText("City, age group, cancer filters and NHS waiting-time pressure", "Şehir, yaş grubu, kanser filtreleri ve NHS bekleme süresi baskısı"),
+        meaning: publicDataHasMatch
+          ? trText("Population-level context is available for the selected filters.", "Seçilen filtreler için popülasyon düzeyi bağlam mevcut.")
+          : trText("Exact public match is missing, so the system uses broader access-pressure context.", "Tam kamu eşleşmesi yok; sistem daha geniş erişim baskısı bağlamını kullanır."),
+        action: trText("Ask what happens if appointment, diagnostic result or treatment decision is delayed.", "Randevu, tanı sonucu veya tedavi kararı gecikirse ne yapılacağını sor."),
+        score: Math.max(10, Math.min(100, dataSignal * 3 + 24))
+      },
+      {
+        label: trText("Treatment evidence", "Tedavi kanıtı"),
+        raw: trText("Chemotherapy regimen, stage, response and treatment-performance KPIs", "Kemoterapi rejimi, evre, yanıt ve tedavi performans KPI’ları"),
+        meaning: trText("Treatment data becomes a doctor-question and monitoring-priority layer, not a treatment recommendation.", "Tedavi verisi tedavi önerisi değil, doktor sorusu ve takip önceliği katmanına dönüşür."),
+        action: trText("Prepare questions about expected side effects, response timing and follow-up frequency.", "Beklenen yan etkiler, yanıt zamanı ve takip sıklığı hakkında sorular hazırla."),
+        score: treatmentStage ? 72 : 48
+      },
+      {
+        label: trText("Lifestyle / prevention context", "Yaşam tarzı / önleme bağlamı"),
+        raw: trText("CRC lifestyle, BMI, diet, activity, smoking and family-history fields", "CRC yaşam tarzı, BMI, beslenme, aktivite, sigara ve aile öyküsü alanları"),
+        meaning: trText("Lifestyle fields create a prevention and screening conversation, especially for colorectal awareness.", "Yaşam tarzı alanları özellikle kolorektal farkındalık için önleme ve tarama görüşmesi oluşturur."),
+        action: trText("Discuss screening history, family history, activity, BMI and diet pattern with a clinician.", "Tarama geçmişi, aile öyküsü, aktivite, BMI ve beslenme düzenini klinisyenle konuş."),
+        score: 64
+      },
+      {
+        label: trText("Caregiver action path", "Bakıcı aksiyon yolu"),
+        raw: trText("Patient/caregiver question engine and home-capacity answers", "Hasta/bakıcı soru motoru ve evde bakım kapasitesi yanıtları"),
+        meaning: trText("Answers are converted into who should act, what to track and when to escalate.", "Yanıtlar kimin aksiyon alacağına, neyin takip edileceğine ve ne zaman yükseltileceğine çevrilir."),
+        action: relationalActionOutput?.what || trText("Use generated questions and symptom summary as a care-team communication aid.", "Üretilen soruları ve semptom özetini bakım ekibi iletişim desteği olarak kullan."),
+        score: relationalPriorityScore
+      }
+    ];
+
+    const judgeImpactCardsV15 = [
+      {
+        title: trText("Technological implementation", "Teknolojik uygulama"),
+        text: trText("Multiple CSV layers, derived summaries, relational graph logic, Splunk-ready telemetry and PDF evidence reporting work together.", "Çoklu CSV katmanları, türetilmiş özetler, ilişkisel graph mantığı, Splunk-ready telemetri ve PDF kanıt raporu birlikte çalışır.")
+      },
+      {
+        title: trText("Design", "Tasarım"),
+        text: trText("The UI now explains what each data signal means instead of only showing raw metrics.", "UI artık sadece ham metrik göstermek yerine her veri sinyalinin ne anlama geldiğini açıklar.")
+      },
+      {
+        title: trText("Potential impact", "Potansiyel etki"),
+        text: trText("Patients and caregivers get clearer questions, safer escalation prompts and better visit preparation.", "Hastalar ve bakıcılar daha net sorular, daha güvenli yükseltme uyarıları ve daha iyi görüşme hazırlığı alır.")
+      },
+      {
+        title: trText("Quality of idea", "Fikir kalitesi"),
+        text: trText("Disconnected cancer, treatment, access and lifestyle datasets become an explainable support intelligence graph.", "Dağınık kanser, tedavi, erişim ve yaşam tarzı veri setleri açıklanabilir destek zekâ grafına dönüşür.")
+      }
+    ];
+
+    const buildDataToMeaningHtmlV15 = () => {
+      const cards = dataToMeaningCardsV15.map((card) => `
+        <div>
+          <h3>${escapeReportHtml(card.label)}</h3>
+          <small>Raw data</small>
+          <p>${escapeReportHtml(card.raw)}</p>
+          <small>Meaning</small>
+          <p>${escapeReportHtml(card.meaning)}</p>
+          <small>Suggested action</small>
+          <p><b>${escapeReportHtml(card.action)}</b></p>
+        </div>
+      `).join("");
+
+      return `
+        <section class="report-section report-data-meaning-v15">
+          <h2>DATA-TO-MEANING INTERPRETATION</h2>
+          <p class="report-muted">
+            This section translates raw data layers into patient-ready, caregiver-ready and judge-readable meaning.
+          </p>
+          <div class="report-context-mode-v15">
+            <b>${escapeReportHtml(contextModeV15)}</b>
+            <span>${escapeReportHtml(contextModeDetailV15)}</span>
+          </div>
+          <div class="report-data-meaning-grid-v15">
+            ${cards}
+          </div>
+        </section>
+      `;
+    };
+    // INTERACTIVE INSIGHT COCKPIT v16 START
+    const [insightLensV16, setInsightLensV16] = useState("case");
+    const [insightQuestionV16, setInsightQuestionV16] = useState("next_action");
+    // COMMAND CENTER UX v17 START
+    const [showDeepEvidenceV17, setShowDeepEvidenceV17] = useState(false);
+
+    // COMMAND CENTER UX v17 END
+
+    const insightLensesV16 = [
+      {
+        id: "case",
+        label: trText("My case", "Benim vakam"),
+        source: trText("Symptoms + red flags + scenario", "Semptomlar + kırmızı bayraklar + senaryo"),
+        meaning: redFlags.length
+          ? trText("Safety signals are present, so escalation guidance comes first.", "Güvenlik sinyalleri var; bu yüzden önce yükseltme yönlendirmesi gelir.")
+          : trText("Current symptoms suggest structured tracking and visit preparation.", "Mevcut semptomlar yapılandırılmış takip ve görüşme hazırlığı gerektirir."),
+        action: redFlags.length
+          ? trText("Use the safety message and contact the care team according to local guidance.", "Güvenlik mesajını kullan ve yerel yönlendirmeye göre bakım ekibiyle iletişime geç.")
+          : trText("Track severity, timing and change; use the generated doctor questions.", "Şiddet, zamanlama ve değişimi takip et; üretilen doktor sorularını kullan."),
+        score: supportScore
+      },
+      {
+        id: "access",
+        label: trText("Access pressure", "Erişim baskısı"),
+        source: trText("NHS waiting-time + public context", "NHS bekleme süresi + kamu bağlamı"),
+        meaning: trText("Waiting-time and pathway pressure explain why appointment timing should be discussed.", "Bekleme süresi ve bakım yolu baskısı randevu zamanının neden konuşulması gerektiğini açıklar."),
+        action: trText("Ask what happens if appointment, diagnostic result or treatment decision is delayed.", "Randevu, tanı sonucu veya tedavi kararı gecikirse ne yapılacağını sor."),
+        score: 73
+      },
+      {
+        id: "treatment",
+        label: trText("Treatment journey", "Tedavi yolculuğu"),
+        source: trText("Chemotherapy + treatment KPI datasets", "Kemoterapi + tedavi KPI veri setleri"),
+        meaning: trText("Treatment data is used to prepare questions about side effects, response timing and follow-up intensity.", "Tedavi verisi yan etkiler, yanıt zamanı ve takip yoğunluğu hakkında soru hazırlamak için kullanılır."),
+        action: trText("Ask which symptoms are expected, which should be reported, and when follow-up should change.", "Hangi semptomların beklenen, hangilerinin bildirilecek olduğunu ve takibin ne zaman değişeceğini sor."),
+        score: 70
+      },
+      {
+        id: "lifestyle",
+        label: trText("Lifestyle / prevention", "Yaşam tarzı / önleme"),
+        source: trText("CRC diet, BMI, family history and screening fields", "CRC beslenme, BMI, aile öyküsü ve tarama alanları"),
+        meaning: trText("Lifestyle data becomes a prevention and screening conversation, not a diagnosis.", "Yaşam tarzı verisi tanı değil, önleme ve tarama konuşmasına dönüşür."),
+        action: trText("Discuss screening history, family history, activity, BMI and diet pattern with a clinician.", "Tarama geçmişi, aile öyküsü, aktivite, BMI ve beslenme düzenini klinisyenle konuş."),
+        score: 64
+      },
+      {
+        id: "caregiver",
+        label: trText("Caregiver plan", "Bakıcı planı"),
+        source: trText("Question engine + home capacity answers", "Soru motoru + evde bakım kapasitesi yanıtları"),
+        meaning: trText("Caregiver answers decide who should act, what to track and when to escalate.", "Bakıcı yanıtları kimin aksiyon alacağını, neyin takip edileceğini ve ne zaman yükseltileceğini belirler."),
+        action: relationalActionOutput?.what || trText("Use the symptom summary as a care-team communication aid.", "Semptom özetini bakım ekibiyle iletişim desteği olarak kullan."),
+        score: relationalPriorityScore
+      }
+    ];
+
+    const insightQuestionsV16 = [
+      {
+        id: "next_action",
+        label: trText("What should I do next?", "Sonra ne yapmalıyım?")
+      },
+      {
+        id: "why_priority",
+        label: trText("Why is this priority?", "Bu neden öncelikli?")
+      },
+      {
+        id: "which_data",
+        label: trText("Which data matters?", "Hangi veri önemli?")
+      },
+      {
+        id: "doctor_questions",
+        label: trText("What should I ask?", "Ne sormalıyım?")
+      }
+    ];
+
+    const selectedInsightLensV16 =
+      insightLensesV16.find((item) => item.id === insightLensV16) || insightLensesV16[0];
+
+    const selectedInsightAnswerV16 = (() => {
+      if (insightQuestionV16 === "why_priority") {
+        return selectedInsightLensV16.meaning;
+      }
+
+      if (insightQuestionV16 === "which_data") {
+        return trText(
+          `This view uses: ${selectedInsightLensV16.source}. The system translates it into meaning before showing an action.`,
+          `Bu görünüm şunu kullanır: ${selectedInsightLensV16.source}. Sistem bunu aksiyon göstermeden önce anlama çevirir.`
+        );
+      }
+
+      if (insightQuestionV16 === "doctor_questions") {
+        if (insightLensV16 === "access") {
+          return trText(
+            "Ask: If my appointment, scan, diagnostic result or treatment decision is delayed, who should I contact and when?",
+            "Sor: Randevum, görüntülemem, tanı sonucum veya tedavi kararım gecikirse kiminle ve ne zaman iletişime geçmeliyim?"
+          );
+        }
+
+        if (insightLensV16 === "treatment") {
+          return trText(
+            "Ask: Which side effects are expected for this treatment stage, and which symptoms should be reported immediately?",
+            "Sor: Bu tedavi aşamasında hangi yan etkiler beklenen kabul edilir, hangi semptomlar hemen bildirilmelidir?"
+          );
+        }
+
+        if (insightLensV16 === "lifestyle") {
+          return trText(
+            "Ask: Based on my family history, BMI, activity and diet pattern, what screening or prevention steps should I discuss?",
+            "Sor: Aile öyküm, BMI, aktivite ve beslenme düzenime göre hangi tarama veya önleme adımlarını konuşmalıyım?"
+          );
+        }
+
+        return trText(
+          "Ask: Which symptoms should I track daily, which should I report, and what change should trigger urgent contact?",
+          "Sor: Hangi semptomları günlük takip etmeliyim, hangilerini bildirmeliyim ve hangi değişim acil iletişim gerektirir?"
+        );
+      }
+
+      return selectedInsightLensV16.action;
+    })();
+
+    const insightSourcePathV16 = [
+      {
+        label: trText("Raw data", "Ham veri"),
+        value: selectedInsightLensV16.source
+      },
+      {
+        label: trText("AI meaning", "AI anlamı"),
+        value: selectedInsightLensV16.meaning
+      },
+      {
+        label: trText("User action", "Kullanıcı aksiyonu"),
+        value: selectedInsightLensV16.action
+      }
+    ];
+
+    const insightDataExplorerV16 = [
+      {
+        label: trText("Symptoms", "Semptomlar"),
+        value: `${symptomScore}/70`,
+        meaning: trText("Shows current burden from fatigue, pain, nausea and mood.", "Yorgunluk, ağrı, bulantı ve ruh halinden mevcut yükü gösterir.")
+      },
+      {
+        label: trText("Public context", "Kamu bağlamı"),
+        value: publicDataHasMatch ? trText("Matched", "Eşleşti") : trText("Broader mode", "Geniş mod"),
+        meaning: contextModeDetailV15
+      },
+      {
+        label: trText("Access pressure", "Erişim baskısı"),
+        value: "73.84%",
+        meaning: trText("NHS pathway pressure becomes a care-access conversation.", "NHS bakım yolu baskısı bakım erişimi konuşmasına dönüşür.")
+      },
+      {
+        label: trText("Treatment context", "Tedavi bağlamı"),
+        value: "69.69",
+        meaning: trText("Treatment KPI data becomes follow-up and side-effect questions.", "Tedavi KPI verisi takip ve yan etki sorularına dönüşür.")
+      },
+      {
+        label: trText("Lifestyle context", "Yaşam tarzı bağlamı"),
+        value: "1,000",
+        meaning: trText("CRC lifestyle records support prevention and screening discussion prompts.", "CRC yaşam tarzı kayıtları önleme ve tarama görüşmesi ipuçlarını destekler.")
+      }
+    ];
+    // INTERACTIVE INSIGHT COCKPIT v16 END
+
+    // DATA TO MEANING UX v15 END
+
+    // AI RELATIONAL INTELLIGENCE GRAPH v13 END
+
+    // AI DATA PROVENANCE PDF v12 END
+    // AI POWER REAL DATA v11 END
+    // COPILOT AI POWER DASHBOARD v10 END
+
     const doctorQuestions = [
       "Which of my symptoms are expected, and which ones should I report immediately?",
       "At what point should I call the clinic or seek urgent support?",
@@ -1956,7 +3137,9 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
     };
 
     const runWorkflowSimulation = () => {
-      setSimulationRunning(true);
+      runExecutionPipelineV78();
+                    startExecutionPipelineV80();
+                    setSimulationRunning(true);
       setSimulationStep(0);
       runCopilotAction(
         "simulation",
@@ -1969,13 +3152,65 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
           setSimulationStep(index + 1);
 
           if (index === copilotSimulationSteps.length - 1) {
-            setSimulationRunning(false);
+            resetExecutionPipelineV85();
+                    setSimulationRunning(false);
             setReportGenerated(true);
             setLastCopilotAction(trText("Simulation completed and report is ready.", "Simülasyon tamamlandı ve rapor hazır."));
           }
         }, 650 * (index + 1));
       });
     };
+
+    // RUN AI ANALYSIS FIX v27 START
+    const runCareCockpitAnalysisV27 = () => {
+      setActiveInsight("simulation");
+      setSimulationRunning(true);
+      setSimulationStep(0);
+      setReportGenerated(false);
+      setLastCopilotAction(
+        trText(
+          "AI is analyzing symptoms, context, public data and care pathway.",
+          "AI semptomları, bağlamı, kamu verisini ve bakım yolunu analiz ediyor."
+        )
+      );
+
+      copilotSimulationSteps.forEach((_, index) => {
+        window.setTimeout(() => {
+          setSimulationStep(index + 1);
+
+          if (index === 1) {
+            setLastCopilotAction(
+              trText(
+                "Symptom burden and safety signals calculated.",
+                "Semptom yükü ve güvenlik sinyalleri hesaplandı."
+              )
+            );
+          }
+
+          if (index === 3) {
+            setLastCopilotAction(
+              trText(
+                "Public data and treatment context connected.",
+                "Kamu verisi ve tedavi bağlamı bağlandı."
+              )
+            );
+          }
+
+          if (index === copilotSimulationSteps.length - 1) {
+            setSimulationRunning(false);
+            setReportGenerated(true);
+            setActiveInsight("report");
+            setLastCopilotAction(
+              trText(
+                "AI analysis completed. Doctor-ready action plan and report are ready.",
+                "AI analizi tamamlandı. Doktora hazır aksiyon planı ve rapor hazır."
+              )
+            );
+          }
+        }, 520 * (index + 1));
+      });
+    };
+    // RUN AI ANALYSIS FIX v27 END
 
     const escapeReportHtml = (value) =>
       String(value ?? "")
@@ -2602,7 +3837,13 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
         <p style="color:#334155; font-weight:750; line-height:1.6;">${escapeReportHtml(aiRecommendation)}</p>
       </section>
 
-      <section class="section">
+                ${buildAccessLifestylePerformanceHtmlV14()}
+
+          ${buildDataToMeaningHtmlV15()}
+
+          ${buildRelationalEvidenceHtml()}
+
+          ${buildRealDataEvidenceHtml()}\n\n<section class="section">
         <span class="section-label">Splunk-ready telemetry</span>
         <h2>Event payload preview</h2>
         <pre>${escapeReportHtml(JSON.stringify(splunkEventPayload, null, 2))}</pre>
@@ -2777,6 +4018,572 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
         </section>
 
         <section className="patient-copilot-layout">
+          <div className="care-cockpit-v42">
+            <div className="cc-topbar-v42">
+              <div className="cc-brand-v42">
+                <span>🧠</span>
+                <div>
+                  <b>OncoConnect <em>AI Copilot</em></b>
+                  <small>{trText("Care intelligence cockpit", "Bakım zekâ kokpiti")}</small>
+                </div>
+              </div>
+
+              <div className="cc-status-pill-v42">
+                <i></i>
+                <span>{trText("AI analyzing your inputs", "AI girdilerini analiz ediyor")}</span>
+              </div>
+
+              <div className="cc-actions-v42">
+                <button type="button" className={shareFeedbackV86 ? "is-feedback-v86" : ""} onClick={handleShareV86}>↗ {shareFeedbackV86 || trText("Share", "Paylaş")}</button>
+                <button type="button" onClick={loadDemoCase}>{trText("Demo Case", "Demo Vaka")}</button>
+                <button type="button" onClick={exportDetailedReportPdf}>{trText("Export PDF", "PDF Dışa Aktar")}</button>
+                <button type="button" onClick={startNewSimulationV86}>{trText("New Simulation", "Yeni Simülasyon")}</button>
+              </div>
+            </div>
+
+            <div className="cc-grid-v42">
+              <aside className="cc-left-v42">
+                <div className="cc-left-head-v42">
+                  <span>1</span>
+                  <div>
+                    <b>{trText("Tell the AI", "AI’ya anlat")}</b>
+                    <small>{trText("Your situation in a few steps", "Birkaç adımda durumunu anlat")}</small>
+                  </div>
+                </div>
+
+                <div className="cc-group-v42">
+                  <label>{trText("Who are you?", "Kimsiniz?")}</label>
+                  <div className="cc-choice-v42 three">
+                    {Object.entries(roleLabels).map(([key, label]) => (
+                      <button key={key} type="button" className={role === key ? "active" : ""} onClick={() => setRole(key)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="cc-group-v42">
+                  <label>{trText("What do you want to learn?", "Ne öğrenmek istiyorsunuz?")}</label>
+                  <div className="cc-choice-v42 two">
+                    {Object.entries(goalLabels).map(([key, label]) => (
+                      <button key={key} type="button" className={goal === key ? "active" : ""} onClick={() => setGoal(key)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="cc-context-v42">
+                  <label>
+                    <span>{trText("City", "Şehir")}</span>
+                    <select value={city} onChange={(e) => setCity(e.target.value)}>
+                      <option value="">{trText("All locations", "Tüm konumlar")}</option>
+                      {(cityOptions.length ? cityOptions : ["İstanbul", "Ankara", "İzmir", "Türkiye"]).map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>{trText("Age group", "Yaş grubu")}</span>
+                    <select value={ageGroup} onChange={(e) => setAgeGroup(e.target.value)}>
+                      {ageOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>{trText("Cancer type", "Kanser türü")}</span>
+                    <select value={cancerType} onChange={(e) => setCancerType(e.target.value)}>
+                      {Object.entries(cancerLabels).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>{trText("Treatment stage", "Tedavi aşaması")}</span>
+                    <select value={treatmentStage} onChange={(e) => setTreatmentStage(e.target.value)}>
+                      {Object.entries(stageLabels).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>{trText("Main concern", "Ana endişe")}</span>
+                    <select value={mainConcern} onChange={(e) => setMainConcern(e.target.value)}>
+                      {Object.entries(concernLabels).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>{trText("Scenario", "Senaryo")}</span>
+                    <select value={caseScenario} onChange={(e) => setCaseScenario(e.target.value)}>
+                      {Object.entries(caseScenarioLabels).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="cc-symptoms-v42">
+                  <div className="cc-mini-title-v42">
+                    <b>{trText("How are your symptoms today?", "Bugün semptomlarınız nasıl?")}</b>
+                    <small>{trText("0 none · 10 very strong", "0 yok · 10 çok güçlü")}</small>
+                  </div>
+
+                  {[
+                    [trText("Fatigue / weakness", "Yorgunluk / halsizlik"), fatigue, setFatigue],
+                    [trText("Pain", "Ağrı"), pain, setPain],
+                    [trText("Nausea / appetite", "Bulantı / iştah"), nausea, setNausea],
+                    [trText("Fear / low mood", "Kaygı / düşük ruh hali"), mood, setMood]
+                  ].map(([label, value, setter]) => (
+                    <label key={label}>
+                      <span>{label}</span>
+                      <strong>{value}/10</strong>
+                      <input type="range" min="0" max="10" value={value} onChange={(e) => setter(Number(e.target.value))} />
+                    </label>
+                  ))}
+                </div>
+
+                <div className="cc-safety-v42">
+                  <b>{trText("Safety check", "Güvenlik kontrolü")}</b>
+                  <div>
+                    <label className={feverFlag ? "active" : ""}>
+                      <input type="checkbox" checked={feverFlag} onChange={(e) => setFeverFlag(e.target.checked)} />
+                      <span>{trText("Fever / chills", "Ateş / titreme")}</span>
+                    </label>
+                    <label className={breathingFlag ? "active" : ""}>
+                      <input type="checkbox" checked={breathingFlag} onChange={(e) => setBreathingFlag(e.target.checked)} />
+                      <span>{trText("Breath tightness", "Nefes darlığı")}</span>
+                    </label>
+                    <label className={bleedingFlag ? "active" : ""}>
+                      <input type="checkbox" checked={bleedingFlag} onChange={(e) => setBleedingFlag(e.target.checked)} />
+                      <span>{trText("Severe vomiting", "Şiddetli kusma")}</span>
+                    </label>
+                    <label className={confusionFlag ? "active" : ""}>
+                      <input type="checkbox" checked={confusionFlag} onChange={(e) => setConfusionFlag(e.target.checked)} />
+                      <span>{trText("Confusion", "Bilinç bulanıklığı")}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="cc-run-v42">
+                  <button type="button" className={simulationRunning ? "running" : ""} onClick={runCareCockpitAnalysisV86}>
+                    ✨ {simulationRunning ? trText("AI analyzing...", "AI analiz ediyor...") : trText("Run AI Analysis", "AI Analizini Çalıştır")}
+                    <small>{trText("Input → AI → Action", "Girdi → AI → Aksiyon")}</small>
+                  </button>
+                  <button type="button" onClick={() => {
+                    runCopilotAction(
+                      "ai",
+                      trText("AI recommendation generated from current case inputs.", "Mevcut vaka girdilerinden AI önerisi oluşturuldu."),
+                      "ai_recommendation"
+                    );
+                    setVisibleRecommendationV106(aiRecommendation);
+                    setLastCopilotAction(trText("AI recommendation ready.", "AI önerisi hazır."));
+                  }}>
+                    {trText("Get Recommendation", "Öneri Al")}
+                  </button>
+                </div>
+              </aside>
+
+              <main className="cc-center-v42">
+                <section className={`cc-execution-v42 ${
+                  lastCopilotAction === trText("Ready for new analysis.", "Yeni analiz için hazır.")
+                    ? "pipeline-reset-visual-v91 ready-force-passive-v102"
+                    : ""
+                }`}>
+                  <div className="cc-card-title-v42 dark">
+                    <span>{trText("AI Execution Console", "AI Çalışma Konsolu")}</span>
+                    <b>{trText("Where did the action run?", "Aksiyon nerede çalıştı?")}</b>
+                  </div>
+
+                  <div key={pipelineResetKeyV100} data-hard-idle={pipelineIdleFinalV100 ? "true" : "false"} className="cc-pipeline-v42 pipeline-v97">
+                    <article className={`pipeline-card-v97 ${pipelineIdleFinalV100 ? "idle-v97" : executionStepV86 > 0 ? "done-v97" : executionStepV86 === 0 ? "active-v97" : "idle-v97"}`}>
+                      <span className="plain-dot-v103" aria-hidden="true"></span>
+                      <i>👤</i>
+                      <small>{trText("Input capture", "Girdi alma")}</small>
+                      <b>{trText("Symptoms & context received", "Semptom ve bağlam alındı")}</b>
+                    </article>
+
+                    <article className={`pipeline-card-v97 ${pipelineIdleFinalV100 ? "idle-v97" : executionStepV86 > 1 ? "done-v97" : executionStepV86 === 1 ? "active-v97" : "idle-v97"}`}>
+                      <span className="plain-dot-v103" aria-hidden="true"></span>
+                      <i>⚙️</i>
+                      <small>{trText("Risk engine", "Risk motoru")}</small>
+                      <b>{supportScore}/100</b>
+                    </article>
+
+                    <article className={`pipeline-card-v97 ${pipelineIdleFinalV100 ? "idle-v97" : executionStepV86 > 2 ? "done-v97" : executionStepV86 === 2 ? "active-v97" : "idle-v97"}`}>
+                      <span className="plain-dot-v103" aria-hidden="true"></span>
+                      <i>📋</i>
+                      <small>{trText("Clinical note", "Klinik not")}</small>
+                      <b>{trText("Care plan prepared", "Bakım planı hazır")}</b>
+                    </article>
+
+                    <article className={`pipeline-card-v97 ${pipelineIdleFinalV100 ? "idle-v97" : executionStepV86 > 3 ? "done-v97" : executionStepV86 === 3 ? "active-v97" : "idle-v97"}`}>
+                      <span className="plain-dot-v103" aria-hidden="true"></span>
+                      <i>〽️</i>
+                      <small>{trText("Telemetry", "Telemetri")}</small>
+                      <b>{readableTelemetryEvent}</b>
+                    </article>
+                  </div>
+
+                  <div className="cc-statusbar-v42">
+                    <span>{trText("Status", "Durum")}</span>
+                    <b>{lastCopilotAction}</b>
+                    <em>{trText("Simulation-ready", "Simülasyona hazır")}</em>
+                  </div>
+
+                  {visibleRecommendationV106 && lastCopilotAction !== trText("Ready for new analysis.", "Yeni analiz için hazır.") && (
+                    <div className="ai-recommendation-v106">
+                      <div className="ai-recommendation-head-v106">
+                        <span>{trText("AI Recommendation", "AI Önerisi")}</span>
+                        <b>{trText("Doctor-ready next action", "Doktor görüşmesine hazır sonraki aksiyon")}</b>
+                      </div>
+
+                      <p>{visibleRecommendationV106}</p>
+
+                      <div className="ai-recommendation-grid-v106">
+                        <div>
+                          <small>{trText("Support score", "Destek skoru")}</small>
+                          <strong>{supportScore}/100</strong>
+                        </div>
+                        <div>
+                          <small>{trText("Clinical priority", "Klinik öncelik")}</small>
+                          <strong>{supportLevel}</strong>
+                        </div>
+                        <div>
+                          <small>{trText("Main concern", "Ana endişe")}</small>
+                          <strong>{concernLabels[mainConcern]}</strong>
+                        </div>
+                      </div>
+
+                      <ul>
+                        <li>{trText("Prepare a short symptom summary for the next clinical contact.", "Bir sonraki klinik görüşme için kısa semptom özeti hazırla.")}</li>
+                        <li>{trText("Track fatigue, pain, nausea, hydration and mood daily.", "Yorgunluk, ağrı, bulantı, sıvı alımı ve ruh halini günlük takip et.")}</li>
+                        <li>{trText("Escalate immediately if fever, severe vomiting, confusion, sudden weakness or breathing difficulty appears.", "Ateş, şiddetli kusma, bilinç bulanıklığı, ani güçsüzlük veya nefes darlığı olursa hemen bakım ekibine bildir.")}</li>
+                      </ul>
+                    </div>
+                  )}
+                </section>
+
+                <div className="cc-mid-v42">
+                  <section className="cc-trend-v42 cc-trend-target-v51">
+                    <div className="trend-head-v51">
+                      <div>
+                        <h3>What's happening (trend)</h3>
+                        <p>Symptom burden over time</p>
+                      </div>
+                      <select
+                        className="trend-range-select-v119"
+                        value={trendRangeV119}
+                        onChange={(event) => setTrendRangeV119(event.target.value)}
+                        aria-label={trText("Trend time range", "Trend zaman aralığı")}
+                      >
+                        <option value="7">{trText("Last 7 days", "Son 7 gün")}</option>
+                        <option value="30">{trText("Last 30 days", "Son 30 gün")}</option>
+                        <option value="90">{trText("Last 90 days", "Son 90 gün")}</option>
+                      </select>
+                    </div>
+
+                    <svg className="trend-chart-v51" viewBox="0 0 620 245" role="img" aria-label="Symptom trend over time">
+                      <line x1="62" y1="30" x2="590" y2="30" />
+                      <line x1="62" y1="78" x2="590" y2="78" />
+                      <line x1="62" y1="126" x2="590" y2="126" />
+                      <line x1="62" y1="174" x2="590" y2="174" />
+                      <line x1="62" y1="30" x2="62" y2="174" />
+                      <line x1="62" y1="174" x2="590" y2="174" />
+
+                      <text x="22" y="35">10</text>
+                      <text x="31" y="83">8</text>
+                      <text x="31" y="131">6</text>
+                      <text x="31" y="179">0</text>
+
+                      <text x="62" y="215">{trendSeriesV119.labels[0]}</text>
+                      <text x="170" y="215">{trendSeriesV119.labels[1]}</text>
+                      <text x="286" y="215">{trendSeriesV119.labels[2]}</text>
+                      <text x="414" y="215">{trendSeriesV119.labels[3]}</text>
+                      <text x="512" y="215">{trendSeriesV119.labels[4]}</text>
+                      <text x="562" y="215">{trendSeriesV119.labels[5] || "Today"}</text>
+
+                      <polyline className="fatigue-line-v51" points={trendSeriesV119.fatigue} />
+                      <polyline className="pain-line-v51" points={trendSeriesV119.pain} />
+                      <polyline className="nausea-line-v51" points={trendSeriesV119.nausea} />
+                      <polyline className="mood-line-v51" points={trendSeriesV119.mood} />
+
+                      <g>
+                        <circle cx="98" cy="76" r="4" className="fatigue-dot-v51" />
+                        <circle cx="170" cy="74" r="4" className="fatigue-dot-v51" />
+                        <circle cx="278" cy="76" r="4" className="fatigue-dot-v51" />
+                        <circle cx="458" cy="92" r="4" className="fatigue-dot-v51" />
+                        <circle cx="590" cy="108" r="5" className="fatigue-dot-v51" />
+
+                        <circle cx="134" cy="102" r="4" className="pain-dot-v51" />
+                        <circle cx="278" cy="124" r="4" className="pain-dot-v51" />
+                        <circle cx="458" cy="116" r="4" className="pain-dot-v51" />
+                        <circle cx="590" cy="134" r="5" className="pain-dot-v51" />
+
+                        <circle cx="62" cy="134" r="4" className="nausea-dot-v51" />
+                        <circle cx="278" cy="148" r="4" className="nausea-dot-v51" />
+                        <circle cx="458" cy="144" r="4" className="nausea-dot-v51" />
+                        <circle cx="590" cy="156" r="5" className="nausea-dot-v51" />
+
+                        <circle cx="62" cy="160" r="4" className="mood-dot-v51" />
+                        <circle cx="278" cy="162" r="4" className="mood-dot-v51" />
+                        <circle cx="458" cy="156" r="4" className="mood-dot-v51" />
+                        <circle cx="590" cy="148" r="5" className="mood-dot-v51" />
+                      </g>
+                    </svg>
+
+                    <div className="trend-legend-v51">
+                      <span><i className="fatigue-dot-v51"></i> Fatigue</span>
+                      <span><i className="pain-dot-v51"></i> Pain</span>
+                      <span><i className="nausea-dot-v51"></i> Nausea</span>
+                      <span><i className="mood-dot-v51"></i> Mood</span>
+                    </div>
+                  </section>
+
+                  <section className="cc-score-v42">
+                    <div className="cc-card-title-v42">
+                      <span>{trText("Score calculation", "Skor hesaplama")}</span>
+                      <b>{trText("How your score was calculated", "Skor nasıl hesaplandı")}</b>
+                    </div>
+
+                    <div className="cc-score-body-v42">
+                      <div className="cc-donut-v42" style={{ "--score": `${supportScore}%` }}>
+                        <strong>{supportScore}</strong>
+                        <small>/100</small>
+                      </div>
+
+                      <ul>
+                        <li><span>{trText("Symptom burden", "Semptom yükü")}</span><b>+{symptomScore}</b></li>
+                        <li><span>{trText("Dataset signal", "Veri sinyali")}</span><b>+{dataSignal}</b></li>
+                        <li><span>{trText("Red flags", "Kırmızı bayrak")}</span><b>+{redFlags.length * 12}</b></li>
+                        <li><span>{trText("Scenario", "Senaryo")}</span><b>{selectedScenarioLabel}</b></li>
+                      </ul>
+                    </div>
+
+                    <div className="cc-score-guide-v42">
+                      <span><b>0–30</b>{trText("Needs close monitoring", "Yakın takip gerekir")}</span>
+                      <span><b>31–60</b>{trText("Stable support preparation", "Stabil destek hazırlığı")}</span>
+                      <span><b>61–100</b>{trText("Strong condition / low concern", "Daha güçlü durum / düşük endişe")}</span>
+                    </div>
+                  </section>
+                </div>
+
+                <section className="cc-network-v42 reasoning-svg-v55 reasoning-svg-v57">
+                  <div className="reasoning-head-v55">
+                    <div>
+                      <h3>AI Reasoning Network</h3>
+                      <p>How factors connect to your support priority</p>
+                    </div>
+                    <div className="reasoning-legend-v55">
+                      <span><i className="pos-v55"></i>Positive impact</span>
+                      <span><i className="neg-v55"></i>Negative impact</span>
+                    </div>
+                  </div>
+
+                  <svg className="reasoning-chart-v55 reasoning-chart-v57" viewBox="0 0 940 245" role="img" aria-label="AI reasoning network">
+                    <defs>
+                      <filter id="softShadowV57" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="#0f172a" floodOpacity="0.08"/>
+                      </filter>
+                    </defs>
+
+                    <path className="edge-pos-v55 edge-main-v57" d="M138 48 C215 44 250 58 320 72" />
+                    <path className="edge-pos-v55 edge-main-v57" d="M138 88 C215 88 250 84 320 72" />
+                    <path className="edge-neg-v55 edge-main-v57" d="M138 128 C215 122 250 112 320 112" />
+                    <path className="edge-pos-v55 edge-main-v57" d="M138 168 C214 160 248 142 320 152" />
+
+                    <path className="edge-pos-v55 edge-soft-v57" d="M138 48 C220 94 252 132 320 152" />
+                    <path className="edge-pos-v55 edge-soft-v57" d="M138 88 C220 112 252 130 320 152" />
+                    <path className="edge-neg-v55 edge-soft-v57" d="M138 128 C218 100 250 92 320 72" />
+                    <path className="edge-pos-v55 edge-soft-v57" d="M138 168 C218 120 250 98 320 72" />
+
+                    <path className="edge-pos-v55 edge-main-v57" d="M470 72 C520 78 548 96 585 122" />
+                    <path className="edge-neg-v55 edge-main-v57" d="M470 112 C520 112 548 116 585 122" />
+                    <path className="edge-pos-v55 edge-main-v57" d="M470 152 C520 148 548 134 585 122" />
+
+                    <path className="edge-pos-v55 edge-soft-v57" d="M470 72 C518 100 548 116 585 122" />
+                    <path className="edge-pos-v55 edge-soft-v57" d="M470 152 C518 126 548 118 585 122" />
+
+                    <path className="edge-pos-v55 edge-main-v57" d="M655 122 C690 74 720 54 755 48" />
+                    <path className="edge-pos-v55 edge-main-v57" d="M655 122 C690 122 720 119 755 112" />
+                    <path className="edge-neg-v55 edge-main-v57" d="M655 122 C690 166 720 184 755 176" />
+
+                    <path className="edge-neg-v55 edge-soft-v57" d="M655 122 C690 96 720 88 755 112" />
+                    <path className="edge-pos-v55 edge-soft-v57" d="M655 122 C690 144 720 154 755 176" />
+
+                    <g filter="url(#softShadowV57)">
+                      <rect className="input-node-v55" x="20" y="30" width="128" height="32" rx="8" />
+                      <circle className="blue-v55" cx="38" cy="46" r="5" />
+                      <text x="55" y="50">Fatigue (6/10)</text>
+
+                      <rect className="input-node-v55" x="20" y="70" width="128" height="32" rx="8" />
+                      <circle className="purple-v55" cx="38" cy="86" r="5" />
+                      <text x="55" y="90">Pain (4/10)</text>
+
+                      <rect className="input-node-v55" x="20" y="110" width="128" height="32" rx="8" />
+                      <circle className="green-v55" cx="38" cy="126" r="5" />
+                      <text x="55" y="130">Nausea (3/10)</text>
+
+                      <rect className="input-node-v55" x="20" y="150" width="128" height="32" rx="8" />
+                      <circle className="orange-v55" cx="38" cy="166" r="5" />
+                      <text x="55" y="170">Mood (5/10)</text>
+
+                      <rect className="factor-node-v55" x="300" y="48" width="142" height="42" rx="13" />
+                      <text x="371" y="65" textAnchor="middle">Symptom</text>
+                      <text x="371" y="80" textAnchor="middle">Burden</text>
+
+                      <rect className="factor-node-v55 purple-node-v55" x="300" y="96" width="142" height="42" rx="13" />
+                      <text x="371" y="114" textAnchor="middle">Treatment</text>
+                      <text x="371" y="129" textAnchor="middle">Stage</text>
+
+                      <rect className="factor-node-v55 teal-node-v55" x="300" y="144" width="142" height="42" rx="13" />
+                      <text x="371" y="162" textAnchor="middle">Public Data</text>
+                      <text x="371" y="177" textAnchor="middle">Match</text>
+
+                      <circle className="priority-halo-v55" cx="610" cy="122" r="58" />
+                      <circle className="priority-node-v55" cx="610" cy="122" r="48" />
+                      <text className="priority-label-v55 priority-label-top-v57" x="610" y="104">Support</text>
+                      <text className="priority-label-v55 priority-label-top-v57" x="610" y="120">Priority</text>
+                      <text className="priority-score-v55" x="610" y="146">{supportScore}</text>
+
+                      <rect className="action-node-v55" x="755" y="30" width="150" height="42" rx="13" />
+                      <text x="830" y="48" textAnchor="middle">Care Plan</text>
+                      <text x="830" y="63" textAnchor="middle">Readiness</text>
+
+                      <rect className="action-node-v55" x="755" y="96" width="150" height="42" rx="13" />
+                      <text x="830" y="114" textAnchor="middle">Doctor Visit</text>
+                      <text x="830" y="129" textAnchor="middle">Preparation</text>
+
+                      <rect className="action-node-v55" x="755" y="162" width="150" height="42" rx="13" />
+                      <text x="830" y="180" textAnchor="middle">Monitoring</text>
+                      <text x="830" y="195" textAnchor="middle">Strategy</text>
+                    </g>
+                  </svg>
+                </section>
+
+                <section className="cc-journey-v42">
+                  {[
+                    ["1", trText("You input", "Girdi"), trText("Symptoms & context", "Semptom ve bağlam")],
+                    ["2", trText("AI analysis", "AI analizi"), trText("Risk & data engine", "Risk ve veri motoru")],
+                    ["3", trText("Meaning", "Anlam"), trText("Clinical insight", "Klinik içgörü")],
+                    ["4", trText("Action", "Aksiyon"), trText("Care recommendations", "Bakım önerileri")],
+                    ["5", trText("Follow-up", "Takip"), trText("Monitoring & support", "İzlem ve destek")]
+                  ].map(([num, title, desc]) => (
+                    <div key={num}>
+                      <b>{num}</b>
+                      <span>{title}</span>
+                      <small>{desc}</small>
+                    </div>
+                  ))}
+                </section>
+              </main>
+
+              <aside className="cc-right-v42">
+                <section className={`cc-priority-v42 ${supportClass}`}>
+                  <span>{trText("Support Priority", "Destek Önceliği")}</span>
+                  <strong>{supportScore}<small>/100</small></strong>
+                  <b>{clinicalRiskLevel}</b>
+                  <p>{safetyMessage}</p>
+                </section>
+
+                <section className="cc-evidence-v42">
+                  <div className="cc-card-title-v42">
+                    <span>{trText("Data & Evidence Signal", "Veri ve Kanıt Sinyali")}</span>
+                    <b>{trText("Public data matched your context", "Kamu verisi bağlamla eşleşti")}</b>
+                  </div>
+
+                  <div className="cc-evidence-grid-v42 evidence-grid-v108">
+                    <div><small>{trText("Incidence", "İnsidans")}</small><b>{incidenceAvg ? incidenceAvg.toFixed(1) : "-"}</b><em>{trText("per 100k", "100 bin kişi")}</em></div>
+                    <div><small>{trText("Mortality", "Mortalite")}</small><b>{mortalityAvg ? mortalityAvg.toFixed(1) : "-"}</b><em>{trText("per 100k", "100 bin kişi")}</em></div>
+                    <div><small>{trText("5-year survival", "5 yıllık sağkalım")}</small><b>{survivalAvg ? `${survivalAvg.toFixed(0)}%` : "-"}</b><em>{trText("estimated", "tahmini")}</em></div>
+                    <div><small>{trText("Data quality", "Veri kalitesi")}</small><b>{filteredRows.length ? trText("Matched", "Eşleşti") : trText("Limited", "Sınırlı")}</b><em>{filteredRows.length ? `${filteredRows.length} ${trText("rows", "satır")}` : trText("no exact match", "tam eşleşme yok")}</em></div>
+                  </div>
+
+                  <div className={`evidence-position-v108 ${filteredRows.length ? "" : "limited-v108"}`}>
+                    <div className="evidence-position-head-v108">
+                      <span>{trText("Compared to similar patients", "Benzer hastalarla karşılaştırma")}</span>
+                      <small>
+                        {filteredRows.length
+                          ? trText("Your case position based on public data context and symptom priority.", "Kamu veri bağlamı ve semptom önceliğine göre vaka pozisyonu.")
+                          : trText("No exact public data match for this selected context. Showing a simulated comparison position.", "Bu seçili bağlam için tam kamu verisi eşleşmesi yok. Simüle edilmiş karşılaştırma pozisyonu gösteriliyor.")}
+                      </small>
+                    </div>
+
+                    <div className="evidence-scale-v108">
+                      <div className="evidence-scale-labels-v108">
+                        <b>{trText("Lower", "Daha düşük")}</b>
+                        <b>{trText("Similar", "Benzer")}</b>
+                        <b>{trText("Higher", "Daha yüksek")}</b>
+                      </div>
+                      <div className="evidence-track-v108" aria-hidden="true">
+                        <i style={{ left: filteredRows.length ? `${Math.max(8, Math.min(92, supportScore))}%` : "50%" }}></i>
+                      </div>
+                      <strong style={{ left: filteredRows.length ? `${Math.max(8, Math.min(92, supportScore))}%` : "50%" }}>
+                        {trText("You are here", "Buradasınız")}
+                      </strong>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="cc-next-side-v67">
+                  <div className="cc-next-side-head-v67">
+                    <span>Next Best Actions</span>
+                    <h3>What should you do now?</h3>
+                  </div>
+
+                  <div className="cc-next-side-grid-v67">
+                    <article className="cc-next-side-card-v67">
+                      <div className="cc-next-side-icon-v67 blue-v67">📈</div>
+                      <h4>Track</h4>
+                      <p>Focus on these symptoms daily</p>
+                      <ul>
+                        <li>Fatigue</li>
+                        <li>Pain</li>
+                        <li>Nausea</li>
+                        <li>Hydration</li>
+                      </ul>
+                    </article>
+
+                    <article className="cc-next-side-card-v67">
+                      <div className="cc-next-side-icon-v67 purple-v67">🩺</div>
+                      <h4>Ask Your Doctor</h4>
+                      <p>Key questions for your next visit</p>
+                      <ul>
+                        <li>Which symptoms should I monitor closely?</li>
+                        <li>What changes should trigger urgent contact?</li>
+                      </ul>
+                    </article>
+
+                    <article className="cc-next-side-card-v67">
+                      <div className="cc-next-side-icon-v67 green-v67">📋</div>
+                      <h4>Prepare</h4>
+                      <p>Be ready for your appointment</p>
+                      <ul>
+                        <li>Bring this report</li>
+                        <li>Track symptoms</li>
+                        <li>List medications</li>
+                      </ul>
+                    </article>
+                  </div>
+                </section>
+
+                <section className="cc-report-v42">
+                  <div>
+                    <b>{trText("Download your report", "Raporunu indir")}</b>
+                    <p>{trText("Doctor-ready report with analysis and recommendations.", "Analiz ve öneriler içeren doktora hazır rapor.")}</p>
+                    <button type="button" onClick={exportDetailedReportPdf}>{trText("Export PDF", "PDF Dışa Aktar")}</button>
+                  </div>
+                  <span>📄</span>
+                </section>
+              </aside>
+            </div>
+          </div>
+
           <div className="patient-input-panel">
             <div className="copilot-quickstart-v6">
               <div>
@@ -2806,6 +4613,800 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                 </button>
                 <button type="button" onClick={exportDetailedReportPdf}>
                   {trText("Export PDF report", "PDF raporu dışa aktar")}
+                </button>
+
+
+
+              </div>
+            </div>
+
+            <div className="copilot-ai-power-dashboard-v10">
+              <div className="ai-power-hero-v10">
+                <span>{trText("AI Power / Data Intelligence", "AI Gücü / Veri Zekâsı")}</span>
+                <h2>{trText("CSV → Splunk → AI Plot → Report", "CSV → Splunk → AI Plot → Rapor")}</h2>
+                <p>
+                  {trText(
+                    "This layer shows how indexed datasets and Copilot events become explainable AI signals, visual analytics and report-ready evidence.",
+                    "Bu katman, indexlenmiş veri setlerinin ve Copilot olaylarının nasıl açıklanabilir AI sinyallerine, görsel analitiklere ve raporlanabilir kanıta dönüştüğünü gösterir."
+                  )}
+                </p>
+              </div>
+
+              <div className="ai-power-flow-v10">
+                <div>
+                  <b>CSV</b>
+                  <small>{trText("raw datasets", "ham veri setleri")}</small>
+                </div>
+                <i></i>
+                <div>
+                  <b>Splunk</b>
+                  <small>{trText("indexed events", "indexlenmiş olaylar")}</small>
+                </div>
+                <i></i>
+                <div>
+                  <b>AI</b>
+                  <small>{trText("feature extraction", "özellik çıkarımı")}</small>
+                </div>
+                <i></i>
+                <div>
+                  <b>Plot</b>
+                  <small>{trText("visual intelligence", "görsel zekâ")}</small>
+                </div>
+                <i></i>
+                <div>
+                  <b>Report</b>
+                  <small>{trText("doctor-ready output", "doktor hazır çıktı")}</small>
+                </div>
+              </div>
+
+              <div className="ai-power-real-data-v11">
+                <div className="ai-power-real-head-v11">
+                  <div>
+                    <span>{trText("Real data verification", "Gerçek veri doğrulaması")}</span>
+                    <h3>{trText("Loaded dataset analytics", "Yüklenen veri seti analitiği")}</h3>
+                    <p>
+                      {trText(
+                        "These charts are generated from the committed CSV dataset summaries, not from static text. Row counts, checksums, distributions and correlations prove that the dashboard is connected to real data sources.",
+                        "Bu grafikler statik metinden değil, commitlenmiş CSV veri seti özetlerinden üretilir. Satır sayıları, checksum değerleri, dağılımlar ve korelasyonlar panelin gerçek veri kaynaklarına bağlı olduğunu kanıtlar."
+                      )}
+                    </p>
+                  </div>
+
+                  <strong className={`ai-power-real-status-v11 ${aiPowerRealDataStatus}`}>
+                    {aiPowerRealDataStatus === "loaded"
+                      ? trText("Real data loaded", "Gerçek veri yüklendi")
+                      : aiPowerRealDataStatus === "error"
+                        ? trText("Summary not loaded", "Özet yüklenemedi")
+                        : trText("Loading data summary", "Veri özeti yükleniyor")}
+                  </strong>
+                </div>
+
+                {aiPowerRealData?.generated_at && (
+                  <div className="ai-power-real-proof-v11">
+                    <span>{trText("Generated from CSV", "CSV’den üretildi")}</span>
+                    <code>{aiPowerRealData.generated_at}</code>
+                    <small>{aiPowerRealData.proof}</small>
+                  </div>
+                )}
+
+                <div className="ai-data-lineage-v12">
+                  <div className="ai-data-lineage-head-v12">
+                    <span>{trText("Data lineage", "Veri soy ağacı")}</span>
+                    <strong>{trText("What is used, where it comes from, and how it is visualized", "Ne kullanılıyor, nereden geliyor ve nasıl görselleştiriliyor")}</strong>
+                  </div>
+
+                  <div className="ai-data-lineage-grid-v12">
+                    {aiDataLineageRows.map((row) => (
+                      <article key={row.layer}>
+                        <b>{row.layer}</b>
+                        <span>{row.source}</span>
+                        <p>{row.usedFor}</p>
+                        <code>{row.columns}</code>
+                      </article>
+                    ))}
+                  </div>
+
+                  {!publicDataHasMatch && (
+                    <div className="ai-context-mode-v15">
+                      <div>
+                        <span>{trText("Broader context mode active", "Geniş bağlam modu aktif")}</span>
+                        <b>{trText("No exact public row found — the AI keeps working with related evidence.", "Tam kamu satırı bulunamadı — AI ilişkili kanıtlarla çalışmaya devam ediyor.")}</b>
+                        <p>
+                          {trText(
+                            "Instead of stopping, the system explains which signals are still usable: symptoms, treatment context, NHS access pressure, lifestyle/prevention data and caregiver answers.",
+                            "Sistem durmak yerine hâlâ kullanılabilir sinyalleri açıklar: semptomlar, tedavi bağlamı, NHS erişim baskısı, yaşam tarzı/önleme verisi ve bakıcı yanıtları."
+                          )}
+                        </p>
+                      </div>
+                      <ul>
+                        <li>{trText("Use broader access pressure", "Daha geniş erişim baskısını kullan")}</li>
+                        <li>{trText("Keep treatment and symptom reasoning active", "Tedavi ve semptom akıl yürütmesini aktif tut")}</li>
+                        <li>{trText("Show user-friendly next questions", "Kullanıcı dostu sonraki soruları göster")}</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="ai-system-context-v14">
+                  <div className="ai-system-context-head-v14">
+                    <div>
+                      <span>{trText("v14 · Access, lifestyle & treatment intelligence", "v14 · Erişim, yaşam tarzı ve tedavi zekâsı")}</span>
+                      <h3>{trText("Three new evidence layers added to the relational graph", "İlişkisel grafa üç yeni kanıt katmanı eklendi")}</h3>
+                      <p>
+                        {trText(
+                          "NHS waiting-time data adds access pressure, treatment KPIs add cohort-level care journey context, and colorectal lifestyle data adds prevention and screening-discussion prompts.",
+                          "NHS bekleme süresi verisi erişim baskısı ekler, tedavi KPI verisi kohort düzeyi bakım yolculuğu bağlamı verir, colorectal yaşam tarzı verisi önleme ve tarama görüşmesi uyarıları ekler."
+                        )}
+                      </p>
+                    </div>
+                    <strong>{v14Context ? trText("Loaded", "Yüklendi") : trText("Loading", "Yükleniyor")}</strong>
+                  </div>
+
+                  {accessLifestyleErrorV14 && (
+                    <div className="ai-system-error-v14">
+                      <b>{trText("v14 context could not be loaded", "v14 bağlamı yüklenemedi")}</b>
+                      <p>{accessLifestyleErrorV14}</p>
+                    </div>
+                  )}
+
+                  {v14Context && (
+                    <>
+                      <div className="ai-system-layer-grid-v14">
+                        {(v14System?.graph_layers || []).map((layer) => (
+                          <article key={layer.layer}>
+                            <span>{layer.layer}</span>
+                            <b>{layer.evidence}</b>
+                            <p>{layer.insight}</p>
+                          </article>
+                        ))}
+                      </div>
+
+                      <div className="ai-v14-kpi-grid">
+                        <article>
+                          <span>{trText("NHS access pressure", "NHS erişim baskısı")}</span>
+                          <b>{v14NhsHighlights[0]?.performance ?? "-"}%</b>
+                          <p>{v14NhsHighlights[0]?.label}</p>
+                        </article>
+                        <article>
+                          <span>{trText("Treatment response context", "Tedavi yanıt bağlamı")}</span>
+                          <b>{v14TreatmentKpis.avg_response_score ?? "-"}</b>
+                          <p>{trText("Average response score across treatment KPI dataset", "Tedavi KPI veri setinde ortalama yanıt skoru")}</p>
+                        </article>
+                        <article>
+                          <span>{trText("Treatment journey intensity", "Tedavi yolculuğu yoğunluğu")}</span>
+                          <b>{v14TreatmentKpis.avg_cycles ?? "-"}</b>
+                          <p>{trText("Average number of cycles", "Ortalama döngü sayısı")}</p>
+                        </article>
+                        <article>
+                          <span>{trText("CRC lifestyle records", "CRC yaşam tarzı kayıtları")}</span>
+                          <b>{formatAiPowerNumber(v14Crc?.rows || 0)}</b>
+                          <p>{trText("Diet, BMI, family-history and lifestyle context", "Beslenme, BMI, aile öyküsü ve yaşam tarzı bağlamı")}</p>
+                        </article>
+                      </div>
+
+                      <div className="ai-v14-relation-grid">
+                        {v14IntelligenceEdges.map((edge) => (
+                          <article key={edge.layer}>
+                            <span>{edge.layer}</span>
+                            <b>{edge.from} → {edge.to}</b>
+                            <p>{edge.why}</p>
+                            <strong>{edge.action}</strong>
+                          </article>
+                        ))}
+                      </div>
+
+                      <div className="ai-v14-evidence-columns">
+                        <article>
+                          <span>{trText("NHS waiting-time pathways", "NHS bekleme süresi yolları")}</span>
+                          {(v14NhsHighlights || []).map((item) => (
+                            <div key={item.label}>
+                              <b>{item.performance ?? "-"}%</b>
+                              <p>{item.label}</p>
+                              <small>{formatAiPowerNumber(item.total)} {trText("pathways", "yol")} · {formatAiPowerNumber(item.after)} {trText("after standard", "standard sonrası")}</small>
+                            </div>
+                          ))}
+                        </article>
+
+                        <article>
+                          <span>{trText("Treatment KPI distributions", "Tedavi KPI dağılımları")}</span>
+                          {(v14TreatmentStages || []).slice(0, 5).map((item) => (
+                            <div key={item.label}>
+                              <b>{item.percent}%</b>
+                              <p>{item.label}</p>
+                              <small>{formatAiPowerNumber(item.count)} {trText("rows", "satır")}</small>
+                            </div>
+                          ))}
+                        </article>
+
+                        <article>
+                          <span>{trText("CRC lifestyle risk context", "CRC yaşam tarzı risk bağlamı")}</span>
+                          {(v14CrcLifestyleRows || []).slice(0, 5).map((item) => (
+                            <div key={item.label}>
+                              <b>{item.crc_risk_rate_percent}%</b>
+                              <p>{item.label}</p>
+                              <small>{formatAiPowerNumber(item.count)} {trText("rows", "satır")}</small>
+                            </div>
+                          ))}
+                        </article>
+                      </div>
+
+                      <div className="ai-v14-action-path">
+                        <span>{trText("Smart care conversation path", "Akıllı bakım görüşmesi yolu")}</span>
+                        <div>
+                          <article><b>{trText("Who", "Kim")}</b><p>{v14ActionPath.who}</p></article>
+                          <article><b>{trText("Where", "Nerede")}</b><p>{v14ActionPath.where}</p></article>
+                          <article><b>{trText("Why", "Neden")}</b><p>{v14ActionPath.why}</p></article>
+                          <article><b>{trText("What", "Ne")}</b><p>{v14ActionPath.what}</p></article>
+                        </div>
+                        <strong>{v14ActionPath.safety}</strong>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="ai-insight-cockpit-v16">
+                  <div className="ai-cockpit-hero-v16">
+                    <div>
+                      <span>{trText("v16 · Interactive Insight Cockpit", "v16 · Etkileşimli İçgörü Kokpiti")}</span>
+                      <h3>{trText("Choose a lens. Ask a question. See meaning, evidence and action.", "Bir lens seç. Bir soru sor. Anlamı, kanıtı ve aksiyonu gör.")}</h3>
+                      <p>
+                        {trText(
+                          "This turns the long analytics dashboard into a guided decision experience for patients, caregivers and judges.",
+                          "Bu katman uzun analitik dashboard’u hastalar, bakıcılar ve hakemler için yönlendirmeli bir karar deneyimine dönüştürür."
+                        )}
+                      </p>
+                    </div>
+                    <strong>{selectedInsightLensV16.score}/100</strong>
+                  </div>
+
+                  <div className="ai-cockpit-controls-v16">
+                    <div>
+                      <b>{trText("1. Choose data lens", "1. Veri lensi seç")}</b>
+                      <div>
+                        {insightLensesV16.map((lens) => (
+                          <button
+                            key={lens.id}
+                            type="button"
+                            className={insightLensV16 === lens.id ? "active" : ""}
+                            onClick={() => setInsightLensV16(lens.id)}
+                          >
+                            {lens.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <b>{trText("2. Ask the system", "2. Sisteme sor")}</b>
+                      <div>
+                        {insightQuestionsV16.map((question) => (
+                          <button
+                            key={question.id}
+                            type="button"
+                            className={insightQuestionV16 === question.id ? "active" : ""}
+                            onClick={() => setInsightQuestionV16(question.id)}
+                          >
+                            {question.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="ai-cockpit-answer-v16">
+                    <div>
+                      <span>{trText("Selected lens", "Seçilen lens")}</span>
+                      <b>{selectedInsightLensV16.label}</b>
+                      <p>{selectedInsightLensV16.source}</p>
+                    </div>
+                    <div className="main-answer-v16">
+                      <span>{trText("Answer", "Yanıt")}</span>
+                      <b>{selectedInsightAnswerV16}</b>
+                    </div>
+                    <div>
+                      <span>{trText("Recommended action", "Önerilen aksiyon")}</span>
+                      <b>{selectedInsightLensV16.action}</b>
+                    </div>
+                  </div>
+
+                  <div className="ai-pathway-v16">
+                    {insightSourcePathV16.map((step, index) => (
+                      <article key={step.label}>
+                        <small>{index + 1}</small>
+                        <span>{step.label}</span>
+                        <p>{step.value}</p>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="ai-data-explorer-v16">
+                    <div className="ai-data-explorer-head-v16">
+                      <span>{trText("Interactive data explorer", "Etkileşimli veri gezgini")}</span>
+                      <b>{trText("Every metric becomes a useful explanation", "Her metrik faydalı bir açıklamaya dönüşür")}</b>
+                    </div>
+
+                    <div className="ai-data-explorer-grid-v16">
+                      {insightDataExplorerV16.map((item) => (
+                        <article key={item.label}>
+                          <span>{item.label}</span>
+                          <b>{item.value}</b>
+                          <p>{item.meaning}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="ai-cockpit-note-v16">
+                    {trText(
+                      "Dashboard details remain below as evidence. The cockpit above is the user-friendly decision layer.",
+                      "Dashboard detayları aşağıda kanıt olarak kalır. Yukarıdaki kokpit kullanıcı dostu karar katmanıdır."
+                    )}
+                  </div>
+                </div>
+
+                <div className="ai-command-center-v17">
+                  <style>
+                    {!showDeepEvidenceV17 ? `
+                      .ai-data-lineage-v12,
+                      .ai-power-real-grid-v11,
+                      .ai-power-source-grid-v10,
+                      .ai-data-meaning-v15,
+                      .ai-relational-graph-v13 {
+                        display: none !important;
+                      }
+                    ` : ""}
+                  </style>
+
+                  <div className="ai-command-hero-v17">
+                    <div>
+                      <span>{trText("v17 · Command Center", "v17 · Komuta Merkezi")}</span>
+                      <h3>{trText("Turn data into one clear answer.", "Veriyi tek net cevaba dönüştür.")}</h3>
+                      <p>
+                        {trText(
+                          "Choose what you want to understand. The system connects symptoms, public context, access pressure, treatment data, lifestyle signals and caregiver answers into a user-ready action.",
+                          "Neyi anlamak istediğini seç. Sistem semptomları, kamu bağlamını, erişim baskısını, tedavi verisini, yaşam tarzı sinyallerini ve bakıcı yanıtlarını kullanıcıya hazır aksiyona bağlar."
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="ai-command-score-v17">
+                      <small>{trText("Current priority", "Mevcut öncelik")}</small>
+                      <b>{selectedInsightLensV16.score}/100</b>
+                      <span>{selectedInsightLensV16.label}</span>
+                    </div>
+                  </div>
+
+                  <div className="ai-command-layout-v17">
+                    <section className="ai-command-picker-v17">
+                      <div className="ai-command-step-v17">
+                        <span>1</span>
+                        <b>{trText("Choose data lens", "Veri lensi seç")}</b>
+                      </div>
+
+                      <div className="ai-command-chip-grid-v17">
+                        {insightLensesV16.map((lens) => (
+                          <button
+                            key={lens.id}
+                            type="button"
+                            className={insightLensV16 === lens.id ? "active" : ""}
+                            onClick={() => setInsightLensV16(lens.id)}
+                          >
+                            <b>{lens.label}</b>
+                            <small>{lens.source}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="ai-command-picker-v17">
+                      <div className="ai-command-step-v17">
+                        <span>2</span>
+                        <b>{trText("Ask a question", "Bir soru sor")}</b>
+                      </div>
+
+                      <div className="ai-command-question-list-v17">
+                        {insightQuestionsV16.map((question) => (
+                          <button
+                            key={question.id}
+                            type="button"
+                            className={insightQuestionV16 === question.id ? "active" : ""}
+                            onClick={() => setInsightQuestionV16(question.id)}
+                          >
+                            {question.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="ai-command-answer-v17">
+                      <div className="ai-command-step-v17">
+                        <span>3</span>
+                        <b>{trText("Meaning and action", "Anlam ve aksiyon")}</b>
+                      </div>
+
+                      <article>
+                        <small>{trText("Answer", "Yanıt")}</small>
+                        <h4>{selectedInsightAnswerV16}</h4>
+                      </article>
+
+                      <article>
+                        <small>{trText("What this means", "Bu ne anlama geliyor")}</small>
+                        <p>{selectedInsightLensV16.meaning}</p>
+                      </article>
+
+                      <article className="action-v17">
+                        <small>{trText("Recommended next step", "Önerilen sonraki adım")}</small>
+                        <p>{selectedInsightLensV16.action}</p>
+                      </article>
+                    </section>
+                  </div>
+
+                  <div className="ai-command-path-v17">
+                    <article>
+                      <span>{trText("Raw evidence", "Ham kanıt")}</span>
+                      <b>{selectedInsightLensV16.source}</b>
+                    </article>
+                    <article>
+                      <span>{trText("AI interpretation", "AI yorumu")}</span>
+                      <b>{selectedInsightLensV16.meaning}</b>
+                    </article>
+                    <article>
+                      <span>{trText("User output", "Kullanıcı çıktısı")}</span>
+                      <b>{selectedInsightLensV16.action}</b>
+                    </article>
+                  </div>
+
+                  <div className="ai-command-footer-v17">
+                    <div>
+                      <b>{trText("Designed for judges and real users", "Hakemler ve gerçek kullanıcılar için tasarlandı")}</b>
+                      <p>
+                        {trText(
+                          "The dashboard now starts with a guided decision layer. Technical dataset evidence stays available, but it no longer overwhelms the main user journey.",
+                          "Dashboard artık yönlendirmeli karar katmanıyla başlar. Teknik veri kanıtları erişilebilir kalır; ancak ana kullanıcı yolculuğunu artık boğmaz."
+                        )}
+                      </p>
+                    </div>
+
+                    <button type="button" onClick={() => setShowDeepEvidenceV17((value) => !value)}>
+                      {showDeepEvidenceV17
+                        ? trText("Hide technical evidence layers", "Teknik kanıt katmanlarını gizle")
+                        : trText("Show technical evidence layers", "Teknik kanıt katmanlarını göster")}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="ai-data-meaning-v15">
+                  <div className="ai-data-meaning-hero-v15">
+                    <div>
+                      <span>{trText("v15 · Data-to-Meaning Experience", "v15 · Veriden Anlama Deneyimi")}</span>
+                      <h3>{trText("Every dataset becomes a care conversation, not just a chart.", "Her veri seti sadece grafik değil, bakım görüşmesine dönüşür.")}</h3>
+                      <p>
+                        {trText(
+                          "OncoConnect AI translates public statistics, waiting-time pressure, treatment KPIs, lifestyle data, symptoms and caregiver answers into a clear support pathway.",
+                          "OncoConnect AI kamu istatistiklerini, bekleme süresi baskısını, tedavi KPI’larını, yaşam tarzı verisini, semptomları ve bakıcı yanıtlarını net bir destek yoluna çevirir."
+                        )}
+                      </p>
+                    </div>
+                    <strong>{contextModeV15}</strong>
+                  </div>
+
+                  <div className="ai-context-mode-card-v15">
+                    <span>{trText("Current interpretation mode", "Mevcut yorumlama modu")}</span>
+                    <b>{contextModeV15}</b>
+                    <p>{contextModeDetailV15}</p>
+                  </div>
+
+                  <div className="ai-data-meaning-grid-v15">
+                    {dataToMeaningCardsV15.map((card) => (
+                      <article key={card.label}>
+                        <div className="ai-meaning-score-v15">
+                          <span>{card.label}</span>
+                          <b>{card.score}/100</b>
+                        </div>
+                        <em><i style={{ width: `${Math.max(5, Math.min(100, Number(card.score || 0)))}%` }}></i></em>
+                        <small>{trText("Raw data", "Ham veri")}</small>
+                        <p>{card.raw}</p>
+                        <small>{trText("Meaning", "Anlam")}</small>
+                        <p>{card.meaning}</p>
+                        <strong>{card.action}</strong>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="ai-judge-ready-v15">
+                    <div>
+                      <span>{trText("Judge-ready impact story", "Hakemlere hazır etki hikâyesi")}</span>
+                      <b>{trText("Why this project matters", "Bu proje neden önemli")}</b>
+                    </div>
+                    <div className="ai-judge-grid-v15">
+                      {judgeImpactCardsV15.map((item) => (
+                        <article key={item.title}>
+                          <b>{item.title}</b>
+                          <p>{item.text}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ai-relational-graph-v13">
+                  <div className="ai-relational-head-v13">
+                    <div>
+                      <span>{trText("AI Relational Intelligence Graph", "AI İlişkisel Zekâ Grafı")}</span>
+                      <h3>{trText("From disconnected CSVs to a patient-ready action path", "Dağınık CSV’lerden hasta odaklı aksiyon yoluna")}</h3>
+                      <p>
+                        {trText(
+                          "This graph connects public cancer context, chemotherapy cohort signals, thyroid monitoring features, red flags and patient/caregiver answers into an explainable support pathway.",
+                          "Bu graf kamu kanser bağlamını, kemoterapi kohort sinyallerini, tiroid takip özelliklerini, kırmızı bayrakları ve hasta/bakıcı yanıtlarını açıklanabilir bir destek yoluna bağlar."
+                        )}
+                      </p>
+                    </div>
+                    <strong>{relationalPriorityScore}/100 · {relationalPriorityLabel}</strong>
+                  </div>
+
+                  <div className="ai-neural-map-v13">
+                    {aiRelationNodes.map((node, index) => (
+                      <div
+                        key={node.id}
+                        className={`ai-neural-node-v13 node-${node.id}`}
+                        style={{ "--node-strength": `${node.strength}%`, "--node-index": index }}
+                      >
+                        <small>{node.type}</small>
+                        <b>{node.label}</b>
+                        <span>{node.detail}</span>
+                        <em><i style={{ width: `${node.strength}%` }}></i></em>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="ai-relation-edge-grid-v13">
+                    {aiRelationEdges.map((edge) => (
+                      <article key={`${edge.from}-${edge.to}`}>
+                        <div>
+                          <b>{edge.from} → {edge.to}</b>
+                          <span>{edge.source}</span>
+                        </div>
+                        <p>{edge.relation}</p>
+                        <small>{edge.why}</small>
+                        <strong>{edge.action}</strong>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="ai-caregiver-question-engine-v13">
+                    <div className="ai-question-head-v13">
+                      <span>{trText("Patient / caregiver question engine", "Hasta / bakıcı soru motoru")}</span>
+                      <strong>{trText("Answer these to strengthen the relationship graph", "İlişki grafını güçlendirmek için yanıtlayın")}</strong>
+                    </div>
+
+                    <div className="ai-question-grid-v13">
+                      {relationalQuestionFlow.map((question) => (
+                        <article key={question.id}>
+                          <b>{question.question}</b>
+                          <p>{question.reason}</p>
+                          <div>
+                            {question.options.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                className={relationAnswers[question.id]?.value === option.value ? "active" : ""}
+                                onClick={() => setRelationAnswer(question.id, option)}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="ai-action-output-v13">
+                    <div className="ai-action-output-title-v13">
+                      <span>{trText("Smart action output", "Akıllı aksiyon çıktısı")}</span>
+                      <strong>{trText("Who, where, why, what and when", "Kim, nerede, neden, ne yapmalı ve ne zaman")}</strong>
+                    </div>
+
+                    <div className="ai-action-output-grid-v13">
+                      <article>
+                        <b>{trText("Who acts?", "Kim aksiyon alır?")}</b>
+                        <p>{relationalActionOutput.who}</p>
+                      </article>
+                      <article>
+                        <b>{trText("Where is the context?", "Bağlam nerede?")}</b>
+                        <p>{relationalActionOutput.where}</p>
+                      </article>
+                      <article>
+                        <b>{trText("Why does it matter?", "Neden önemli?")}</b>
+                        <p>{relationalActionOutput.why}</p>
+                      </article>
+                      <article>
+                        <b>{trText("What should be done?", "Ne yapılmalı?")}</b>
+                        <p>{relationalActionOutput.what}</p>
+                      </article>
+                      <article>
+                        <b>{trText("When?", "Ne zaman?")}</b>
+                        <p>{relationalActionOutput.when}</p>
+                      </article>
+                    </div>
+
+                    <div className="ai-action-safety-note-v13">
+                      {trText(
+                        "This output is a structured communication aid. It is not a diagnosis, treatment decision, emergency triage or personal survival prediction.",
+                        "Bu çıktı yapılandırılmış iletişim desteğidir. Tanı, tedavi kararı, acil triyaj veya kişisel sağkalım tahmini değildir."
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ai-power-real-grid-v11">
+                  {aiPowerRealDatasets.map((dataset) => (
+                    <article className="ai-power-real-card-v11" key={dataset.id}>
+                      <div className="ai-power-real-title-v11">
+                        <div>
+                          <span>{dataset.domain}</span>
+                          <h4>{dataset.name}</h4>
+                        </div>
+                        <b>{dataset.file_size_mb} MB</b>
+                      </div>
+
+                      <div className="ai-power-real-kpis-v11">
+                        <div>
+                          <strong>{formatAiPowerNumber(dataset.row_count)}</strong>
+                          <small>{trText("rows", "satır")}</small>
+                        </div>
+                        <div>
+                          <strong>{dataset.column_count}</strong>
+                          <small>{trText("columns", "kolon")}</small>
+                        </div>
+                        <div>
+                          <strong>{dataset.numeric_columns_detected}</strong>
+                          <small>{trText("numeric", "sayısal")}</small>
+                        </div>
+                        <div>
+                          <strong>{dataset.sha256_prefix}</strong>
+                          <small>checksum</small>
+                        </div>
+                      </div>
+
+                      <div className="ai-power-chart-block-v11">
+                        <div className="ai-power-chart-head-v11">
+                          <b>{trText("Key metric bars", "Ana metrik barları")}</b>
+                          <small>{dataset.source}</small>
+                        </div>
+
+                        {(dataset.key_metrics || []).slice(0, 6).map((metric) => (
+                          <div className="ai-power-real-bar-v11" key={`${dataset.id}-${metric.label}`}>
+                            <div>
+                              <span>{metric.label}</span>
+                              <small>avg {formatAiPowerDecimal(metric.value)}</small>
+                            </div>
+                            <em>
+                              <i style={{ width: `${Math.max(4, Math.min(100, Number(metric.relative || 0)))}%` }}></i>
+                            </em>
+                            <p>{getAiPowerColumnMeaning(metric.label)}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="ai-power-line-risk-v11">
+                        <div>
+                          <b>{trText("Trend line", "Trend çizgisi")}</b>
+                          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <polyline points={aiPowerTrendPoints(dataset.trend)} />
+                          </svg>
+                          <small>{trText("10-window burden trend from dataset rows", "Veri satırlarından 10 pencereli yük trendi")}</small>
+                        </div>
+
+                        <div>
+                          <b>{trText("Risk / prognosis distribution", "Risk / prognoz dağılımı")}</b>
+                          <ul>
+                            {(dataset.risk_distribution || []).slice(0, 4).map((risk) => (
+                              <li key={`${dataset.id}-${risk.label}`}>
+                                <span>{risk.label}</span>
+                                <strong>{risk.percent}%</strong>
+                              </li>
+                            ))}
+                          </ul>
+                          <small>{trText("source", "kaynak")}: {dataset.risk_source}</small>
+                        </div>
+                      </div>
+
+                      <div className="ai-power-correlation-v11">
+                        <b>{trText("Top correlations", "En güçlü korelasyonlar")}</b>
+                        {(dataset.correlations || []).length ? (
+                          <ul>
+                            {dataset.correlations.slice(0, 4).map((corr) => (
+                              <li key={`${dataset.id}-${corr.x}-${corr.y}`}>
+                                <span>{corr.x} ↔ {corr.y}</span>
+                                <strong>r={corr.r}</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>{trText("No strong numeric correlation detected in preview sample.", "Önizleme örneğinde güçlü sayısal korelasyon bulunamadı.")}</p>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ai-power-source-grid-v10">
+                {aiPowerSources.map((source) => (
+                  <article key={source.id}>
+                    <div>
+                      <span>{source.status}</span>
+                      <strong>{source.name}</strong>
+                    </div>
+                    <p>{source.domain}</p>
+                    <small>{source.signal}</small>
+                    <code>{source.splunkSource}</code>
+                  </article>
+                ))}
+              </div>
+
+              <div className="ai-power-main-grid-v10">
+                <section className="ai-power-breakdown-v10">
+                  <div className="ai-power-section-head-v10">
+                    <span>{trText("AI signal breakdown", "AI sinyal kırılımı")}</span>
+                    <strong>{supportScore}/100</strong>
+                  </div>
+
+                  {aiPowerBreakdown.map((item) => (
+                    <div className="ai-power-bar-v10" key={item.label}>
+                      <div>
+                        <b>{item.label}</b>
+                        <small>{item.value}/{item.max}</small>
+                      </div>
+                      <em>
+                        <i style={{ width: `${Math.min(100, Math.round((item.value / Math.max(1, item.max)) * 100))}%` }}></i>
+                      </em>
+                      <p>{item.detail}</p>
+                    </div>
+                  ))}
+                </section>
+
+                <section className="ai-power-query-preview-v10">
+                  <div className="ai-power-section-head-v10">
+                    <span>{trText("Splunk query preview", "Splunk sorgu önizlemesi")}</span>
+                    <strong>SPL</strong>
+                  </div>
+
+                  {aiPowerQueries.map((item) => (
+                    <details key={item.title} open={item.source === "oncoconnect_ai_copilot"}>
+                      <summary>
+                        <b>{item.title}</b>
+                        <small>{item.source}</small>
+                      </summary>
+                      <pre>{item.query}</pre>
+                    </details>
+                  ))}
+                </section>
+              </div>
+
+              <div className="ai-power-evidence-v10">
+                <div>
+                  <span>{trText("Evidence used by AI", "AI tarafından kullanılan kanıt")}</span>
+                  <strong>{trText("Explainable decision path", "Açıklanabilir karar yolu")}</strong>
+                </div>
+
+                <ul>
+                  {aiPowerEvidence.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="ai-power-actions-v10">
+                <button type="button" onClick={runWorkflowSimulation}>
+                  {trText("Run AI pipeline simulation", "AI pipeline simülasyonu çalıştır")}
+                </button>
+                <button type="button" onClick={generateDetailedReport}>
+                  {trText("Generate evidence report", "Kanıt raporu üret")}
+                </button>
+                <button type="button" onClick={exportDetailedReportPdf}>
+                  {trText("Export AI report PDF", "AI raporunu PDF dışa aktar")}
                 </button>
               </div>
             </div>
