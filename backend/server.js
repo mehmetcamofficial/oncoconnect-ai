@@ -1717,6 +1717,15 @@ app.get("/splunk/metrics", async (req, res) => {
 });
 
 
-app.listen(5050, () => {
-  console.log("Server running on port 5050");
-});
+// ONCOCONNECT_VERCEL_ENTRY_V1
+// Export the Express app for Vercel and tests.
+module.exports = app;
+
+// Keep the existing local development workflow.
+if (require.main === module) {
+  const port = Number(process.env.PORT || 5050);
+
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
