@@ -45,23 +45,94 @@ app.post("/test-splunk", async (req, res) => {
       splunk: response.data
     });
   } catch (error) {
+    if (error instanceof InputValidationError) {
+      return res.status(400).json({
+        success: false,
+        error: "INVALID_INPUT",
+        field: error.field,
+        message: error.message
+      });
+    }
+
     console.log(error.response?.data || error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message
     });
   }
 });
 
+
+// ONCOCONNECT_SYMPTOM_VALIDATION_V1
+class InputValidationError extends Error {
+  constructor(message, field) {
+    super(message);
+    this.name = "InputValidationError";
+    this.field = field;
+    this.statusCode = 400;
+  }
+}
+
+function readSymptomScore(data, field) {
+  const rawValue = data?.[field];
+
+  // Preserve the current behavior for omitted or empty fields.
+  if (rawValue === undefined || rawValue === null || rawValue === "") {
+    return 0;
+  }
+
+  // Reject booleans, arrays and objects rather than coercing them.
+  if (
+    typeof rawValue === "boolean" ||
+    Array.isArray(rawValue) ||
+    typeof rawValue === "object"
+  ) {
+    throw new InputValidationError(
+      `${field} must be a number between 0 and 10.`,
+      field
+    );
+  }
+
+  const value = Number(rawValue);
+
+  if (!Number.isFinite(value)) {
+    throw new InputValidationError(
+      `${field} must be a valid number between 0 and 10.`,
+      field
+    );
+  }
+
+  if (value < 0 || value > 10) {
+    throw new InputValidationError(
+      `${field} must be between 0 and 10.`,
+      field
+    );
+  }
+
+  return value;
+}
+
+function readValidatedSymptoms(data) {
+  return {
+    fatigue: readSymptomScore(data, "fatigue"),
+    nausea: readSymptomScore(data, "nausea"),
+    pain: readSymptomScore(data, "pain"),
+    mood: readSymptomScore(data, "mood")
+  };
+}
+
+
 app.post("/checkin", async (req, res) => {
   try {
-    const data = req.body;
+    const data = req.body || {};
 
-    const fatigue = Number(data.fatigue || 0);
-    const nausea = Number(data.nausea || 0);
-    const pain = Number(data.pain || 0);
-    const mood = Number(data.mood || 0);
+    const {
+      fatigue,
+      nausea,
+      pain,
+      mood
+    } = readValidatedSymptoms(data);
 
     const risk_score = fatigue + nausea + pain + (10 - mood);
 
@@ -104,9 +175,18 @@ app.post("/checkin", async (req, res) => {
       splunk: response.data
     });
   } catch (error) {
+    if (error instanceof InputValidationError) {
+      return res.status(400).json({
+        success: false,
+        error: "INVALID_INPUT",
+        field: error.field,
+        message: error.message
+      });
+    }
+
     console.log(error.response?.data || error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message
     });
@@ -118,10 +198,13 @@ app.post("/ai-summary", async (req, res) => {
   try {
     const data = req.body || {};
 
-    const fatigue = Number(data.fatigue || 0);
-    const nausea = Number(data.nausea || 0);
-    const pain = Number(data.pain || 0);
-    const mood = Number(data.mood || 0);
+    const {
+      fatigue,
+      nausea,
+      pain,
+      mood
+    } = readValidatedSymptoms(data);
+
     const risk_score = fatigue + nausea + pain + (10 - mood);
 
     let riskLevel = "Low";
@@ -262,8 +345,21 @@ app.post("/ai-summary", async (req, res) => {
       splunk: response.data
     });
   } catch (error) {
+    if (error instanceof InputValidationError) {
+      return res.status(400).json({
+        success: false,
+        error: "INVALID_INPUT",
+        field: error.field,
+        message: error.message
+      });
+    }
+
     console.log(error.response?.data || error.message);
-    res.status(500).json({ success: false, error: error.message });
+
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
