@@ -439,15 +439,42 @@ app.post("/ai-summary", async (req, res) => {
       }
     };
 
-    const response = await splunkClient.post(
-      process.env.SPLUNK_HEC_URL,
-      payload
-    );
+    // ONCOCONNECT_OPTIONAL_SPLUNK_LOGGING_V1
+    let splunkResult = {
+      sent: false,
+      status: "not_configured"
+    };
+
+    if (process.env.SPLUNK_HEC_URL && process.env.SPLUNK_HEC_TOKEN) {
+      try {
+        const response = await splunkClient.post(
+          process.env.SPLUNK_HEC_URL,
+          payload
+        );
+
+        splunkResult = {
+          sent: true,
+          status: "indexed",
+          response: response.data
+        };
+      } catch (splunkError) {
+        console.warn(
+          "Splunk logging failed; returning AI result without telemetry:",
+          splunkError.response?.data || splunkError.message
+        );
+
+        splunkResult = {
+          sent: false,
+          status: "unavailable",
+          message: "AI result returned, but Splunk telemetry could not be indexed."
+        };
+      }
+    }
 
     res.json({
       success: true,
       summary,
-      splunk: response.data
+      splunk: splunkResult
     });
   } catch (error) {
     if (error instanceof InputValidationError) {
