@@ -1,20 +1,25 @@
-# OncoConnect AI — Splunk Observability MVP
+cd ~/Desktop/oncoconnect-ai
 
-OncoConnect AI is a hackathon MVP designed to support cancer patients and caregivers through structured daily symptom check-ins and real-time observability.
+cat > LICENSE <<'EOF'
+MIT License
 
-The platform allows patients to submit fatigue, nausea, pain, mood, treatment stage, cancer type, city, and notes. The backend computes a lightweight risk score and sends each structured check-in event to Splunk through HTTP Event Collector.
+Copyright (c) 2026 OncoConnect AI Contributors
 
-Splunk is used as the observability and analytics layer. It enables real-time dashboards for patient check-in volume, risk distribution, symptom trends, city-level patterns, and high-risk patient alerts.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files, to deal in the Software
+without restriction, including without limitation the rights to use, copy,
+modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-## Core Components
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-- React / Vite frontend for patient check-ins
-- Node.js / Express backend
-- Risk scoring logic
-- Splunk HEC integration
-- Splunk dashboard for monitoring and analytics
-- Synthetic oncology dataset import for demo-scale observability
-
-## Hackathon Value
-
-This MVP demonstrates how Splunk can be used beyond traditional IT logs, as a real-time health observability layer for patient-reported outcomes, early risk detection, and social impact monitoring.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+EOF
