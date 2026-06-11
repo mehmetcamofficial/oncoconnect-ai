@@ -42768,157 +42768,7 @@ body,
   }
 }
 
-
-
-/* RIGHT RAIL FILL V46
-   Fix right-side empty bottom space.
-   Makes the right panel behave like a full-height dashboard rail.
-*/
-
-.cc-grid-v42 {
-  align-items: stretch !important;
-}
-
-.cc-right-v42 {
-  height: 100% !important;
-  min-height: 100% !important;
-  align-self: stretch !important;
-  display: grid !important;
-  grid-template-rows: auto auto 1fr auto !important;
-  gap: 12px !important;
-}
-
-/* Priority and evidence stay compact */
-.cc-priority-v42 {
-  min-height: 230px !important;
-}
-
-.cc-evidence-v42 {
-  min-height: 185px !important;
-}
-
-/* This section now absorbs the remaining vertical space */
-.cc-next-v42 {
-  min-height: 0 !important;
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.cc-next-grid-v42 {
-  flex: 1 !important;
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  align-items: stretch !important;
-}
-
-.cc-next-grid-v42 article {
-  height: 100% !important;
-  min-height: 190px !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-/* Report card becomes the clean bottom CTA */
-.cc-report-v42 {
-  align-self: end !important;
-  min-height: 126px !important;
-  margin-top: 0 !important;
-}
-
-/* Better right rail proportions on laptop widths */
-@media (min-width: 1181px) and (max-width: 1500px) {
-  .cc-right-v42 {
-    gap: 10px !important;
-  }
-
-  .cc-priority-v42 {
-    min-height: 215px !important;
-  }
-
-  .cc-evidence-v42 {
-    min-height: 172px !important;
-  }
-
-  .cc-next-grid-v42 article {
-    min-height: 175px !important;
-  }
-
-  .cc-report-v42 {
-    min-height: 116px !important;
-  }
-}
-
-/* Prevent clipped/ugly narrow text in right cards */
-.cc-next-grid-v42 article,
-.cc-next-grid-v42 article * {
-  overflow-wrap: normal !important;
-  word-break: normal !important;
-}
-
-
-
-/* LEFT RAIL NO GAP V48
-   Fix left-side empty bottom area after Get Recommendation.
-   The left rail now stretches with the cockpit grid instead of ending early.
-*/
-
-.cc-grid-v42 {
-  align-items: stretch !important;
-}
-
-/* Left rail should fill the full dashboard column height */
-.cc-left-v42 {
-  align-self: stretch !important;
-  height: 100% !important;
-  min-height: 100% !important;
-  display: grid !important;
-  grid-template-rows:
-    auto   /* title */
-    auto   /* role */
-    auto   /* goal */
-    auto   /* context */
-    auto   /* symptoms */
-    auto   /* safety */
-    auto   /* buttons */ !important;
-  align-content: start !important;
-}
-
-/* Make the bottom feel intentional instead of ending abruptly */
-.cc-run-v42 {
-  margin-top: 6px !important;
-  padding-bottom: 4px !important;
-}
-
-/* If the grid is taller than the form, the white card still continues cleanly */
-.cc-left-v42::after {
-  content: "";
-  display: block;
-  min-height: 1px;
-}
-
-/* Slightly reduce excessive bottom background inside the full cockpit frame */
-.care-cockpit-v42 {
-  padding-bottom: 8px !important;
-}
-
-/* Keep left controls readable */
-.cc-left-v42 .cc-run-v42 button:last-child {
-  margin-bottom: 0 !important;
-}
-
-/* Laptop tuning */
-@media (min-width: 1181px) and (max-width: 1500px) {
-  .cc-left-v42 {
-    min-height: 100% !important;
-  }
-
-  .cc-run-v42 {
-    margin-top: 4px !important;
-  }
-}
-
-
+/* RIGHT/LEFT RAIL FILL V46 removed: it forced full-height columns. */
 
 /* EXECUTION CONSOLE TARGET V49
    Only changes AI Execution Console.
@@ -49971,6 +49821,1575 @@ body.pipeline-force-idle-v93 .cc-execution-v42 .cc-pipeline-v42 article.hard-idl
   .reasoning-chart-v55 circle,
   .reasoning-chart-v57 circle {
     animation: none !important;
+  }
+}
+
+
+
+/* REASONING NETWORK DATA PACKETS V125
+   Adds visible data/neuron packets moving through the existing SVG.
+   Keeps the card structure intact.
+*/
+
+.cc-network-v42.reasoning-svg-v55,
+.cc-network-v42.reasoning-svg-v57 {
+  min-height: 365px !important;
+}
+
+/* Slightly larger canvas, without changing node positions */
+.reasoning-chart-v55.reasoning-chart-v57 {
+  height: 292px !important;
+  min-height: 292px !important;
+  max-height: 292px !important;
+  overflow: visible !important;
+}
+
+/* Make the route lines clearer but not bulky */
+.reasoning-chart-v55 .edge-main-v57,
+.reasoning-chart-v57 .edge-main-v57 {
+  stroke-width: 2.75px !important;
+  opacity: .96 !important;
+}
+
+.reasoning-chart-v55 .edge-soft-v57,
+.reasoning-chart-v57 .edge-soft-v57 {
+  stroke-width: 1.95px !important;
+  opacity: .48 !important;
+}
+
+/* Animated packets */
+.data-packets-v125 {
+  pointer-events: none !important;
+}
+
+.data-packet-v125 {
+  opacity: .95;
+  stroke: rgba(255,255,255,.94);
+  stroke-width: 2.1px;
+  filter:
+    drop-shadow(0 0 6px rgba(37, 99, 235, .20))
+    drop-shadow(0 6px 8px rgba(15, 23, 42, .16));
+}
+
+.packet-fatigue-v125 {
+  fill: #2563eb;
+}
+
+.packet-pain-v125 {
+  fill: #7c3aed;
+}
+
+.packet-mood-v125,
+.packet-positive-v125,
+.packet-care-v125,
+.packet-doctor-v125,
+.packet-monitor-v125 {
+  fill: #10b981;
+}
+
+.packet-negative-v125 {
+  fill: #fb7185;
+}
+
+/* Destination packets glow slightly stronger */
+.packet-care-v125,
+.packet-doctor-v125,
+.packet-monitor-v125 {
+  filter:
+    drop-shadow(0 0 8px rgba(16, 185, 129, .34))
+    drop-shadow(0 8px 12px rgba(15, 23, 42, .14));
+}
+
+/* When user hovers over the network, make the data journey easier to read */
+.cc-network-v42:hover .data-packet-v125 {
+  opacity: 1;
+  stroke-width: 2.5px;
+  filter:
+    drop-shadow(0 0 10px rgba(37, 99, 235, .25))
+    drop-shadow(0 8px 12px rgba(15, 23, 42, .20));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-packet-v125 animateMotion {
+    display: none !important;
+  }
+}
+
+
+
+/* LANDING NAV FIX V126 */
+
+/* Keep nav buttons visually consistent with old anchor links */
+.old-home-links button {
+  cursor: pointer;
+}
+
+/* Remove visual gap after Language label removal */
+.old-home-lang {
+  gap: 0 !important;
+}
+
+.old-home-lang label {
+  display: none !important;
+}
+
+/* Smooth anchor positioning under sticky navbar */
+#what-is-it,
+#how-it-works,
+#cancer-burden,
+#research {
+  scroll-margin-top: 110px;
+}
+
+
+
+/* NAV SCROLL + ALIGNMENT FIX V127 */
+
+.old-home-nav {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 22px !important;
+  padding-left: 96px !important;
+  padding-right: 22px !important;
+  min-height: 76px !important;
+}
+
+.old-home-brand {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  margin-right: 8px !important;
+}
+
+.old-home-links {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 20px !important;
+  min-width: 0 !important;
+}
+
+.old-home-links button,
+.old-home-links a {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  min-width: auto !important;
+  width: auto !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+.old-home-lang {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  margin-left: 8px !important;
+}
+
+.old-home-lang label {
+  display: none !important;
+}
+
+.old-home-lang select {
+  min-width: 132px !important;
+}
+
+/* Prevent sticky nav from covering target sections */
+#what-is-it,
+#how-it-works,
+#cancer-burden,
+#research,
+.landing-research-feed-after,
+.landing-research-feed,
+.patient-journey-simulator-v19b,
+.patient-journey-simulator-v19 {
+  scroll-margin-top: 105px !important;
+}
+
+@media (max-width: 1350px) {
+  .old-home-nav {
+    padding-left: 76px !important;
+    gap: 16px !important;
+  }
+
+  .old-home-links {
+    gap: 14px !important;
+  }
+
+  .old-home-links button,
+  .old-home-links a {
+    font-size: .9rem !important;
+  }
+
+  .old-home-brand {
+    font-size: 1.05rem !important;
+  }
+}
+
+
+
+/* HARD NAV SCROLL + ONE-LINE NAV V128 */
+
+.old-home-nav {
+  padding-left: 64px !important;
+  padding-right: 20px !important;
+  gap: 18px !important;
+}
+
+.old-home-brand {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  font-size: 1.08rem !important;
+  margin-right: 4px !important;
+}
+
+.old-home-links {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 18px !important;
+  flex-wrap: nowrap !important;
+}
+
+.old-home-links button,
+.old-home-links a {
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  max-width: none !important;
+  min-width: max-content !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+}
+
+.old-home-links button br,
+.old-home-links a br {
+  display: none !important;
+}
+
+.old-home-lang {
+  flex: 0 0 auto !important;
+  margin-left: 4px !important;
+}
+
+.old-home-lang label {
+  display: none !important;
+}
+
+.old-home-lang select {
+  min-width: 124px !important;
+  height: 46px !important;
+}
+
+#what-is-it,
+#how-it-works,
+#cancer-burden,
+#research,
+.landing-research-feed-after,
+.landing-research-feed,
+.patient-journey-simulator-v19b,
+.patient-journey-simulator-v19 {
+  scroll-margin-top: 105px !important;
+}
+
+@media (max-width: 1450px) {
+  .old-home-links {
+    gap: 14px !important;
+  }
+
+  .old-home-links button,
+  .old-home-links a {
+    font-size: .86rem !important;
+  }
+
+  .old-home-brand {
+    font-size: 1rem !important;
+  }
+}
+
+
+
+/* HARD TARGET NAV SECTIONS V129 */
+
+.old-home-links {
+  flex-wrap: nowrap !important;
+  gap: 18px !important;
+}
+
+.old-home-links button,
+.old-home-links a {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  min-width: max-content !important;
+  width: max-content !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.old-home-lang label {
+  display: none !important;
+}
+
+.old-home-lang {
+  gap: 0 !important;
+}
+
+
+
+/* DIRECT NAV IDS V130 */
+
+.old-home-links button,
+.old-home-links a {
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.old-home-lang label {
+  display: none !important;
+}
+
+.old-home-lang {
+  gap: 0 !important;
+}
+
+#what-is-it,
+#how-it-works,
+#cancer-burden,
+#research {
+  scroll-margin-top: 110px !important;
+}
+
+
+
+/* CLEAN NAV TARGETS V131 */
+
+.landing-scroll-anchor-v131 {
+  height: 1px;
+  width: 100%;
+  scroll-margin-top: 110px;
+}
+
+#what-is-it,
+#how-it-works-anchor,
+#cancer-burden,
+#research-pulse {
+  scroll-margin-top: 110px !important;
+}
+
+.old-home-links button {
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.old-home-lang label {
+  display: none !important;
+}
+
+.old-home-lang {
+  gap: 0 !important;
+}
+
+
+
+/* SIDE PANELS NO STRETCH V132
+   Keeps enlarged AI Reasoning Network.
+   Prevents left/right cards from stretching to the center column height.
+*/
+
+/* Main cockpit/grid columns should start from top, not stretch vertically */
+.care-cockpit-v42,
+.cc-grid-v42,
+.cc-main-v42,
+.cc-content-v42,
+.cc-cockpit-grid-v42,
+.cc-main-grid-v42,
+.patient-copilot-layout {
+  align-items: start !important;
+}
+
+/* Left input panel should fit its own content */
+.cc-left-v42,
+.cc-left-v42 > aside,
+.cc-left-v42 > section,
+.cc-left-v42 > div {
+  align-self: start !important;
+  height: fit-content !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Remove artificial blank space at the bottom of left panel */
+.cc-left-v42 {
+  padding-bottom: 14px !important;
+  margin-bottom: 0 !important;
+}
+
+.cc-left-v42 > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Right column should not stretch either */
+.cc-right-v42,
+.cc-right-v42 > aside,
+.cc-right-v42 > section,
+.cc-right-v42 > div {
+  align-self: start !important;
+  height: fit-content !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Report card compact height */
+.cc-report-v42,
+.cc-download-v42,
+.report-card-v42,
+.download-report-v42,
+.cc-right-v42 .cc-report-card,
+.cc-right-v42 .download-card,
+.cc-right-v42 [class*="report"],
+.cc-right-v42 [class*="download"] {
+  align-self: start !important;
+  height: fit-content !important;
+  min-height: 0 !important;
+  padding-bottom: 22px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Prevent right column from reserving dead vertical space */
+.cc-right-v42 {
+  gap: 14px !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Keep enlarged reasoning network but avoid forcing side columns */
+.cc-network-v42,
+.reasoning-svg-v55,
+.reasoning-svg-v57 {
+  align-self: stretch !important;
+}
+
+/* Bottom journey should stay close to center content */
+.cc-journey-v42 {
+  margin-top: 14px !important;
+}
+
+
+
+/* HARD REMOVE COCKPIT BOTTOM GAP V133
+   Goal: remove large empty area under left/right cards after AI Reasoning Network enlargement.
+   Rollback file: frontend/src/App.BEFORE_HARD_REMOVE_BOTTOM_GAP_V133.css
+*/
+
+/* Stop the outer dashboard shell from reserving unnecessary bottom height */
+.care-cockpit-v42,
+.patient-copilot-layout,
+.cc-main-v42,
+.cc-content-v42,
+.cc-grid-v42,
+.cc-cockpit-grid-v42,
+.cc-main-grid-v42 {
+  align-items: start !important;
+  align-content: start !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Center column should define its own height only */
+.cc-center-v42 {
+  align-self: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  gap: 12px !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Left column should end after Get Recommendation */
+.cc-left-v42 {
+  align-self: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 0 !important;
+  overflow: visible !important;
+}
+
+.cc-left-v42 > aside,
+.cc-left-v42 > section,
+.cc-left-v42 > div {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+}
+
+/* Right column should end after report content */
+.cc-right-v42 {
+  align-self: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+.cc-right-v42 > aside,
+.cc-right-v42 > section,
+.cc-right-v42 > div {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+}
+
+/* Compact any report/download card without changing its content */
+.cc-right-v42 [class*="report"],
+.cc-right-v42 [class*="Report"],
+.cc-right-v42 [class*="download"],
+.cc-right-v42 [class*="Download"] {
+  height: auto !important;
+  min-height: 0 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 18px !important;
+}
+
+/* Pull journey closer to AI Reasoning Network */
+.cc-journey-v42 {
+  margin-top: 10px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Reduce dashboard bottom dead zone */
+.patient-copilot-page,
+.copilot-page,
+.care-page,
+body {
+  padding-bottom: 0 !important;
+}
+
+/* If an internal wrapper creates the pale empty area, collapse its bottom padding */
+[class*="cockpit"],
+[class*="Copilot"],
+[class*="copilot"] {
+  --bottom-gap-v133: 0px;
+}
+
+/* Keep AI Reasoning Network enlarged but not forcing side columns */
+.cc-network-v42,
+.reasoning-svg-v55,
+.reasoning-svg-v57 {
+  align-self: stretch !important;
+  margin-bottom: 0 !important;
+}
+
+
+
+/* SIDE SUMMARY CARDS V135
+   Fill left/right visual gaps with useful dashboard micro-cards.
+   Does not move Journey or change AI Reasoning Network layout.
+*/
+
+.cc-side-mini-card-v135 {
+  margin-top: 14px !important;
+  padding: 16px 16px 15px !important;
+  border-radius: 20px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.94), rgba(248,250,252,.90)) !important;
+  border: 1px solid rgba(148, 163, 184, .22) !important;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, .07) !important;
+}
+
+.cc-side-mini-card-v135 span {
+  display: block !important;
+  color: #2563eb !important;
+  font-size: .68rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 7px !important;
+}
+
+.cc-side-mini-card-v135 b {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: .9rem !important;
+  font-weight: 950 !important;
+  line-height: 1.15 !important;
+  margin-bottom: 10px !important;
+}
+
+.cc-side-mini-card-v135 ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: grid !important;
+  gap: 7px !important;
+}
+
+.cc-side-mini-card-v135 li {
+  position: relative !important;
+  padding-left: 18px !important;
+  color: #475569 !important;
+  font-size: .72rem !important;
+  font-weight: 850 !important;
+  line-height: 1.22 !important;
+}
+
+.cc-side-mini-card-v135 li::before {
+  content: "✓" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  color: #10b981 !important;
+  font-weight: 950 !important;
+}
+
+.cc-side-mini-card-right-v135 {
+  margin-top: 12px !important;
+}
+
+/* Keep cards content-sized */
+.cc-left-v42,
+.cc-right-v42 {
+  align-self: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.cc-left-v42 > *,
+.cc-right-v42 > * {
+  flex-shrink: 0 !important;
+}
+
+
+
+/* ENLARGE REASONING + EVIDENCE V136
+   Goal: close visual gaps by enlarging real dashboard cards,
+   not by moving Journey or adding filler cards.
+*/
+
+/* Hide previous filler cards from v135 */
+.cc-side-mini-card-v135 {
+  display: none !important;
+}
+
+/* Make AI Reasoning Network larger and more intentional */
+.cc-network-v42.reasoning-svg-v55,
+.cc-network-v42.reasoning-svg-v57 {
+  min-height: 430px !important;
+  padding: 30px 34px 34px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Enlarge the internal SVG/canvas without changing node structure */
+.reasoning-chart-v55.reasoning-chart-v57 {
+  height: 340px !important;
+  min-height: 340px !important;
+  max-height: 340px !important;
+  overflow: visible !important;
+}
+
+/* Slightly stronger visual weight for network paths and packets */
+.reasoning-chart-v55 .edge-main-v57,
+.reasoning-chart-v57 .edge-main-v57 {
+  stroke-width: 3px !important;
+  opacity: .98 !important;
+}
+
+.reasoning-chart-v55 .edge-soft-v57,
+.reasoning-chart-v57 .edge-soft-v57 {
+  stroke-width: 2.15px !important;
+  opacity: .55 !important;
+}
+
+.data-packet-v125 {
+  opacity: 1 !important;
+}
+
+/* Keep Journey close after bigger reasoning card */
+.cc-journey-v42 {
+  margin-top: 12px !important;
+}
+
+/* Expand the real Data & Evidence Signal card */
+.cc-evidence-expanded-v136 {
+  min-height: 340px !important;
+  height: auto !important;
+  padding: 24px 24px 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+/* Fallback: if class injection failed, target likely right-column data card after support priority */
+.cc-right-v42 > section:nth-of-type(2) {
+  min-height: 340px !important;
+}
+
+/* Make evidence metric boxes more substantial */
+.cc-evidence-expanded-v136 [class*="grid"],
+.cc-evidence-expanded-v136 [class*="metrics"],
+.cc-evidence-expanded-v136 [class*="cards"] {
+  gap: 12px !important;
+}
+
+/* Bigger evidence metric cards, but not oversized */
+.cc-evidence-expanded-v136 [class*="grid"] > *,
+.cc-evidence-expanded-v136 [class*="metrics"] > *,
+.cc-evidence-expanded-v136 [class*="cards"] > * {
+  min-height: 86px !important;
+}
+
+/* Tighten evidence card inner lower empty area */
+.cc-evidence-expanded-v136 p,
+.cc-evidence-expanded-v136 h3,
+.cc-evidence-expanded-v136 h2 {
+  margin-bottom: 8px !important;
+}
+
+.cc-evidence-expanded-v136 [class*="compare"],
+.cc-evidence-expanded-v136 [class*="slider"],
+.cc-evidence-expanded-v136 [class*="bar"] {
+  margin-top: 12px !important;
+}
+
+/* Right column should use its real cards to fill the column */
+.cc-right-v42 {
+  gap: 14px !important;
+}
+
+/* Left column should not reserve bottom blank space */
+.cc-left-v42 {
+  padding-bottom: 0 !important;
+}
+
+/* Overall cockpit remains compact */
+.cc-center-v42 {
+  gap: 14px !important;
+}
+
+
+/* ============================================================
+   ONCOCONNECT FINAL COCKPIT BALANCE
+   Clean final CSS override. No JS / Run AI / backend touched.
+   ============================================================ */
+
+/* Stop global cockpit layout from stretching the left card */
+body .cc-shell-v42,
+body .cc-layout-v42,
+body .cc-cockpit-v42 {
+  align-items: flex-start !important;
+}
+
+/* Left rail should end after Get Recommendation, not stretch downward */
+body .cc-left-v42 {
+  align-self: flex-start !important;
+  height: fit-content !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding-bottom: 18px !important;
+  overflow: visible !important;
+  flex: 0 0 auto !important;
+}
+
+/* Hide optional/empty session summary area if it creates blank space */
+body .cc-left-v42 .cc-side-mini-card-v135 {
+  display: none !important;
+}
+
+/* Keep Run AI compact and premium-looking */
+body .cc-run-v42 {
+  margin-top: 14px !important;
+  margin-bottom: 10px !important;
+}
+
+body .cc-run-v42 button {
+  height: auto !important;
+  min-height: 56px !important;
+  max-height: 68px !important;
+  padding: 12px 16px !important;
+  border-radius: 18px !important;
+}
+
+body .cc-run-v42 button small {
+  margin-top: 2px !important;
+  line-height: 1.05 !important;
+}
+
+/* Main column spacing */
+body .cc-main-v42 {
+  align-self: flex-start !important;
+  gap: 14px !important;
+}
+
+/* Right column spacing */
+body .cc-right-v42 {
+  align-self: flex-start !important;
+  gap: 14px !important;
+}
+
+/* AI Reasoning Network: slightly larger graph, controlled card height */
+body .cc-reasoning-v42 {
+  min-height: 350px !important;
+  max-height: 390px !important;
+  padding: 22px 28px 18px !important;
+  overflow: hidden !important;
+}
+
+/* Carefully enlarge only the internal SVG graph */
+body .cc-reasoning-v42 svg {
+  width: 108% !important;
+  height: 278px !important;
+  min-height: 278px !important;
+  max-height: 286px !important;
+  margin-left: -4% !important;
+  margin-top: 0 !important;
+  transform: scale(1.02) !important;
+  transform-origin: center center !important;
+}
+
+/* Keep title / legend above graph */
+body .cc-reasoning-v42 h1,
+body .cc-reasoning-v42 h2,
+body .cc-reasoning-v42 h3,
+body .cc-reasoning-v42 > div:first-child {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Care Journey: prevent title overlap, keep dashboard compact */
+body .cc-journey-v42 {
+  position: relative !important;
+  margin-top: 12px !important;
+  padding: 48px 24px 16px !important;
+  min-height: 126px !important;
+  overflow: visible !important;
+}
+
+body .cc-journey-v42::before {
+  top: 16px !important;
+  left: 24px !important;
+  z-index: 5 !important;
+  white-space: nowrap !important;
+}
+
+body .cc-journey-v42 div {
+  min-height: 58px !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+body .cc-journey-v42 div b {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  margin-bottom: 8px !important;
+  font-size: 17px !important;
+}
+
+/* Download/report card: compact but readable */
+body .cc-report-v42,
+body .cc-download-v42 {
+  min-height: auto !important;
+  padding-bottom: 18px !important;
+}
+
+body .cc-report-v42 .cc-report-placeholder,
+body .cc-download-v42 .cc-report-placeholder {
+  width: 68px !important;
+  height: 68px !important;
+  min-height: 68px !important;
+}
+
+
+/* ============================================================
+   FINAL LEFT BLANK SPACE FIX
+   Target: remove forced left-card stretching and pseudo filler.
+   CSS only. No JSX / Run AI / backend touched.
+   ============================================================ */
+
+/* Parent grid must not force all columns to same height */
+body .cc-grid-v42 {
+  align-items: flex-start !important;
+}
+
+/* Left card should be content-height only */
+body .cc-grid-v42 > .cc-left-v42,
+body .cc-left-v42 {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-self: flex-start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  padding-bottom: 18px !important;
+}
+
+/* Remove old pseudo filler that can create fake white space */
+body .cc-left-v42::after,
+body .cc-left-v42::before {
+  content: none !important;
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+}
+
+/* Prevent children from forcing 100% height inside the left rail */
+body .cc-left-v42 > * {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+}
+
+/* Compact the final action area */
+body .cc-run-v42 {
+  margin-top: 14px !important;
+  margin-bottom: 10px !important;
+}
+
+body .cc-run-v42 button {
+  height: auto !important;
+  min-height: 54px !important;
+  max-height: 68px !important;
+  padding: 12px 16px !important;
+}
+
+/* Hide optional session summary if it is empty/unused */
+body .cc-left-v42 .cc-side-mini-card-v135 {
+  display: none !important;
+}
+
+/* Keep AI graph slightly larger but controlled */
+body .cc-reasoning-v42 svg {
+  width: 110% !important;
+  height: 285px !important;
+  min-height: 285px !important;
+  max-height: 292px !important;
+  margin-left: -5% !important;
+  transform: scale(1.02) !important;
+  transform-origin: center center !important;
+}
+
+
+/* ============================================================
+   FINAL LEFT PANEL + REASONING GRAPH FIX
+   Clean override after removing LEFT RAIL NO GAP V48.
+   CSS only. Run AI untouched.
+   ============================================================ */
+
+body .cc-grid-v42 {
+  align-items: flex-start !important;
+}
+
+body .cc-left-v42 {
+  align-self: flex-start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: max-content !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  padding-bottom: 18px !important;
+}
+
+body .cc-left-v42::before,
+body .cc-left-v42::after {
+  display: none !important;
+  content: none !important;
+}
+
+body .cc-left-v42 > * {
+  flex: 0 0 auto !important;
+}
+
+body .cc-run-v42 {
+  margin-top: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+body .cc-run-v42 button {
+  min-height: 54px !important;
+  max-height: 68px !important;
+  padding: 12px 16px !important;
+}
+
+/* AI Reasoning Network: slightly larger internal graph */
+body .cc-reasoning-v42 {
+  min-height: 365px !important;
+  max-height: 410px !important;
+  padding: 22px 28px 18px !important;
+  overflow: hidden !important;
+}
+
+body .cc-reasoning-v42 svg {
+  width: 112% !important;
+  height: 300px !important;
+  min-height: 300px !important;
+  max-height: 310px !important;
+  margin-left: -6% !important;
+  margin-top: -4px !important;
+  transform: scale(1.02) !important;
+  transform-origin: center center !important;
+}
+
+
+
+/* FINAL SAFE COCKPIT OVERRIDE */
+body .cc-grid-v42 {
+  align-items: flex-start !important;
+}
+
+body .cc-left-v42 {
+  align-self: flex-start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: fit-content !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 14px !important;
+}
+
+body .cc-left-v42::before,
+body .cc-left-v42::after {
+  content: none !important;
+  display: none !important;
+}
+
+body .cc-reasoning-v42 {
+  min-height: 405px !important;
+  max-height: 445px !important;
+  overflow: hidden !important;
+}
+
+body .cc-reasoning-v42 svg {
+  width: 116% !important;
+  height: 330px !important;
+  min-height: 330px !important;
+  max-height: 340px !important;
+  margin-left: -8% !important;
+  margin-top: -8px !important;
+}
+
+/* FINAL REAL REASONING GRAPH FIX — exact inspected classes */
+body .cc-network-v42.reasoning-svg-v55.reasoning-svg-v57 {
+  min-height: 390px !important;
+  max-height: 420px !important;
+  padding: 22px 28px 18px !important;
+  overflow: hidden !important;
+}
+
+body .reasoning-chart-v55.reasoning-chart-v57 {
+  width: 112% !important;
+  height: 365px !important;
+  min-height: 365px !important;
+  max-height: 365px !important;
+  margin-left: -6% !important;
+  margin-top: -12px !important;
+  overflow: visible !important;
+}
+
+/* Pull Care Journey closer without overlap */
+body .cc-journey-v42 {
+  margin-top: 8px !important;
+}
+
+/* FINAL: scale actual reasoning graph content, not only SVG container */
+body .reasoning-chart-v55.reasoning-chart-v57 {
+  width: 100% !important;
+  height: 360px !important;
+  min-height: 360px !important;
+  max-height: 360px !important;
+  margin-left: 0 !important;
+  margin-top: -8px !important;
+  overflow: visible !important;
+}
+
+/* Scale the internal SVG drawing group */
+body .reasoning-chart-v55.reasoning-chart-v57 > g {
+  transform: translate(-28px, -8px) scale(1.12);
+  transform-origin: center center;
+}
+
+/* Give the card enough room but avoid huge empty space */
+body .cc-network-v42.reasoning-svg-v55.reasoning-svg-v57 {
+  min-height: 410px !important;
+  max-height: 440px !important;
+  overflow: hidden !important;
+}
+
+/* TUNE: keep reasoning graph large but prevent left overflow */
+body .reasoning-chart-v55.reasoning-chart-v57 {
+  width: 106% !important;
+  height: 345px !important;
+  min-height: 345px !important;
+  max-height: 345px !important;
+  margin-left: -2% !important;
+  margin-top: -4px !important;
+  overflow: visible !important;
+}
+
+body .reasoning-chart-v55.reasoning-chart-v57 > g {
+  transform: translate(12px, -2px) scale(1.06) !important;
+  transform-origin: center center !important;
+}
+
+body .cc-network-v42.reasoning-svg-v55.reasoning-svg-v57 {
+  min-height: 390px !important;
+  max-height: 425px !important;
+  overflow: hidden !important;
+}
+
+/* LEFT AI ENGINE CARD — fills empty rail space with useful demo signal */
+body .cc-left-v42 .cc-side-mini-card-v135.ai-engine-card-v141 {
+  display: block !important;
+  margin-top: 14px !important;
+  padding: 16px 16px 15px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.92)) !important;
+  border: 1px solid rgba(148, 163, 184, .25) !important;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, .07) !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 span {
+  display: block !important;
+  color: #2563eb !important;
+  font-size: .68rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 7px !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 b {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: .92rem !important;
+  line-height: 1.15 !important;
+  margin-bottom: 10px !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 ul {
+  margin: 0 !important;
+  padding-left: 16px !important;
+  color: #64748b !important;
+  font-size: .72rem !important;
+  line-height: 1.45 !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 li {
+  margin-bottom: 5px !important;
+}
+
+/* AI Engine card independent from hidden cc-side-mini-card-v135 */
+body .cc-left-v42 .ai-engine-card-v141 {
+  display: block !important;
+  margin-top: 14px !important;
+  padding: 16px 16px 15px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.92)) !important;
+  border: 1px solid rgba(148, 163, 184, .25) !important;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, .07) !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 span {
+  display: block !important;
+  color: #2563eb !important;
+  font-size: .68rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 7px !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 b {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: .92rem !important;
+  line-height: 1.15 !important;
+  margin-bottom: 10px !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 ul {
+  margin: 0 !important;
+  padding-left: 16px !important;
+  color: #64748b !important;
+  font-size: .72rem !important;
+  line-height: 1.45 !important;
+}
+
+body .cc-left-v42 .ai-engine-card-v141 li {
+  margin-bottom: 5px !important;
+}
+
+/* Force visible AI Engine card outside Run AI block */
+body .cc-left-v42 > .ai-engine-card-v141 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: 118px !important;
+  margin: 12px 0 12px !important;
+  padding: 14px 15px !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(148, 163, 184, .28) !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, .06) !important;
+  z-index: 10 !important;
+}
+
+body .cc-left-v42 > .ai-engine-card-v141 span {
+  display: block !important;
+  color: #2563eb !important;
+  font-size: .66rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .13em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 6px !important;
+}
+
+body .cc-left-v42 > .ai-engine-card-v141 b {
+  display: block !important;
+  font-size: .86rem !important;
+  line-height: 1.15 !important;
+  color: #0f172a !important;
+  margin-bottom: 8px !important;
+}
+
+body .cc-left-v42 > .ai-engine-card-v141 ul {
+  margin: 0 !important;
+  padding-left: 15px !important;
+  font-size: .68rem !important;
+  line-height: 1.35 !important;
+  color: #64748b !important;
+}
+
+/* FINAL AI ENGINE CARD STYLE */
+body .cc-left-v42 > .ai-engine-card-v141 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10 !important;
+  margin: 14px 0 14px !important;
+  padding: 16px 16px 15px !important;
+  min-height: auto !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(37, 99, 235, .16) !important;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, .07) !important;
+}
+
+body .cc-left-v42 > .ai-engine-card-v141 span {
+  color: #2563eb !important;
+}
+
+body .cc-left-v42 > .ai-engine-card-v141 b {
+  color: #0f172a !important;
+}
+
+body .cc-left-v42 > .ai-engine-card-v141 ul,
+body .cc-left-v42 > .ai-engine-card-v141 li {
+  color: #64748b !important;
+}
+
+/* Fill left rail blank space with a stable pseudo-card */
+body .cc-left-v42 .cc-run-v42::after {
+  content: "AI ENGINE\A Safety scoring + evidence layer\A ✓ Rule-based priority engine\A ✓ v14 evidence context\A ✓ OpenRouter-ready";
+  display: block !important;
+  white-space: pre-line !important;
+  margin-top: 14px !important;
+  padding: 15px 16px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
+  border: 1px solid rgba(37, 99, 235, .18) !important;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, .07) !important;
+  color: #64748b !important;
+  font-size: .72rem !important;
+  line-height: 1.45 !important;
+  font-weight: 750 !important;
+}
+
+body .cc-left-v42 .cc-run-v42 {
+  padding-bottom: 12px !important;
+}
+
+/* CLEAR_SIMILAR_PATIENT_SCALE_V1 */
+.data-evidence-card-v14,
+.cc-evidence-card-v14 {
+  overflow: visible;
+}
+
+.similar-patient-scale-v14 small,
+.similar-patient-scale-v14 span,
+.similar-patient-scale-v14 b {
+  letter-spacing: -0.01em;
+}
+
+
+/* PERFORMANCE_LIGHT_MODE_V1 */
+/* Reduce expensive dashboard effects without changing layout */
+.cc-execution-v42,
+.cc-pipeline-v42,
+.pipeline-card-v97,
+.patient-result-card,
+.cc-evidence-card-v14,
+.data-evidence-card-v14,
+.ai-engine-card-v141 {
+  transition: none !important;
+}
+
+.pipeline-card-v97,
+.cc-execution-v42,
+.patient-result-card,
+.cc-evidence-card-v14,
+.data-evidence-card-v14 {
+  animation: none !important;
+}
+
+/* Heavy shadows make the page feel slower on large dashboards */
+.cc-execution-v42,
+.patient-result-card,
+.cc-evidence-card-v14,
+.data-evidence-card-v14 {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Avoid unnecessary repaint cost */
+.cc-center-v42,
+.cc-right-v42,
+.cc-left-v42 {
+  contain: layout paint;
+}
+
+/* Keep status indicators simple */
+.pipeline-card-v97 .plain-dot-v103,
+.pipeline-card-v97::before,
+.pipeline-card-v97::after {
+  animation: none !important;
+}
+
+/* TREND CLARITY PATCH V121 */
+.trend-helper-v121 {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.trend-chart-v51 polyline {
+  fill: none;
+  stroke-width: 4.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.12));
+}
+
+.trend-chart-v51 circle {
+  stroke: white;
+  stroke-width: 2.4px;
+}
+
+.trend-chart-v51 text {
+  font-weight: 850;
+  fill: #64748b;
+}
+
+.trend-legend-v51 span {
+  font-weight: 900;
+}
+
+.trend-range-select-v119 {
+  font-weight: 900;
+}
+
+.cc-trend-v42 {
+  overflow: hidden;
+}
+
+/* TREND CLARITY SAFE PATCH — CSS only */
+.cc-trend-v42 .trend-chart-v51 {
+  overflow: visible;
+}
+
+.cc-trend-v42 .trend-chart-v51 polyline {
+  stroke-width: 4.2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.16));
+}
+
+.cc-trend-v42 .trend-chart-v51 circle {
+  r: 6;
+  stroke: #ffffff;
+  stroke-width: 2.5px;
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.18));
+}
+
+.cc-trend-v42 .trend-chart-v51 line {
+  stroke-width: 1.4px;
+  opacity: 0.72;
+}
+
+.cc-trend-v42 .trend-chart-v51 text {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.cc-trend-v42 .trend-legend-v51 {
+  margin-top: 18px;
+  gap: 22px;
+}
+
+.cc-trend-v42 .trend-legend-v51 span {
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.cc-trend-v42 .trend-legend-v51 i {
+  width: 14px;
+  height: 14px;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.16);
+}
+
+/* Keep trend card stable and lightweight */
+.cc-trend-v42 {
+  contain: layout paint;
+}
+
+
+
+/* TREND_READABILITY_V123 — safer visual improvement, no data distortion */
+.cc-trend-v42 {
+  min-height: 560px;
+}
+
+.cc-trend-v42 .trend-chart-v51 {
+  width: 100%;
+  min-height: 310px;
+  height: 310px;
+  overflow: visible;
+  margin-top: 18px;
+}
+
+.cc-trend-v42 .trend-chart-v51 polyline {
+  stroke-width: 4.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 5px 7px rgba(15, 23, 42, 0.16));
+}
+
+.cc-trend-v42 .trend-chart-v51 circle {
+  r: 6;
+  stroke: #ffffff;
+  stroke-width: 2.5px;
+  filter: drop-shadow(0 4px 7px rgba(15, 23, 42, 0.22));
+}
+
+.cc-trend-v42 .trend-chart-v51 text {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.cc-trend-v42 .trend-legend-v51 {
+  margin-top: 20px;
+  gap: 28px;
+  font-size: 20px;
+}
+
+.cc-trend-v42 .trend-legend-v51 i {
+  width: 17px;
+  height: 17px;
+}
+
+/* Make the dropdown less dominant so the chart gets more visual focus */
+.cc-trend-v42 .trend-range-select-v119 {
+  max-width: 360px;
+}
+
+
+/* TREND_SPACING_FIX_V124 */
+.cc-trend-v42 {
+  min-height: 460px !important;
+}
+
+.cc-trend-v42 .trend-chart-v51 {
+  min-height: 255px !important;
+  height: 255px !important;
+  margin-top: 8px !important;
+}
+
+.cc-trend-v42 .trend-head-v51 {
+  margin-bottom: 8px !important;
+}
+
+.cc-trend-v42 .trend-legend-v51 {
+  margin-top: 10px !important;
+}
+
+.cc-trend-v42 .trend-chart-v51 polyline {
+  stroke-width: 4px !important;
+}
+
+.cc-trend-v42 .trend-chart-v51 circle {
+  r: 5.5;
+}
+
+/* ============================================================
+   FINAL_SAFE_LEFT_PANEL_WIDTH_V150
+   Wider Tell the AI rail on large desktop screens only.
+   No JSX, backend, AI flow or vertical sizing changes.
+   ============================================================ */
+@media (min-width: 1501px) {
+  body .care-cockpit-v42 > .cc-grid-v42,
+  body .cc-grid-v42 {
+    grid-template-columns:
+      clamp(440px, 22vw, 470px)
+      minmax(0, 1fr)
+      clamp(380px, 20vw, 420px) !important;
+    column-gap: 16px !important;
+  }
+
+  body .cc-grid-v42 > .cc-left-v42,
+  body .cc-grid-v42 > .cc-center-v42,
+  body .cc-grid-v42 > .cc-right-v42 {
+    min-width: 0 !important;
+  }
+
+  body .cc-left-v42 .cc-choice-v42 > button {
+    min-width: 0 !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+  }
+
+  body .cc-left-v42 select {
+    min-width: 0 !important;
+    width: 100% !important;
+    text-overflow: ellipsis !important;
   }
 }
 
