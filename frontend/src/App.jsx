@@ -2447,6 +2447,53 @@ const [simulationStep, setSimulationStep] = useState(0);
 
     const supportScore = Math.min(100, symptomScore + dataSignal);
 
+    // LIVE_SPLUNK_COHORT_CONTEXT_V151
+    // Uses the same 0–40 symptom-risk formula as backend /ai-summary.
+    const currentCaseRiskV151 =
+      Number(fatigue) +
+      Number(nausea) +
+      Number(pain) +
+      (10 - Number(mood));
+
+    const cohortEventCountV151 =
+      Number(splunkLiveMetricsV140?.metrics?.total_events || 0);
+
+    const cohortAvgRiskV151 =
+      Number(splunkLiveMetricsV140?.metrics?.avg_risk || 0);
+
+    const hasLiveCohortV151 =
+      splunkLiveStatusV140 === "ready" &&
+      cohortEventCountV151 > 0 &&
+      Number.isFinite(cohortAvgRiskV151);
+
+    const cohortRiskDifferenceV151 = hasLiveCohortV151
+      ? Number((currentCaseRiskV151 - cohortAvgRiskV151).toFixed(2))
+      : 0;
+
+    const cohortComparisonV151 = !hasLiveCohortV151
+      ? "unavailable"
+      : cohortRiskDifferenceV151 > 3
+      ? "higher"
+      : cohortRiskDifferenceV151 < -3
+      ? "lower"
+      : "similar";
+
+    const cohortMarkerPositionV151 =
+      cohortComparisonV151 === "lower"
+        ? 22
+        : cohortComparisonV151 === "higher"
+        ? 78
+        : 50;
+
+    const cohortComparisonLabelV151 =
+      cohortComparisonV151 === "lower"
+        ? trText("Lower than live cohort", "Canlı kohorttan daha düşük")
+        : cohortComparisonV151 === "higher"
+        ? trText("Higher than live cohort", "Canlı kohorttan daha yüksek")
+        : cohortComparisonV151 === "similar"
+        ? trText("Similar to live cohort", "Canlı kohorta benzer")
+        : trText("Live cohort unavailable", "Canlı kohort kullanılamıyor");
+
     const supportLevel =
       supportScore >= 72 ? "High support priority" :
       supportScore >= 45 ? "Needs attention" :
@@ -4537,7 +4584,18 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
             feverFlag,
             breathingDifficultyFlag: breathingFlag,
             severeVomitingFlag: bleedingFlag,
-            confusionFlag
+            confusionFlag,
+
+            cohort_context: hasLiveCohortV151
+              ? {
+                  source: "splunk_live_last_24h",
+                  telemetry_event_count: cohortEventCountV151,
+                  cohort_avg_risk: cohortAvgRiskV151,
+                  current_case_risk: currentCaseRiskV151,
+                  risk_difference: cohortRiskDifferenceV151,
+                  comparison: cohortComparisonV151
+                }
+              : null
           })
         });
 
@@ -5302,8 +5360,12 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                       <span>{trText("Compared to similar patients", "Benzer hastalarla karşılaştırma")}</span>
                       <small>
                         {trText(
-                          "Your support priority is interpreted with the v14 background evidence layer: treatment KPI context, NHS access-pressure signals, lifestyle/prevention context and safety positioning.",
-                          "Destek önceliğiniz v14 arka plan kanıt katmanı ile yorumlanır: tedavi KPI bağlamı, NHS erişim baskısı sinyalleri, yaşam tarzı/önleme bağlamı ve güvenlik konumlandırması."
+                          hasLiveCohortV151
+                            ? `Live Splunk comparison uses ${cohortEventCountV151} indexed events from the last 24 hours. Current case risk: ${currentCaseRiskV151}; cohort average: ${cohortAvgRiskV151}.`
+                            : "Live Splunk cohort comparison is currently unavailable. The marker remains neutral.",
+                          hasLiveCohortV151
+                            ? `Canlı Splunk karşılaştırması son 24 saatte indekslenen ${cohortEventCountV151} olayı kullanır. Mevcut vaka riski: ${currentCaseRiskV151}; kohort ortalaması: ${cohortAvgRiskV151}.`
+                            : "Canlı Splunk kohort karşılaştırması şu anda kullanılamıyor. Gösterge nötr konumda kalır."
                         )}
                       </small>
                     </div>
@@ -5315,10 +5377,25 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                         <b>{trText("Higher", "Daha yüksek")}</b>
                       </div>
                       <div className="evidence-track-v108" aria-hidden="true">
-                        <i style={{ left: filteredRows.length ? `${Math.max(8, Math.min(92, supportScore))}%` : "50%" }}></i>
+                        <i
+                          style={{
+                            left: hasLiveCohortV151
+                              ? `${cohortMarkerPositionV151}%`
+                              : "50%"
+                          }}
+                        ></i>
                       </div>
-                      <strong style={{ left: filteredRows.length ? `${Math.max(8, Math.min(92, supportScore))}%` : "50%" }}>
-                        {trText("You are here", "Buradasınız")}
+
+                      <strong
+                        style={{
+                          left: hasLiveCohortV151
+                            ? `${cohortMarkerPositionV151}%`
+                            : "50%"
+                        }}
+                      >
+                        {hasLiveCohortV151
+                          ? cohortComparisonLabelV151
+                          : trText("You are here", "Buradasınız")}
                       </strong>
                     </div>
                   </div>

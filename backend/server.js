@@ -338,6 +338,7 @@ app.post("/ai-summary", async (req, res) => {
                     risk_score,
                     riskLevel
                   },
+                  cohort_context: data.cohort_context || null,
                   v14_evidence_layer: {
                     treatment_kpi_records: 450,
                     avg_response_score: 69.69,
@@ -395,7 +396,9 @@ app.post("/ai-summary", async (req, res) => {
       risk_score,
       riskLevel,
       red_flag_detected: redFlagDetected,
-      red_flags: redFlags
+      red_flags: redFlags,
+      safety_override_applied: redFlagDetected,
+      cohort_context: data.cohort_context || null
     };
 
     if (redFlagDetected) {
