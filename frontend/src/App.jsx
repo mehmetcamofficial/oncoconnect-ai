@@ -2139,6 +2139,8 @@ function App() {
   }, []);
 
 const [visibleRecommendationV106, setVisibleRecommendationV106] = useState("");
+const [backendRecommendationV149, setBackendRecommendationV149] = useState(null);
+const [recommendationLoadingV149, setRecommendationLoadingV149] = useState(false);
 
   const clearExecutionTimersV86 = () => {
     if (window.__oncoExecutionTimersV86) {
@@ -4496,6 +4498,100 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       }, 80);
     };
 
+
+    const getBackendRecommendationV149 = async () => {
+      setRecommendationLoadingV149(true);
+      setBackendRecommendationV149(null);
+
+      runCopilotAction(
+        "ai",
+        trText(
+          "AI recommendation is being generated from current case inputs.",
+          "Mevcut vaka girdilerinden AI önerisi oluşturuluyor."
+        ),
+        "ai_recommendation_requested"
+      );
+
+      try {
+        const response = await fetch(`${API}/ai-summary`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            patientId: "dashboard-user",
+            role,
+            goal,
+            cancerType,
+            treatmentStage,
+            city,
+            ageGroup,
+            mainConcern,
+            scenario: caseScenario,
+
+            fatigue,
+            pain,
+            nausea,
+            mood,
+
+            feverFlag,
+            breathingDifficultyFlag: breathingFlag,
+            severeVomitingFlag: bleedingFlag,
+            confusionFlag
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data?.success || !data?.summary) {
+          throw new Error(
+            data?.message ||
+            data?.error ||
+            `Recommendation request failed with status ${response.status}`
+          );
+        }
+
+        const summary = data.summary;
+
+        setBackendRecommendationV149(summary);
+        setVisibleRecommendationV106(
+          summary.recommended_action ||
+          summary.ai_summary ||
+          aiRecommendation
+        );
+
+        setLastCopilotAction(
+          summary.red_flag_detected
+            ? trText(
+                "Rule-based safety override applied.",
+                "Kural tabanlı güvenlik geçersiz kılma kuralı uygulandı."
+              )
+            : trText(
+                "AI recommendation ready.",
+                "AI önerisi hazır."
+              )
+        );
+      } catch (error) {
+        console.error("Backend recommendation fallback:", error);
+
+        setBackendRecommendationV149({
+          fallback_used: true,
+          error: error.message
+        });
+
+        setVisibleRecommendationV106(aiRecommendation);
+
+        setLastCopilotAction(
+          trText(
+            "Local recommendation shown. Backend AI was unavailable.",
+            "Yerel öneri gösterildi. Backend AI kullanılamadı."
+          )
+        );
+      } finally {
+        setRecommendationLoadingV149(false);
+      }
+    };
+
     const copySummary = async () => {
       try {
         await navigator.clipboard.writeText(patientSummary);
@@ -4747,16 +4843,14 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                     ✨ {simulationRunning ? trText("AI analyzing...", "AI analiz ediyor...") : trText("Run AI Analysis", "AI Analizini Çalıştır")}
                     <small>{trText("Input → AI → Action", "Girdi → AI → Aksiyon")}</small>
                   </button>
-                  <button type="button" onClick={() => {
-                    runCopilotAction(
-                      "ai",
-                      trText("AI recommendation generated from current case inputs.", "Mevcut vaka girdilerinden AI önerisi oluşturuldu."),
-                      "ai_recommendation"
-                    );
-                    setVisibleRecommendationV106(aiRecommendation);
-                    setLastCopilotAction(trText("AI recommendation ready.", "AI önerisi hazır."));
-                  }}>
-                    {trText("Get Recommendation", "Öneri Al")}
+                  <button
+                    type="button"
+                    onClick={getBackendRecommendationV149}
+                    disabled={recommendationLoadingV149}
+                  >
+                    {recommendationLoadingV149
+                      ? trText("Generating recommendation...", "Öneri oluşturuluyor...")
+                      : trText("Get Recommendation", "Öneri Al")}
                   </button>
                 </div>
 
@@ -4810,10 +4904,31 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                   </div>
 
                   {visibleRecommendationV106 && lastCopilotAction !== trText("Ready for new analysis.", "Yeni analiz için hazır.") && (
-                    <div className="ai-recommendation-v106">
+                    <div
+                      className="ai-recommendation-v106"
+                      style={backendRecommendationV149?.red_flag_detected ? {
+                        border: "1px solid rgba(239, 68, 68, 0.72)",
+                        boxShadow: "0 18px 42px rgba(127, 29, 29, 0.20)",
+                        background: "linear-gradient(180deg, rgba(69, 10, 10, 0.34), rgba(15, 23, 42, 0.98))"
+                      } : undefined}
+                    >
                       <div className="ai-recommendation-head-v106">
-                        <span>{trText("AI Recommendation", "AI Önerisi")}</span>
-                        <b>{trText("Doctor-ready next action", "Doktor görüşmesine hazır sonraki aksiyon")}</b>
+                        <span>
+                          {backendRecommendationV149?.red_flag_detected
+                            ? trText("Urgent Safety Signal", "Acil Güvenlik Sinyali")
+                            : trText("AI Recommendation", "AI Önerisi")}
+                        </span>
+                        <b>
+                          {backendRecommendationV149?.red_flag_detected
+                            ? trText(
+                                "Rule-based safety override applied",
+                                "Kural tabanlı güvenlik kuralı uygulandı"
+                              )
+                            : trText(
+                                "Doctor-ready next action",
+                                "Doktor görüşmesine hazır sonraki aksiyon"
+                              )}
+                        </b>
                       </div>
 
                       <p>{visibleRecommendationV106}</p>
@@ -4825,13 +4940,47 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                         </div>
                         <div>
                           <small>{trText("Clinical priority", "Klinik öncelik")}</small>
-                          <strong>{supportLevel}</strong>
+                          <strong>
+                            {backendRecommendationV149?.riskLevel || supportLevel}
+                          </strong>
                         </div>
                         <div>
                           <small>{trText("Main concern", "Ana endişe")}</small>
                           <strong>{concernLabels[mainConcern]}</strong>
                         </div>
                       </div>
+
+                      {backendRecommendationV149?.red_flag_detected &&
+                        Array.isArray(backendRecommendationV149?.red_flags) && (
+                          <div
+                            style={{
+                              margin: "16px 0",
+                              padding: "12px 14px",
+                              borderRadius: "14px",
+                              background: "rgba(127, 29, 29, 0.28)",
+                              border: "1px solid rgba(248, 113, 113, 0.58)"
+                            }}
+                          >
+                            <strong
+                              style={{
+                                display: "block",
+                                marginBottom: "6px",
+                                color: "#fca5a5"
+                              }}
+                            >
+                              {trText(
+                                "Detected warning signs",
+                                "Tespit edilen uyarı işaretleri"
+                              )}
+                            </strong>
+
+                            <span style={{ color: "#fee2e2" }}>
+                              {backendRecommendationV149.red_flags
+                                .map((item) => item.label)
+                                .join(" · ")}
+                            </span>
+                          </div>
+                        )}
 
                       <ul>
                         <li>{trText("Prepare a short symptom summary for the next clinical contact.", "Bir sonraki klinik görüşme için kısa semptom özeti hazırla.")}</li>
