@@ -1,0 +1,77 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+frontend/dist/
+
+# Logs and OS files
+*.log
+.DS_Store
+
+# Local development backups
+*.bak
+*backup*
+*.BEFORE_*
+*.STABLE_*
+*.BROKEN_*
+*.WORKING_*
+*.disabled_*
+
+# Local patch and inspection scripts
+add_*.py
+apply_*.py
+clean_*.py
+compact_*.py
+connect_*.py
+critical_*.py
+definitive_*.py
+emergency_*.py
+enhance_*.py
+enlarge_*.py
+exact_*.py
+execution_*.py
+fill_*.py
+final_*.py
+fix_*.py
+force_*.py
+hard_*.py
+hide_*.py
+improve_*.py
+inspect_*.py
+intensify_*.py
+keep_*.py
+kill_*.py
+make_*.py
+move_*.py
+optimize_*.py
+patch_*.py
+pipeline_*.py
+polish_*.py
+ready_*.py
+rebalance_*.py
+rebuild_*.py
+reduce_*.py
+refine_*.py
+remove_*.py
+repair_*.py
+replace_*.py
+reset_*.py
+restore_*.py
+restyle_*.py
+spread_*.py
+sticky_*.py
+subtle_*.py
+translate_*.py
+tune_*.py
+ultra_*.py
+upgrade_*.py
