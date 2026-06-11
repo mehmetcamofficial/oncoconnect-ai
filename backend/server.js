@@ -116,7 +116,7 @@ app.post("/checkin", async (req, res) => {
 
 app.post("/ai-summary", async (req, res) => {
   try {
-    const data = req.body;
+    const data = req.body || {};
 
     const fatigue = Number(data.fatigue || 0);
     const nausea = Number(data.nausea || 0);
@@ -129,7 +129,7 @@ app.post("/ai-summary", async (req, res) => {
     else if (risk_score >= 20) riskLevel = "High";
     else if (risk_score >= 12) riskLevel = "Medium";
 
-    const summary = {
+    const fallbackSummary = {
       patientId: data.patientId || "unknown",
       risk_score,
       riskLevel,
@@ -142,9 +142,102 @@ app.post("/ai-summary", async (req, res) => {
           : risk_score >= 20
           ? "Flag for monitoring and caregiver outreach."
           : "Continue routine monitoring.",
+      doctor_questions: [
+        "Which symptoms should I monitor closely?",
+        "What changes should trigger urgent contact?",
+        "Should medication, hydration or nutrition be reviewed?"
+      ],
+      monitoring_plan: [
+        "Track fatigue, pain, nausea and mood daily.",
+        "Record fever, breathing difficulty, confusion or severe vomiting immediately.",
+        "Share this report with the care team during the next visit."
+      ],
+      evidence_note:
+        "v14 evidence layer used as contextual, non-diagnostic support only.",
       safety_note:
-        "This is not medical advice. It is an operational support signal for monitoring and care coordination."
+        "This is not medical advice. It is an operational support signal for monitoring and care coordination.",
+      model_used: "rule_based_fallback"
     };
+
+    let summary = fallbackSummary;
+
+    if (process.env.OPENROUTER_API_KEY) {
+      try {
+        const openRouterResponse = await axios.post(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            model: process.env.OPENROUTER_MODEL || "openrouter/auto",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are OncoConnect AI, a non-diagnostic cancer support copilot. " +
+                  "Do not provide diagnosis, treatment selection, emergency triage, dosage advice, survival prediction, or medical certainty. " +
+                  "Return only valid JSON with keys: ai_summary, recommended_action, doctor_questions, monitoring_plan, evidence_note, safety_note."
+              },
+              {
+                role: "user",
+                content: JSON.stringify({
+                  patient_context: {
+                    patientId: data.patientId || "unknown",
+                    cancerType: data.cancerType,
+                    treatmentStage: data.treatmentStage,
+                    city: data.city,
+                    ageGroup: data.ageGroup,
+                    mainConcern: data.mainConcern,
+                    scenario: data.scenario
+                  },
+                  symptoms: { fatigue, nausea, pain, mood },
+                  computed_support_signal: {
+                    risk_score,
+                    riskLevel
+                  },
+                  v14_evidence_layer: {
+                    treatment_kpi_records: 450,
+                    avg_response_score: 69.69,
+                    nhs_access_pressure_files: 6,
+                    crc_lifestyle_records: 1000,
+                    avg_bmi: 26.8,
+                    crc_risk_mean: 0.15,
+                    safety_positioning: "contextual non-diagnostic support"
+                  }
+                })
+              }
+            ],
+            temperature: 0.2,
+            response_format: { type: "json_object" }
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": process.env.OPENROUTER_SITE_URL || "http://localhost:5173",
+              "X-Title": process.env.OPENROUTER_SITE_NAME || "OncoConnect AI"
+            },
+            timeout: 30000
+          }
+        );
+
+        const content = openRouterResponse.data?.choices?.[0]?.message?.content;
+        const aiJson = content ? JSON.parse(content) : {};
+
+        summary = {
+          ...fallbackSummary,
+          ...aiJson,
+          patientId: data.patientId || "unknown",
+          risk_score,
+          riskLevel,
+          model_used: process.env.OPENROUTER_MODEL || "openrouter/auto"
+        };
+      } catch (aiError) {
+        console.log("OpenRouter fallback:", aiError.response?.data || aiError.message);
+        summary = {
+          ...fallbackSummary,
+          model_used: "rule_based_fallback_after_openrouter_error",
+          ai_error: aiError.message
+        };
+      }
+    }
 
     const payload = {
       sourcetype: "oncoconnect:ai_summary",
@@ -1311,6 +1404,113 @@ app.post("/admin/official-search", async (req, res) => {
       officialDataCreated: false,
       error: error.message || "Configured official data import failed.",
       sources: []
+    });
+  }
+});
+
+
+
+
+// SPLUNK_READ_METRICS_V1
+// Reads indexed OncoConnect events from Splunk Search API.
+// This does not change existing HEC telemetry sending.
+app.get("/splunk/metrics", async (req, res) => {
+  try {
+    const searchUrl = process.env.SPLUNK_SEARCH_URL || "https://localhost:8089";
+    const username = process.env.SPLUNK_USERNAME;
+    const password = process.env.SPLUNK_PASSWORD;
+    const index = process.env.SPLUNK_INDEX || "main";
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        source: "splunk_search",
+        message: "Missing SPLUNK_USERNAME or SPLUNK_PASSWORD in backend .env"
+      });
+    }
+
+    const https = require("https");
+    const searchClient = axios.create({
+      baseURL: searchUrl,
+      auth: {
+        username,
+        password
+      },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      timeout: 12000
+    });
+
+    const spl = `
+      search index=${index} earliest=-24h (event_type="ai_patient_summary" OR event_type="patient_checkin" OR app="OncoConnect AI")
+      | eval risk=tonumber(coalesce(risk_score, riskScore, summary.risk_score, event.risk_score))
+      | eval level=coalesce(riskLevel, risk_level, summary.riskLevel, event.riskLevel)
+      | stats
+          count as total_events
+          avg(risk) as avg_risk
+          max(risk) as max_risk
+          count(eval(level="High")) as high_risk
+          count(eval(level="Medium")) as medium_risk
+          count(eval(level="Low")) as low_risk
+      | eval avg_risk=round(avg_risk,2)
+    `;
+
+    const params = new URLSearchParams();
+    params.append("search", spl);
+    params.append("output_mode", "json");
+
+    const response = await searchClient.post("/services/search/jobs/export", params.toString());
+
+    const raw = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+    const lines = raw
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    let result = null;
+
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line);
+        if (parsed.result) {
+          result = parsed.result;
+        }
+      } catch (_) {}
+    }
+
+    const metrics = result || {
+      total_events: "0",
+      avg_risk: "0",
+      max_risk: "0",
+      high_risk: "0",
+      medium_risk: "0",
+      low_risk: "0"
+    };
+
+    return res.json({
+      success: true,
+      source: "splunk_search",
+      index,
+      window: "last_24h",
+      metrics: {
+        total_events: Number(metrics.total_events || 0),
+        avg_risk: Number(metrics.avg_risk || 0),
+        max_risk: Number(metrics.max_risk || 0),
+        high_risk: Number(metrics.high_risk || 0),
+        medium_risk: Number(metrics.medium_risk || 0),
+        low_risk: Number(metrics.low_risk || 0)
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      source: "splunk_search",
+      message: "Failed to read metrics from Splunk Search API",
+      error: error.response?.data || error.message
     });
   }
 });

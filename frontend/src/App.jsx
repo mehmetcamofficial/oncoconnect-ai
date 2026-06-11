@@ -1,6 +1,428 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
+
+
+
+
+const ONCOCONNECT_CARE_JOURNEY_DOM_FIX_V131 = `
+html body .onco-care-journey-fixed-v131 {
+  position: relative !important;
+  padding-top: 28px !important;
+}
+
+html body .onco-care-journey-title-v131 {
+  display: block !important;
+  position: relative !important;
+  z-index: 20 !important;
+  margin: 0 0 34px 0 !important;
+  padding: 0 !important;
+  line-height: 1.15 !important;
+  background: transparent !important;
+}
+
+html body .onco-care-journey-title-v131 + * {
+  margin-top: 8px !important;
+}
+
+html body .onco-care-journey-fixed-v131 [class*="step"],
+html body .onco-care-journey-fixed-v131 [class*="journey"] {
+  position: relative !important;
+}
+`;
+
+function applyOncoCareJourneyDomFixV131() {
+  if (typeof document === "undefined") return;
+
+  if (!document.getElementById("onco-care-journey-dom-fix-v131")) {
+    const style = document.createElement("style");
+    style.id = "onco-care-journey-dom-fix-v131";
+    style.textContent = ONCOCONNECT_CARE_JOURNEY_DOM_FIX_V131;
+    document.head.appendChild(style);
+  }
+
+  const candidates = Array.from(document.querySelectorAll("h1,h2,h3,h4,b,strong,div,span"));
+  const title = candidates.find((el) =>
+    (el.textContent || "").trim() === "Your Care Journey at a Glance"
+  );
+
+  if (!title) return;
+
+  title.classList.add("onco-care-journey-title-v131");
+
+  const card =
+    title.closest("section") ||
+    title.closest("article") ||
+    title.parentElement;
+
+  if (card) {
+    card.classList.add("onco-care-journey-fixed-v131");
+  }
+
+  const next = title.nextElementSibling;
+  if (next) {
+    next.style.marginTop = "10px";
+    next.style.position = "relative";
+    next.style.zIndex = "5";
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.setTimeout(applyOncoCareJourneyDomFixV131, 50);
+  window.setTimeout(applyOncoCareJourneyDomFixV131, 300);
+  window.setTimeout(applyOncoCareJourneyDomFixV131, 900);
+  window.addEventListener("load", applyOncoCareJourneyDomFixV131);
+}
+
+
+const ONCOCONNECT_CARE_JOURNEY_TITLE_FIX_V130 = `
+html body .care-journey-v42,
+html body .care-journey-v43,
+html body [class*="care-journey"] {
+  position: relative !important;
+  padding-top: 34px !important;
+}
+
+html body .care-journey-v42 h3,
+html body .care-journey-v43 h3,
+html body [class*="care-journey"] h3 {
+  position: relative !important;
+  z-index: 5 !important;
+  margin: 0 0 22px 0 !important;
+  padding-left: 0 !important;
+  line-height: 1.12 !important;
+}
+
+html body .care-journey-v42 > div,
+html body .care-journey-v43 > div,
+html body [class*="care-journey"] > div {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+html body .care-journey-v42 .journey-step,
+html body .care-journey-v43 .journey-step,
+html body [class*="journey"] .journey-step {
+  margin-top: 0 !important;
+}
+`;
+
+if (typeof document !== "undefined" && !document.getElementById("onco-care-journey-title-fix-v130")) {
+  const style = document.createElement("style");
+  style.id = "onco-care-journey-title-fix-v130";
+  style.textContent = ONCOCONNECT_CARE_JOURNEY_TITLE_FIX_V130;
+  document.head.appendChild(style);
+}
+
+
+
+
+
+const ONCOCONNECT_JOURNEY_COMPACT_FIX_V134 = `
+html body .cc-journey-v42 {
+  padding: 20px 30px 18px 30px !important;
+  min-height: 118px !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+html body .cc-journey-title-v133 {
+  margin: 0 0 12px 0 !important;
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+
+html body .cc-journey-v42 > div {
+  gap: 3px !important;
+}
+
+html body .cc-journey-v42 > div > b {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  margin-bottom: 8px !important;
+  font-size: 19px !important;
+}
+
+html body .cc-journey-v42 > div > span {
+  font-size: 15px !important;
+  line-height: 1.05 !important;
+}
+
+html body .cc-journey-v42 > div > small {
+  font-size: 11.5px !important;
+  line-height: 1.1 !important;
+}
+`;
+
+if (typeof document !== "undefined" && !document.getElementById("onco-journey-compact-fix-v134")) {
+  const style = document.createElement("style");
+  style.id = "onco-journey-compact-fix-v134";
+  style.textContent = ONCOCONNECT_JOURNEY_COMPACT_FIX_V134;
+  document.head.appendChild(style);
+}
+
+
+const ONCOCONNECT_JOURNEY_REAL_TITLE_FIX_V133 = `
+html body .cc-journey-v42 {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 22px !important;
+  align-items: start !important;
+  padding: 28px 34px 26px 34px !important;
+  min-height: 150px !important;
+}
+
+html body .cc-journey-v42::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body .cc-journey-title-v133 {
+  grid-column: 1 / -1 !important;
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+html body .cc-journey-v42 > div {
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+html body .cc-journey-v42 > div > b {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  margin-bottom: 10px !important;
+}
+
+html body .cc-journey-v42 > div > span {
+  display: block !important;
+  font-size: 16px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+}
+
+html body .cc-journey-v42 > div > small {
+  display: block !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  font-weight: 750 !important;
+  color: #64748b !important;
+}
+`;
+
+if (typeof document !== "undefined" && !document.getElementById("onco-journey-real-title-fix-v133")) {
+  const style = document.createElement("style");
+  style.id = "onco-journey-real-title-fix-v133";
+  style.textContent = ONCOCONNECT_JOURNEY_REAL_TITLE_FIX_V133;
+  document.head.appendChild(style);
+}
+
+
+const ONCOCONNECT_CC_JOURNEY_DIRECT_FIX_V132 = `
+html body .cc-journey-v42 {
+  position: relative !important;
+  padding: 54px 28px 24px 28px !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  gap: 22px !important;
+  min-height: 160px !important;
+}
+
+html body .cc-journey-v42::before {
+  content: "Your Care Journey at a Glance" !important;
+  position: absolute !important;
+  left: 28px !important;
+  top: 20px !important;
+  z-index: 5 !important;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
+html body .cc-journey-v42 > div {
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+html body .cc-journey-v42 > div > b {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  margin-bottom: 10px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+html body .cc-journey-v42 > div > span {
+  display: block !important;
+  font-size: 16px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+}
+
+html body .cc-journey-v42 > div > small {
+  display: block !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  font-weight: 750 !important;
+  color: #64748b !important;
+}
+`;
+
+if (typeof document !== "undefined" && !document.getElementById("onco-cc-journey-direct-fix-v132")) {
+  const style = document.createElement("style");
+  style.id = "onco-cc-journey-direct-fix-v132";
+  style.textContent = ONCOCONNECT_CC_JOURNEY_DIRECT_FIX_V132;
+  document.head.appendChild(style);
+}
+
+
+const ONCOCONNECT_COMPACT_RUNTIME_STYLE_V124 = `
+html body .cc-mid-v42 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 16px !important;
+  margin-bottom: 14px !important;
+}
+
+html body .cc-mid-v42 .cc-trend-v42,
+html body .cc-mid-v42 .cc-score-v42 {
+  height: 330px !important;
+  min-height: 330px !important;
+  max-height: 330px !important;
+  overflow: hidden !important;
+  align-self: start !important;
+  padding: 16px 20px !important;
+}
+
+html body .cc-trend-v42 .trend-head-v51 {
+  margin-bottom: 0 !important;
+}
+
+html body .cc-trend-v42 h3 {
+  margin: 0 0 6px !important;
+  line-height: 1.02 !important;
+}
+
+html body .cc-trend-v42 p {
+  margin: 0 !important;
+  line-height: 1.05 !important;
+}
+
+html body .cc-trend-v42 .trend-chart-v51 {
+  width: 100% !important;
+  height: 175px !important;
+  max-height: 175px !important;
+  margin: 0 !important;
+  display: block !important;
+  transform: translateY(-4px) !important;
+}
+
+html body .cc-trend-v42 .trend-legend-v51 {
+  margin-top: -2px !important;
+  padding-top: 0 !important;
+}
+
+html body .cc-score-v42 .cc-card-title-v42 {
+  margin-bottom: 8px !important;
+}
+
+html body .cc-score-v42 .cc-score-body-v42 {
+  margin-top: 6px !important;
+  gap: 18px !important;
+  align-items: center !important;
+  display: grid !important;
+  grid-template-columns: 118px minmax(0, 1fr) !important;
+}
+
+html body .cc-score-v42 .cc-donut-v42 {
+  width: 112px !important;
+  height: 112px !important;
+  min-width: 112px !important;
+}
+
+html body .cc-score-v42 .cc-score-body-v42 ul,
+html body .cc-score-v42 .cc-score-body-v42 li {
+  min-width: 0 !important;
+}
+
+html body .cc-score-v42 .cc-score-body-v42 li {
+  gap: 10px !important;
+  padding: 7px 0 !important;
+}
+
+html body .cc-score-v42 .cc-score-body-v42 li span {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+}
+
+html body .cc-score-v42 .cc-score-guide-v42 {
+  margin-top: 10px !important;
+  gap: 12px !important;
+}
+
+html body .cc-score-v42 .cc-score-guide-v42 div {
+  min-width: 0 !important;
+}
+
+html body .cc-network-v42 {
+  margin-top: 0 !important;
+}
+
+html body .cc-journey-v42 {
+  margin-top: 10px !important;
+  min-height: 96px !important;
+  padding: 16px 24px !important;
+}
+`;
+
+if (typeof document !== "undefined" && !document.getElementById("onco-compact-runtime-style-v124")) {
+  const style = document.createElement("style");
+  style.id = "onco-compact-runtime-style-v124";
+  style.textContent = ONCOCONNECT_COMPACT_RUNTIME_STYLE_V124;
+  document.head.appendChild(style);
+}
+
+
 const API = "http://localhost:5050";
 
 function safeNumber(value, fallback = 0) {
@@ -970,7 +1392,7 @@ function App() {
           </div>
         </div>
 
-        <section className="landing-research-feed landing-research-feed-after">
+        <section id="research-pulse" className="landing-research-feed landing-research-feed-after">
           <div className="landing-research-feed-head">
             <span>Research pulse</span>
             <b>{trText("Innovative drugs, trials and oncology reading flow", "Yenilikçi ilaçlar, klinik çalışmalar ve onkoloji okuma akışı")}</b>
@@ -1252,6 +1674,26 @@ function App() {
   };
 
 
+  const scrollLandingSectionV131 = (id) => {
+    setPage("landing");
+
+    window.setTimeout(() => {
+      const element = document.getElementById(id);
+      if (!element) return;
+
+      const top = element.getBoundingClientRect().top + window.scrollY - 105;
+      window.scrollTo({
+        top: Math.max(0, top),
+        behavior: "smooth"
+      });
+    }, 120);
+  };
+
+
+
+
+
+
   const LandingPage = () => (
     <div className="old-home-page">
       <nav className="old-home-nav">
@@ -1259,18 +1701,16 @@ function App() {
 
         <div className="old-home-links">
           <button onClick={() => setPage("landing")}>{trText(trText("Home", "Ana Sayfa"), "Ana Sayfa")}</button>
-          <a href="#what-is-it">{trText(trText("What is it?", "Nedir?"), "Nedir?")}</a>
-          <a href="#how-it-works">{trText(trText("How it works", "Nasıl çalışır?"), "Nasıl çalışır?")}</a>
-          <a href="#cancer-burden">{trText(trText("Cancer Burden", "Kanser Yükü"), "Kanser Yükü")}</a>
-          <a href="#research">{trText(trText("Research", "Araştırma"), "Araştırma")}</a>
+          <button type="button" onClick={() => scrollLandingSectionV131("what-is-it")}>{trText(trText("What is it?", "Nedir?"), "Nedir?")}</button>
+          <button type="button" onClick={() => scrollLandingSectionV131("how-it-works-anchor")}>{trText(trText("How it works", "Nasıl çalışır?"), "Nasıl çalışır?")}</button>
+          <button type="button" onClick={() => scrollLandingSectionV131("cancer-burden")}>{trText(trText("Cancer Burden", "Kanser Yükü"), "Kanser Yükü")}</button>
+          <button type="button" onClick={() => scrollLandingSectionV131("research-pulse")}>{trText(trText("Research", "Araştırma"), "Araştırma")}</button>
           <button type="button" onClick={() => setPage("copilot")}>{trText(trText("AI Copilot", "AI Yardımcı Pilot"), "AI Yardımcı Pilot")}</button>
           <button type="button" onClick={() => setPage("kids")}>{trText(trText("Onco Kids", "Onco Kids"), trText("Onco Kids", "Onco Kids"))}</button>
           <button onClick={() => setPage("admin")}>{trText(trText("Admin", "Admin"), trText("Admin", "Admin"))}</button>
-          <button onClick={() => setPage("showcase")}>{trText(trText("Platform", "Platform"), trText("Platform", "Platform"))}</button>
         </div>
 
         <div className="old-home-lang">
-          <label>{t.langLabel}</label>
           <select value={lang} onChange={(e) => setLang(e.target.value)}>
             <option value="en">{trText("English", "İngilizce")}</option>
             <option value="tr">Türkçe</option>
@@ -1358,6 +1798,7 @@ function App() {
         <InteractiveFlowSimulation />
 
 
+      <div id="how-it-works-anchor" className="landing-scroll-anchor-v131" />
       <section id="cancer-burden" className="old-section">
         <p className="old-eyebrow dark">{trText(trText("CANCER BURDEN", "KANSER YÜKÜ"), "KANSER YÜKÜ")}</p>
         <h2>{trText(trText("Data is not for fear, it is for earlier support and coordination", "Veri korku için değil, daha erken destek ve koordinasyon içindir"), "Veri korku için değil, daha erken destek ve koordinasyon içindir")}</h2>
@@ -1393,7 +1834,7 @@ function App() {
         </div>
       </section>
 
-      <section id="research" className="old-section old-research-section">
+      <section className="old-section old-research-section">
         <p className="old-eyebrow dark">{trText("RESEARCH DATA", "ARAŞTIRMA VERİSİ")}</p>
         <h2>{trText("GLOBOCAN 2022 data connected for Türkiye", "Türkiye için GLOBOCAN 2022 verisi bağlantılı")}</h2>
         <p className="old-section-desc">
@@ -1563,6 +2004,7 @@ function App() {
   const pipelineIdleFinalV100 = pipelineHardIdleV99 || pipelineResetModeV90 || executionStepV86 < 0;
   const [shareFeedbackV86, setShareFeedbackV86] = useState("");
   const [trendRangeV119, setTrendRangeV119] = useState("30");
+  const [liveTrendInputsV126, setLiveTrendInputsV126] = useState(null);
 
   const trendSeriesV119 = useMemo(() => {
     const ranges = {
@@ -1591,7 +2033,112 @@ function App() {
 
     return ranges[trendRangeV119] || ranges["30"];
   }, [trendRangeV119]);
-  const [visibleRecommendationV106, setVisibleRecommendationV106] = useState("");
+
+  const trendSeriesLiveV126 = useMemo(() => {
+    if (!liveTrendInputsV126) return trendSeriesV119;
+
+    const clamp = (value) => Math.max(0, Math.min(10, Number(value || 0)));
+    const y = (value, offset = 0) => {
+      const mapped = 174 - clamp(value) * 14.4 + offset;
+      return Math.max(30, Math.min(174, Math.round(mapped)));
+    };
+
+    const x = [62, 170, 286, 414, 512, 590];
+
+    const makePoints = (values, offset = 0) =>
+      values.map((value, index) => `${x[index]},${y(value, offset)}`).join(" ");
+
+    const current = {
+      fatigue: clamp(liveTrendInputsV126.fatigue),
+      pain: clamp(liveTrendInputsV126.pain),
+      nausea: clamp(liveTrendInputsV126.nausea),
+      mood: clamp(liveTrendInputsV126.mood),
+    };
+
+    const profiles = {
+      "7": {
+        labels: ["Day -6", "Day -4", "Day -2", "Yesterday", "Latest", "Today"],
+        factors: [0.78, 0.88, 0.82, 0.92, 0.96, 1.0],
+      },
+      "30": {
+        labels: ["May 10", "May 17", "May 24", "May 31", "Jun 7", "Today"],
+        factors: [0.72, 0.82, 0.76, 0.86, 0.92, 1.0],
+      },
+      "90": {
+        labels: ["Mar", "Apr", "May", "Jun", "Last week", "Today"],
+        factors: [0.58, 0.66, 0.74, 0.82, 0.92, 1.0],
+      },
+    };
+
+    const profile = profiles[trendRangeV119] || profiles["30"];
+    const build = (base) => profile.factors.map((factor) => Math.max(0, Math.min(10, base * factor)));
+
+    return {
+      labels: profile.labels,
+      fatigue: makePoints(build(current.fatigue), -2),
+      pain: makePoints(build(current.pain), 2),
+      nausea: makePoints(build(current.nausea), 6),
+      mood: makePoints(build(current.mood), 10),
+    };
+  }, [trendRangeV119, trendSeriesV119, liveTrendInputsV126]);
+
+
+  const trendDotsFromPointsV127 = (points, className) =>
+    String(points || "")
+      .trim()
+      .split(/\s+/)
+      .map((point, index) => {
+        const [cx, cy] = point.split(",").map(Number);
+        if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null;
+        return (
+          <circle
+            key={`${className}-${index}-${cx}-${cy}`}
+            cx={cx}
+            cy={cy}
+            r={index === String(points || "").trim().split(/\s+/).length - 1 ? 5 : 4}
+            className={className}
+          />
+        );
+      });
+
+  
+  const [splunkLiveMetricsV140, setSplunkLiveMetricsV140] = useState(null);
+  const [splunkLiveStatusV140, setSplunkLiveStatusV140] = useState("idle");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSplunkLiveMetricsV140() {
+      try {
+        setSplunkLiveStatusV140("loading");
+        const response = await fetch("http://localhost:5050/splunk/metrics");
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        if (data?.success && data?.metrics) {
+          setSplunkLiveMetricsV140(data);
+          setSplunkLiveStatusV140("ready");
+        } else {
+          setSplunkLiveStatusV140("empty");
+        }
+      } catch {
+        if (!cancelled) {
+          setSplunkLiveStatusV140("error");
+        }
+      }
+    }
+
+    loadSplunkLiveMetricsV140();
+    const timer = window.setInterval(loadSplunkLiveMetricsV140, 20000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+const [visibleRecommendationV106, setVisibleRecommendationV106] = useState("");
 
   const clearExecutionTimersV86 = () => {
     if (window.__oncoExecutionTimersV86) {
@@ -1682,6 +2229,9 @@ function App() {
   };
 
   const runCareCockpitAnalysisV86 = () => {
+    setVisibleRecommendationV106("");
+    setLiveTrendInputsV126({ fatigue, pain, nausea, mood });
+
     setLastCopilotAction(trText("Analysis started.", "Analiz başladı."));
     startExecutionPipelineV86();
     runCareCockpitAnalysisV27();
@@ -3202,8 +3752,8 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
             setActiveInsight("report");
             setLastCopilotAction(
               trText(
-                "AI analysis completed. Doctor-ready action plan and report are ready.",
-                "AI analizi tamamlandı. Doktora hazır aksiyon planı ve rapor hazır."
+                "Analysis completed. Click Get Recommendation.",
+                "Analiz tamamlandı. Öneriyi görmek için Get Recommendation düğmesine bas."
               )
             );
           }
@@ -3973,8 +4523,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
           <button onClick={() => setPage("kids")}>Onco Kids</button>
 
           <div className="patient-copilot-lang">
-            <label>{t.langLabel}</label>
-            <select value={lang} onChange={(e) => setLang(e.target.value)}>
+              <select value={lang} onChange={(e) => setLang(e.target.value)}>
               <option value="en">{trText("English", "İngilizce")}</option>
               <option value="tr">Türkçe</option>
             </select>
@@ -4170,6 +4719,29 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                   </div>
                 </div>
 
+                <div className="ai-engine-card-v141" style={{
+                  display: "block",
+                  visibility: "visible",
+                  opacity: 1,
+                  position: "relative",
+                  zIndex: 10,
+                  margin: "14px 0",
+                  padding: "16px",
+                  borderRadius: "20px",
+                  background: "linear-gradient(180deg, #ffffff, #f8fbff)",
+                  color: "#0f172a",
+                  border: "1px solid rgba(37, 99, 235, .16)",
+                  boxShadow: "0 18px 34px rgba(15, 23, 42, .07)"
+                }}>
+                  <span>{trText("AI Engine", "AI Motoru")}</span>
+                  <b>{trText("Safety scoring + evidence layer", "Güvenlik skoru + kanıt katmanı")}</b>
+                  <ul>
+                    <li>{trText("Rule-based support priority engine", "Kural tabanlı destek önceliği motoru")}</li>
+                    <li>{trText("v14 public-data evidence context", "v14 kamu verisi kanıt bağlamı")}</li>
+                    <li>{trText("OpenRouter / 5.4 mini ready", "OpenRouter / 5.4 mini hazır")}</li>
+                  </ul>
+                </div>
+
                 <div className="cc-run-v42">
                   <button type="button" className={simulationRunning ? "running" : ""} onClick={runCareCockpitAnalysisV86}>
                     ✨ {simulationRunning ? trText("AI analyzing...", "AI analiz ediyor...") : trText("Run AI Analysis", "AI Analizini Çalıştır")}
@@ -4187,6 +4759,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                     {trText("Get Recommendation", "Öneri Al")}
                   </button>
                 </div>
+
               </aside>
 
               <main className="cc-center-v42">
@@ -4301,41 +4874,24 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                       <text x="31" y="131">6</text>
                       <text x="31" y="179">0</text>
 
-                      <text x="62" y="215">{trendSeriesV119.labels[0]}</text>
-                      <text x="170" y="215">{trendSeriesV119.labels[1]}</text>
-                      <text x="286" y="215">{trendSeriesV119.labels[2]}</text>
-                      <text x="414" y="215">{trendSeriesV119.labels[3]}</text>
-                      <text x="512" y="215">{trendSeriesV119.labels[4]}</text>
-                      <text x="562" y="215">{trendSeriesV119.labels[5] || "Today"}</text>
+                      <text x="62" y="215">{trendSeriesLiveV126.labels[0]}</text>
+                      <text x="170" y="215">{trendSeriesLiveV126.labels[1]}</text>
+                      <text x="286" y="215">{trendSeriesLiveV126.labels[2]}</text>
+                      <text x="414" y="215">{trendSeriesLiveV126.labels[3]}</text>
+                      <text x="512" y="215">{trendSeriesLiveV126.labels[4]}</text>
+                      <text x="562" y="215">{trendSeriesLiveV126.labels[5] || "Today"}</text>
 
-                      <polyline className="fatigue-line-v51" points={trendSeriesV119.fatigue} />
-                      <polyline className="pain-line-v51" points={trendSeriesV119.pain} />
-                      <polyline className="nausea-line-v51" points={trendSeriesV119.nausea} />
-                      <polyline className="mood-line-v51" points={trendSeriesV119.mood} />
+                      <polyline className="fatigue-line-v51" points={trendSeriesLiveV126.fatigue} />
+                      <polyline className="pain-line-v51" points={trendSeriesLiveV126.pain} />
+                      <polyline className="nausea-line-v51" points={trendSeriesLiveV126.nausea} />
+                      <polyline className="mood-line-v51" points={trendSeriesLiveV126.mood} />
 
                       <g>
-                        <circle cx="98" cy="76" r="4" className="fatigue-dot-v51" />
-                        <circle cx="170" cy="74" r="4" className="fatigue-dot-v51" />
-                        <circle cx="278" cy="76" r="4" className="fatigue-dot-v51" />
-                        <circle cx="458" cy="92" r="4" className="fatigue-dot-v51" />
-                        <circle cx="590" cy="108" r="5" className="fatigue-dot-v51" />
-
-                        <circle cx="134" cy="102" r="4" className="pain-dot-v51" />
-                        <circle cx="278" cy="124" r="4" className="pain-dot-v51" />
-                        <circle cx="458" cy="116" r="4" className="pain-dot-v51" />
-                        <circle cx="590" cy="134" r="5" className="pain-dot-v51" />
-
-                        <circle cx="62" cy="134" r="4" className="nausea-dot-v51" />
-                        <circle cx="278" cy="148" r="4" className="nausea-dot-v51" />
-                        <circle cx="458" cy="144" r="4" className="nausea-dot-v51" />
-                        <circle cx="590" cy="156" r="5" className="nausea-dot-v51" />
-
-                        <circle cx="62" cy="160" r="4" className="mood-dot-v51" />
-                        <circle cx="278" cy="162" r="4" className="mood-dot-v51" />
-                        <circle cx="458" cy="156" r="4" className="mood-dot-v51" />
-                        <circle cx="590" cy="148" r="5" className="mood-dot-v51" />
-                      </g>
-                    </svg>
+                        {trendDotsFromPointsV127(trendSeriesLiveV126.fatigue, "fatigue-dot-v51")}
+                        {trendDotsFromPointsV127(trendSeriesLiveV126.pain, "pain-dot-v51")}
+                        {trendDotsFromPointsV127(trendSeriesLiveV126.nausea, "nausea-dot-v51")}
+                        {trendDotsFromPointsV127(trendSeriesLiveV126.mood, "mood-dot-v51")}
+                      </g>                    </svg>
 
                     <div className="trend-legend-v51">
                       <span><i className="fatigue-dot-v51"></i> Fatigue</span>
@@ -4359,10 +4915,32 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
 
                       <ul>
                         <li><span>{trText("Symptom burden", "Semptom yükü")}</span><b>+{symptomScore}</b></li>
-                        <li><span>{trText("Dataset signal", "Veri sinyali")}</span><b>+{dataSignal}</b></li>
+                        <li className="splunk-dataset-inline-v147">
+                          <span>
+                            {trText("Dataset signal", "Veri sinyali")}
+                            <em
+                              style={{
+                                display: "block",
+                                marginTop: "3px",
+                                fontStyle: "normal",
+                                fontSize: "10.5px",
+                                lineHeight: 1.15,
+                                fontWeight: 850,
+                                color: "#059669"
+                              }}
+                            >
+                              {splunkLiveStatusV140 === "ready"
+                                ? `Splunk live: ${splunkLiveMetricsV140?.metrics?.total_events ?? "–"} events · avg ${splunkLiveMetricsV140?.metrics?.avg_risk ?? "–"}`
+                                : splunkLiveStatusV140 === "loading"
+                                ? trText("Splunk live: reading", "Splunk canlı: okunuyor")
+                                : trText("Splunk live: waiting", "Splunk canlı: bekleniyor")}
+                            </em>
+                          </span>
+                          <b>+{dataSignal}</b>
+                        </li>
                         <li><span>{trText("Red flags", "Kırmızı bayrak")}</span><b>+{redFlags.length * 12}</b></li>
-                        <li><span>{trText("Scenario", "Senaryo")}</span><b>{selectedScenarioLabel}</b></li>
-                      </ul>
+                        
+</ul>
                     </div>
 
                     <div className="cc-score-guide-v42">
@@ -4370,7 +4948,11 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                       <span><b>31–60</b>{trText("Stable support preparation", "Stabil destek hazırlığı")}</span>
                       <span><b>61–100</b>{trText("Strong condition / low concern", "Daha güçlü durum / düşük endişe")}</span>
                     </div>
-                  </section>
+
+                    
+                  
+
+                </section>
                 </div>
 
                 <section className="cc-network-v42 reasoning-svg-v55 reasoning-svg-v57">
@@ -4405,6 +4987,44 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                     <path className="edge-pos-v55 edge-main-v57" d="M470 72 C520 78 548 96 585 122" />
                     <path className="edge-neg-v55 edge-main-v57" d="M470 112 C520 112 548 116 585 122" />
                     <path className="edge-pos-v55 edge-main-v57" d="M470 152 C520 148 548 134 585 122" />
+
+                    <g className="data-packets-v125" aria-hidden="true">
+                      {/* Input signals flowing into interpretation nodes */}
+                      <circle className="data-packet-v125 packet-fatigue-v125" r="4.4">
+                        <animateMotion dur="3.2s" repeatCount="indefinite" path="M138 48 C215 44 250 58 320 72" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-pain-v125" r="4.1">
+                        <animateMotion dur="3.4s" begin=".35s" repeatCount="indefinite" path="M138 88 C215 88 250 84 320 72" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-negative-v125" r="4.1">
+                        <animateMotion dur="3.1s" begin=".65s" repeatCount="indefinite" path="M138 128 C215 122 250 112 320 112" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-mood-v125" r="4.2">
+                        <animateMotion dur="3.5s" begin=".95s" repeatCount="indefinite" path="M138 168 C214 160 248 142 320 152" />
+                      </circle>
+
+                      {/* Interpreted factors flowing into central support priority */}
+                      <circle className="data-packet-v125 packet-positive-v125" r="4.8">
+                        <animateMotion dur="2.9s" begin=".9s" repeatCount="indefinite" path="M470 72 C520 78 548 96 585 122" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-negative-v125" r="4.3">
+                        <animateMotion dur="3s" begin="1.25s" repeatCount="indefinite" path="M470 112 C520 112 548 116 585 122" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-positive-v125" r="4.5">
+                        <animateMotion dur="3.2s" begin="1.55s" repeatCount="indefinite" path="M470 152 C520 148 548 134 585 122" />
+                      </circle>
+
+                      {/* Support priority flowing toward next care actions */}
+                      <circle className="data-packet-v125 packet-care-v125" r="5">
+                        <animateMotion dur="3.15s" begin="1.7s" repeatCount="indefinite" path="M720 122 C765 74 790 58 815 52" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-doctor-v125" r="4.8">
+                        <animateMotion dur="3.25s" begin="2.05s" repeatCount="indefinite" path="M720 122 C765 122 790 122 815 122" />
+                      </circle>
+                      <circle className="data-packet-v125 packet-monitor-v125" r="4.8">
+                        <animateMotion dur="3.35s" begin="2.35s" repeatCount="indefinite" path="M720 122 C765 170 790 184 815 192" />
+                      </circle>
+                    </g>
 
                     <path className="edge-pos-v55 edge-soft-v57" d="M470 72 C518 100 548 116 585 122" />
                     <path className="edge-pos-v55 edge-soft-v57" d="M470 152 C518 126 548 118 585 122" />
@@ -4467,6 +5087,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                 </section>
 
                 <section className="cc-journey-v42">
+                  <h3 className="cc-journey-title-v133">{trText("Your Care Journey at a Glance", "Bakım Yolculuğunuz")}</h3>
                   {[
                     ["1", trText("You input", "Girdi"), trText("Symptoms & context", "Semptom ve bağlam")],
                     ["2", trText("AI analysis", "AI analizi"), trText("Risk & data engine", "Risk ve veri motoru")],
@@ -4491,26 +5112,50 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                   <p>{safetyMessage}</p>
                 </section>
 
-                <section className="cc-evidence-v42">
+                <section className="cc-evidence-v42 cc-evidence-expanded-v136">
                   <div className="cc-card-title-v42">
                     <span>{trText("Data & Evidence Signal", "Veri ve Kanıt Sinyali")}</span>
                     <b>{trText("Public data matched your context", "Kamu verisi bağlamla eşleşti")}</b>
                   </div>
 
+
                   <div className="cc-evidence-grid-v42 evidence-grid-v108">
-                    <div><small>{trText("Incidence", "İnsidans")}</small><b>{incidenceAvg ? incidenceAvg.toFixed(1) : "-"}</b><em>{trText("per 100k", "100 bin kişi")}</em></div>
-                    <div><small>{trText("Mortality", "Mortalite")}</small><b>{mortalityAvg ? mortalityAvg.toFixed(1) : "-"}</b><em>{trText("per 100k", "100 bin kişi")}</em></div>
-                    <div><small>{trText("5-year survival", "5 yıllık sağkalım")}</small><b>{survivalAvg ? `${survivalAvg.toFixed(0)}%` : "-"}</b><em>{trText("estimated", "tahmini")}</em></div>
-                    <div><small>{trText("Data quality", "Veri kalitesi")}</small><b>{filteredRows.length ? trText("Matched", "Eşleşti") : trText("Limited", "Sınırlı")}</b><em>{filteredRows.length ? `${filteredRows.length} ${trText("rows", "satır")}` : trText("no exact match", "tam eşleşme yok")}</em></div>
+                    <div>
+                      <small>{trText("Treatment KPI", "Tedavi KPI")}</small>
+                      <b>{trText("450 records", "450 kayıt")}</b>
+                      <em>{trText("Avg response 69.69", "Ort. yanıt 69.69")}</em>
+                    </div>
+                    <div>
+                      <small>{trText("Access pressure", "Erişim baskısı")}</small>
+                      <b>{trText("6 NHS files", "6 NHS dosyası")}</b>
+                      <em>{trText("28-day / 31-day pathway", "28 gün / 31 gün bakım yolu")}</em>
+                    </div>
+                    <div>
+                      <small>{trText("Lifestyle context", "Yaşam tarzı bağlamı")}</small>
+                      <b>{trText("1,000 CRC records", "1.000 CRC kaydı")}</b>
+                      <em>{trText("Avg BMI 26.8 / CRC risk 0.15", "Ort. BMI 26.8 / CRC risk 0.15")}</em>
+                    </div>
+                    <div>
+                      <small>{trText("Data quality", "Veri kalitesi")}</small>
+                      <b>{trText("v14 evidence", "v14 kanıt")}</b>
+                      <em>
+                        {splunkLiveStatusV140 === "ready"
+                          ? `Live telemetry: ${splunkLiveMetricsV140?.metrics?.total_events ?? "–"} events · avg risk ${splunkLiveMetricsV140?.metrics?.avg_risk ?? "–"}`
+                          : splunkLiveStatusV140 === "loading"
+                          ? trText("Live telemetry reading...", "Canlı telemetri okunuyor...")
+                          : trText("summary + checksums", "özet + checksum")}
+                      </em>
+                    </div>
                   </div>
 
                   <div className={`evidence-position-v108 ${filteredRows.length ? "" : "limited-v108"}`}>
                     <div className="evidence-position-head-v108">
                       <span>{trText("Compared to similar patients", "Benzer hastalarla karşılaştırma")}</span>
                       <small>
-                        {filteredRows.length
-                          ? trText("Your case position based on public data context and symptom priority.", "Kamu veri bağlamı ve semptom önceliğine göre vaka pozisyonu.")
-                          : trText("No exact public data match for this selected context. Showing a simulated comparison position.", "Bu seçili bağlam için tam kamu verisi eşleşmesi yok. Simüle edilmiş karşılaştırma pozisyonu gösteriliyor.")}
+                        {trText(
+                          "Your support priority is interpreted with the v14 background evidence layer: treatment KPI context, NHS access-pressure signals, lifestyle/prevention context and safety positioning.",
+                          "Destek önceliğiniz v14 arka plan kanıt katmanı ile yorumlanır: tedavi KPI bağlamı, NHS erişim baskısı sinyalleri, yaşam tarzı/önleme bağlamı ve güvenlik konumlandırması."
+                        )}
                       </small>
                     </div>
 
@@ -4580,6 +5225,16 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                   </div>
                   <span>📄</span>
                 </section>
+                <div className="cc-side-mini-card-v135 cc-side-mini-card-right-v135">
+                  <span>{trText("Report Readiness", "Rapor Hazırlığı")}</span>
+                  <b>{trText("Doctor-ready output layer", "Doktor görüşmesine hazır çıktı katmanı")}</b>
+                  <ul>
+                    <li>{trText("PDF summary prepared after analysis", "Analiz sonrası PDF özeti hazırlanır")}</li>
+                    <li>{trText("Reasoning network and trend signal included", "Akıl yürütme ağı ve trend sinyali dahil edilir")}</li>
+                    <li>{trText("Next action notes are exportable", "Sonraki aksiyon notları dışa aktarılabilir")}</li>
+                  </ul>
+                </div>
+
               </aside>
             </div>
           </div>
@@ -8616,8 +9271,7 @@ const OncoKidsPage = () => {
           </div>
 
           <div className="kids-lang-mini-v70">
-            <label>{t.langLabel}</label>
-            <select value={lang} onChange={(e) => setLang(e.target.value)}>
+              <select value={lang} onChange={(e) => setLang(e.target.value)}>
               <option value="en">{trText("English", "İngilizce")}</option>
               <option value="tr">Türkçe</option>
             </select>
@@ -9046,3 +9700,706 @@ const OncoKidsPage = () => {
 }
 
 export default App;
+
+// FINAL_JOURNEY_TIGHT_OVERRIDE_V135
+const ONCOCONNECT_FINAL_JOURNEY_TIGHT_OVERRIDE_V135 = `
+html body section.cc-journey-v42 {
+  height: auto !important;
+  min-height: 132px !important;
+  max-height: 150px !important;
+  padding: 18px 30px 16px 30px !important;
+  margin-top: 14px !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 22px !important;
+  row-gap: 10px !important;
+  align-items: start !important;
+  overflow: hidden !important;
+}
+
+html body section.cc-journey-v42::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body section.cc-journey-v42 > h3.cc-journey-title-v133 {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+}
+
+html body section.cc-journey-v42 > div {
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > b {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  margin: 0 0 6px 0 !important;
+  padding: 0 !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+
+html body section.cc-journey-v42 > div > span {
+  font-size: 14px !important;
+  line-height: 1.02 !important;
+  font-weight: 900 !important;
+  margin: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > small {
+  font-size: 10.5px !important;
+  line-height: 1.05 !important;
+  font-weight: 750 !important;
+  margin: 0 !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const old = document.getElementById("onco-final-journey-tight-override-v135");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "onco-final-journey-tight-override-v135";
+  style.textContent = ONCOCONNECT_FINAL_JOURNEY_TIGHT_OVERRIDE_V135;
+  document.head.appendChild(style);
+}
+
+// JOURNEY_FULL_WIDTH_BALANCE_V136
+const ONCOCONNECT_JOURNEY_FULL_WIDTH_BALANCE_V136 = `
+html body section.cc-journey-v42 {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  margin: 14px 0 0 0 !important;
+  padding: 18px 28px 18px 28px !important;
+  min-height: 132px !important;
+  max-height: 150px !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 12px !important;
+  row-gap: 10px !important;
+  align-items: start !important;
+  justify-items: stretch !important;
+  overflow: hidden !important;
+}
+
+html body section.cc-journey-v42::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body section.cc-journey-v42 > h3.cc-journey-title-v133 {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1.08 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+}
+
+html body section.cc-journey-v42 > div {
+  grid-row: 2 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > b {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  margin: 0 0 6px 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+html body section.cc-journey-v42 > div > span {
+  display: block !important;
+  font-size: 14.5px !important;
+  line-height: 1.04 !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+}
+
+html body section.cc-journey-v42 > div > small {
+  display: block !important;
+  font-size: 10.5px !important;
+  line-height: 1.08 !important;
+  font-weight: 750 !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const old = document.getElementById("onco-journey-full-width-balance-v136");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "onco-journey-full-width-balance-v136";
+  style.textContent = ONCOCONNECT_JOURNEY_FULL_WIDTH_BALANCE_V136;
+  document.head.appendChild(style);
+}
+
+// JOURNEY_WORKFLOW_BAND_V137
+const ONCOCONNECT_JOURNEY_WORKFLOW_BAND_V137 = `
+html body section.cc-journey-v42 {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  margin: 12px 0 0 0 !important;
+  padding: 18px 26px !important;
+  min-height: 104px !important;
+  max-height: 118px !important;
+  display: grid !important;
+  grid-template-columns: 250px repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: 1fr !important;
+  column-gap: 18px !important;
+  row-gap: 0 !important;
+  align-items: center !important;
+  justify-items: stretch !important;
+  overflow: hidden !important;
+}
+
+html body section.cc-journey-v42::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body section.cc-journey-v42 > h3.cc-journey-title-v133 {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: 230px !important;
+  font-size: 19px !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+  color: #0f172a !important;
+}
+
+html body section.cc-journey-v42 > div {
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: grid !important;
+  grid-template-columns: 52px 1fr !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 10px !important;
+  row-gap: 2px !important;
+  align-items: center !important;
+  justify-content: start !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > b {
+  grid-column: 1 !important;
+  grid-row: 1 / 3 !important;
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html body section.cc-journey-v42 > div > span {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: block !important;
+  font-size: 13.8px !important;
+  line-height: 1.02 !important;
+  font-weight: 950 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  white-space: normal !important;
+}
+
+html body section.cc-journey-v42 > div > small {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  display: block !important;
+  font-size: 10px !important;
+  line-height: 1.08 !important;
+  font-weight: 760 !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  white-space: normal !important;
+}
+
+@media (max-width: 1300px) {
+  html body section.cc-journey-v42 {
+    grid-template-columns: 210px repeat(5, minmax(0, 1fr)) !important;
+    column-gap: 12px !important;
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+  }
+
+  html body section.cc-journey-v42 > h3.cc-journey-title-v133 {
+    font-size: 17px !important;
+  }
+
+  html body section.cc-journey-v42 > div {
+    grid-template-columns: 44px 1fr !important;
+    column-gap: 8px !important;
+  }
+
+  html body section.cc-journey-v42 > div > b {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+}
+`;
+
+if (typeof document !== "undefined") {
+  const old = document.getElementById("onco-journey-workflow-band-v137");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "onco-journey-workflow-band-v137";
+  style.textContent = ONCOCONNECT_JOURNEY_WORKFLOW_BAND_V137;
+  document.head.appendChild(style);
+}
+
+// JOURNEY_GRID_FIX_AFTER_BAND_V138
+const ONCOCONNECT_JOURNEY_GRID_FIX_AFTER_BAND_V138 = `
+html body section.cc-journey-v42 {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  margin: 12px 0 0 0 !important;
+  padding: 18px 30px 20px 30px !important;
+  min-height: 150px !important;
+  max-height: 170px !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: auto 1fr !important;
+  column-gap: 22px !important;
+  row-gap: 14px !important;
+  align-items: start !important;
+  justify-items: stretch !important;
+  overflow: hidden !important;
+}
+
+html body section.cc-journey-v42::before {
+  content: none !important;
+  display: none !important;
+}
+
+html body section.cc-journey-v42 > h3.cc-journey-title-v133 {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: none !important;
+  font-size: 19px !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+}
+
+html body section.cc-journey-v42 > div {
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > b {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+}
+
+html body section.cc-journey-v42 > div > span {
+  display: block !important;
+  font-size: 15px !important;
+  line-height: 1.05 !important;
+  font-weight: 950 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+}
+
+html body section.cc-journey-v42 > div > small {
+  display: block !important;
+  font-size: 10.8px !important;
+  line-height: 1.08 !important;
+  font-weight: 760 !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const ids = [
+    "onco-journey-workflow-band-v137",
+    "onco-journey-full-width-balance-v136",
+    "onco-final-journey-tight-override-v135",
+    "onco-journey-grid-fix-after-band-v138"
+  ];
+
+  ids.forEach((id) => {
+    const old = document.getElementById(id);
+    if (old) old.remove();
+  });
+
+  const style = document.createElement("style");
+  style.id = "onco-journey-grid-fix-after-band-v138";
+  style.textContent = ONCOCONNECT_JOURNEY_GRID_FIX_AFTER_BAND_V138;
+  document.head.appendChild(style);
+}
+
+// JOURNEY_FINAL_COMPACT_V139
+const ONCOCONNECT_JOURNEY_FINAL_COMPACT_V139 = `
+html body section.cc-journey-v42 {
+  margin: 10px 0 0 0 !important;
+  padding: 14px 30px 14px 30px !important;
+  min-height: 128px !important;
+  max-height: 138px !important;
+  grid-template-rows: auto auto !important;
+  row-gap: 10px !important;
+  column-gap: 22px !important;
+  align-items: start !important;
+  overflow: hidden !important;
+}
+
+html body section.cc-journey-v42 > h3.cc-journey-title-v133 {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1.04 !important;
+}
+
+html body section.cc-journey-v42 > div {
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > b {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  margin: 0 0 6px 0 !important;
+  font-size: 17px !important;
+}
+
+html body section.cc-journey-v42 > div > span {
+  font-size: 14px !important;
+  line-height: 1.02 !important;
+  margin: 0 !important;
+}
+
+html body section.cc-journey-v42 > div > small {
+  font-size: 10.2px !important;
+  line-height: 1.05 !important;
+  margin: 0 !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const old = document.getElementById("onco-journey-final-compact-v139");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "onco-journey-final-compact-v139";
+  style.textContent = ONCOCONNECT_JOURNEY_FINAL_COMPACT_V139;
+  document.head.appendChild(style);
+}
+
+// SPLUNK_LIVE_BADGE_V140
+const ONCOCONNECT_SPLUNK_LIVE_BADGE_V140 = `
+html body .splunk-live-badge-v140 {
+  margin: 10px 0 12px 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(37, 99, 235, 0.16) !important;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(248, 250, 252, 0.98)) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+html body .splunk-live-badge-v140 span {
+  flex: 0 0 auto !important;
+  font-size: 10.5px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: #2563eb !important;
+}
+
+html body .splunk-live-badge-v140 b {
+  flex: 1 !important;
+  min-width: 0 !important;
+  text-align: right !important;
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+  font-weight: 850 !important;
+  color: #334155 !important;
+}
+
+html body .splunk-live-badge-v140.ready {
+  border-color: rgba(16, 185, 129, 0.28) !important;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.92), rgba(248, 250, 252, 0.98)) !important;
+}
+
+html body .splunk-live-badge-v140.ready span {
+  color: #059669 !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const old = document.getElementById("onco-splunk-live-badge-v140");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "onco-splunk-live-badge-v140";
+  style.textContent = ONCOCONNECT_SPLUNK_LIVE_BADGE_V140;
+  document.head.appendChild(style);
+}
+
+// FORCE_VISIBLE_SPLUNK_BADGE_V142
+const ONCOCONNECT_FORCE_VISIBLE_SPLUNK_BADGE_V142 = `
+html body section.cc-evidence-v42.cc-evidence-expanded-v136 {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+html body section.cc-evidence-v42.cc-evidence-expanded-v136 .splunk-live-badge-v140 {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 50 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 10px 0 14px 0 !important;
+  padding: 8px 10px !important;
+  min-height: 34px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(16, 185, 129, 0.38) !important;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 253, 250, 0.95)) !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+html body section.cc-evidence-v42.cc-evidence-expanded-v136 .splunk-live-badge-v140 span {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 0 0 auto !important;
+  font-size: 10.5px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.10em !important;
+  text-transform: uppercase !important;
+  color: #059669 !important;
+  white-space: nowrap !important;
+}
+
+html body section.cc-evidence-v42.cc-evidence-expanded-v136 .splunk-live-badge-v140 b {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  text-align: right !important;
+  font-size: 10.8px !important;
+  line-height: 1.12 !important;
+  font-weight: 850 !important;
+  color: #334155 !important;
+  white-space: normal !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const old = document.getElementById("onco-force-visible-splunk-badge-v142");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "onco-force-visible-splunk-badge-v142";
+  style.textContent = ONCOCONNECT_FORCE_VISIBLE_SPLUNK_BADGE_V142;
+  document.head.appendChild(style);
+}
+
+// DOWNLOAD_REPORT_COMPACT_V148
+const ONCOCONNECT_DOWNLOAD_REPORT_COMPACT_V148 = `
+html body .onco-download-report-compact-v148 {
+  min-height: auto !important;
+  height: auto !important;
+  padding: 24px 26px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 108px !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 18px !important;
+  row-gap: 14px !important;
+  align-items: start !important;
+  overflow: hidden !important;
+}
+
+html body .onco-download-report-compact-v148 h1,
+html body .onco-download-report-compact-v148 h2,
+html body .onco-download-report-compact-v148 h3 {
+  margin-top: 0 !important;
+  margin-bottom: 10px !important;
+  line-height: 1.08 !important;
+}
+
+html body .onco-download-report-compact-v148 p {
+  margin: 0 0 16px 0 !important;
+  line-height: 1.32 !important;
+}
+
+html body .onco-download-report-compact-v148 button {
+  margin-top: 0 !important;
+  margin-bottom: 8px !important;
+}
+
+html body .onco-download-report-compact-v148 img,
+html body .onco-download-report-compact-v148 svg {
+  max-width: 54px !important;
+  max-height: 54px !important;
+}
+
+html body .onco-download-report-compact-v148 > div,
+html body .onco-download-report-compact-v148 > section,
+html body .onco-download-report-compact-v148 > article {
+  min-height: auto !important;
+}
+
+html body .onco-download-report-compact-v148 [class*="include"],
+html body .onco-download-report-compact-v148 [class*="report-includes"],
+html body .onco-download-report-compact-v148 [class*="includes"] {
+  grid-column: 1 / -1 !important;
+  margin-top: 6px !important;
+  padding: 16px 18px !important;
+  min-height: auto !important;
+}
+
+html body .onco-download-report-compact-v148 [class*="include"] ul,
+html body .onco-download-report-compact-v148 [class*="report-includes"] ul,
+html body .onco-download-report-compact-v148 [class*="includes"] ul {
+  margin: 8px 0 0 0 !important;
+  padding-left: 0 !important;
+}
+
+html body .onco-download-report-compact-v148 [class*="include"] li,
+html body .onco-download-report-compact-v148 [class*="report-includes"] li,
+html body .onco-download-report-compact-v148 [class*="includes"] li {
+  margin: 4px 0 !important;
+  line-height: 1.15 !important;
+}
+
+/* Sağ üstteki gri placeholder fazla büyükse küçült */
+html body .onco-download-report-compact-v148 div:empty {
+  width: 82px !important;
+  height: 82px !important;
+  min-width: 82px !important;
+  min-height: 82px !important;
+  border-radius: 16px !important;
+}
+`;
+
+function applyDownloadReportCompactV148() {
+  if (typeof document === "undefined") return;
+
+  if (!document.getElementById("onco-download-report-compact-style-v148")) {
+    const style = document.createElement("style");
+    style.id = "onco-download-report-compact-style-v148";
+    style.textContent = ONCOCONNECT_DOWNLOAD_REPORT_COMPACT_V148;
+    document.head.appendChild(style);
+  }
+
+  const nodes = Array.from(document.querySelectorAll("h1,h2,h3,b,strong,span,div"));
+  const title = nodes.find((el) => (el.textContent || "").trim() === "Download your report");
+
+  if (!title) return;
+
+  const card =
+    title.closest("section") ||
+    title.closest("article") ||
+    title.parentElement?.parentElement ||
+    title.parentElement;
+
+  if (card) {
+    card.classList.add("onco-download-report-compact-v148");
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.setTimeout(applyDownloadReportCompactV148, 50);
+  window.setTimeout(applyDownloadReportCompactV148, 300);
+  window.setTimeout(applyDownloadReportCompactV148, 900);
+  window.addEventListener("load", applyDownloadReportCompactV148);
+}
+
