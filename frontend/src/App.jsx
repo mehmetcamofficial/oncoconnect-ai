@@ -423,7 +423,11 @@ if (typeof document !== "undefined" && !document.getElementById("onco-compact-ru
 }
 
 
-const API = "http://localhost:5050";
+// ONCOCONNECT_API_BASE_V1
+// Uses the hosted API in production and localhost during local development.
+const API =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
+  "http://localhost:5050";
 
 function safeNumber(value, fallback = 0) {
   const cleaned = String(value ?? "").replace(",", ".").trim();
@@ -2111,7 +2115,7 @@ function App() {
     async function loadSplunkLiveMetricsV140() {
       try {
         setSplunkLiveStatusV140("loading");
-        const response = await fetch("http://localhost:5050/splunk/metrics");
+        const response = await fetch(`${API}/splunk/metrics`);
         const data = await response.json();
 
         if (cancelled) return;
