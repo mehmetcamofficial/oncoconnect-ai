@@ -123,6 +123,61 @@ function readValidatedSymptoms(data) {
 }
 
 
+
+// ONCOCONNECT_RED_FLAG_SAFETY_V1
+function readBooleanFlag(value) {
+  if (value === true || value === 1) return true;
+
+  if (typeof value === "string") {
+    return ["true", "1", "yes", "on"].includes(value.trim().toLowerCase());
+  }
+
+  return false;
+}
+
+function readRedFlags(data) {
+  const definitions = [
+    {
+      key: "fever",
+      label: "Fever",
+      values: [data?.feverFlag, data?.fever, data?.hasFever]
+    },
+    {
+      key: "breathing_difficulty",
+      label: "Breathing difficulty",
+      values: [
+        data?.breathingDifficultyFlag,
+        data?.breathingDifficulty,
+        data?.shortnessOfBreath
+      ]
+    },
+    {
+      key: "severe_vomiting",
+      label: "Severe vomiting",
+      values: [
+        data?.severeVomitingFlag,
+        data?.severeVomiting
+      ]
+    },
+    {
+      key: "confusion",
+      label: "Confusion",
+      values: [
+        data?.confusionFlag,
+        data?.confusion
+      ]
+    }
+  ];
+
+  return definitions
+    .filter((item) => item.values.some(readBooleanFlag))
+    .map((item) => ({
+      key: item.key,
+      label: item.label
+    }));
+}
+
+
 app.post("/checkin", async (req, res) => {
   try {
     const data = req.body || {};
@@ -211,6 +266,14 @@ app.post("/ai-summary", async (req, res) => {
     if (risk_score >= 25) riskLevel = "Critical";
     else if (risk_score >= 20) riskLevel = "High";
     else if (risk_score >= 12) riskLevel = "Medium";
+
+    const redFlags = readRedFlags(data);
+    const redFlagDetected = redFlags.length > 0;
+
+    // Rule-based safety always takes precedence over model-generated text.
+    if (redFlagDetected) {
+      riskLevel = "Critical";
+    }
 
     const fallbackSummary = {
       patientId: data.patientId || "unknown",
@@ -310,6 +373,9 @@ app.post("/ai-summary", async (req, res) => {
           patientId: data.patientId || "unknown",
           risk_score,
           riskLevel,
+          red_flag_detected: redFlagDetected,
+          red_flags: redFlags,
+          safety_override_applied: redFlagDetected,
           model_used: process.env.OPENROUTER_MODEL || "openrouter/auto"
         };
       } catch (aiError) {
@@ -320,6 +386,42 @@ app.post("/ai-summary", async (req, res) => {
           ai_error: aiError.message
         };
       }
+    }
+
+
+    summary = {
+      ...summary,
+      patientId: data.patientId || "unknown",
+      risk_score,
+      riskLevel,
+      red_flag_detected: redFlagDetected,
+      red_flags: redFlags
+    };
+
+    if (redFlagDetected) {
+      const redFlagLabels = redFlags.map((item) => item.label);
+
+      summary = {
+        ...summary,
+        riskLevel: "Critical",
+        ai_summary:
+          `A rule-based safety check detected: ${redFlagLabels.join(", ")}. ` +
+          "This signal takes priority over the general AI-generated summary.",
+        recommended_action:
+          "Promptly contact the care team or follow the urgent-contact instructions provided by the treating clinic. If symptoms are severe, rapidly worsening, or immediate safety is at risk, contact the appropriate local emergency service.",
+        doctor_questions: [
+          "Do these symptoms require prompt clinical assessment?",
+          "Which urgent-contact instructions should be followed now?",
+          "What changes should trigger emergency support?"
+        ],
+        monitoring_plan: [
+          "Do not rely only on continued routine monitoring.",
+          "Record when the symptom started and whether it is worsening.",
+          "Prepare current medications, treatment details and recent temperature readings for the care team."
+        ],
+        safety_note:
+          "Rule-based red-flag safety override applied. This is not a diagnosis or treatment decision. Clinical assessment is required."
+      };
     }
 
     const payload = {
