@@ -1688,11 +1688,17 @@ app.get("/splunk/metrics", async (req, res) => {
     const password = process.env.SPLUNK_PASSWORD;
     const index = process.env.SPLUNK_INDEX || "main";
 
+    // ONCOCONNECT_SPLUNK_METRICS_GRACEFUL_FALLBACK_V1
+    // Hosted demos may run without direct access to a Splunk Search API.
+    // Return a normal 200 response so the frontend can show static evidence
+    // without generating repeated browser-console errors.
     if (!username || !password) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
-        source: "splunk_search",
-        message: "Missing SPLUNK_USERNAME or SPLUNK_PASSWORD in backend .env"
+        configured: false,
+        source: "not_configured",
+        message: "Live Splunk metrics are not configured for this deployment.",
+        metrics: null
       });
     }
 
