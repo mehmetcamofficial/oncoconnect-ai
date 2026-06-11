@@ -481,15 +481,54 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 
+// ONCOCONNECT_VERCEL_READ_ONLY_ADMIN_V1
+const IS_VERCEL_RUNTIME = Boolean(process.env.VERCEL);
 const ADMIN_DATA_DIR = path.join(__dirname, "data");
-const ADMIN_UPLOAD_DIR = path.join(ADMIN_DATA_DIR, "uploads");
+const ADMIN_UPLOAD_DIR = IS_VERCEL_RUNTIME
+  ? path.join("/tmp", "oncoconnect-admin-uploads")
+  : path.join(ADMIN_DATA_DIR, "uploads");
 const ADMIN_STORE_PATH = path.join(ADMIN_DATA_DIR, "admin_datasets.json");
 
-if (!fs.existsSync(ADMIN_DATA_DIR)) fs.mkdirSync(ADMIN_DATA_DIR);
-if (!fs.existsSync(ADMIN_UPLOAD_DIR)) fs.mkdirSync(ADMIN_UPLOAD_DIR);
-if (!fs.existsSync(ADMIN_STORE_PATH)) fs.writeFileSync(ADMIN_STORE_PATH, "[]");
+if (IS_VERCEL_RUNTIME) {
+  // Vercel only provides temporary writable storage under /tmp.
+  if (!fs.existsSync(ADMIN_UPLOAD_DIR)) {
+    fs.mkdirSync(ADMIN_UPLOAD_DIR, { recursive: true });
+  }
+} else {
+  if (!fs.existsSync(ADMIN_DATA_DIR)) {
+    fs.mkdirSync(ADMIN_DATA_DIR, { recursive: true });
+  }
+
+  if (!fs.existsSync(ADMIN_UPLOAD_DIR)) {
+    fs.mkdirSync(ADMIN_UPLOAD_DIR, { recursive: true });
+  }
+
+  if (!fs.existsSync(ADMIN_STORE_PATH)) {
+    fs.writeFileSync(ADMIN_STORE_PATH, "[]");
+  }
+}
 
 const upload = multer({ dest: ADMIN_UPLOAD_DIR });
+
+// Production deployment exposes admin data as read-only demo content.
+// Login remains available, but persistent write operations are disabled.
+app.use((req, res, next) => {
+  const isAdminWrite =
+    req.path.startsWith("/admin/") &&
+    ["POST", "PUT", "PATCH", "DELETE"].includes(req.method) &&
+    req.path !== "/admin/login";
+
+  if (IS_VERCEL_RUNTIME && isAdminWrite) {
+    return res.status(503).json({
+      success: false,
+      error: "READ_ONLY_DEMO",
+      message:
+        "Admin data modifications are disabled in the hosted demo. Run the backend locally for upload, synchronization and dataset editing."
+    });
+  }
+
+  next();
+});
 
 function readDatasets() {
   try {
