@@ -1,0 +1,42 @@
+{
+  "generated_by": "OncoConnect AI v14 data bundle generator",
+  "method": "uploaded CSV/XLSX summarization + graph-ready context",
+  "safety_positioning": "All outputs are non-diagnostic support, awareness, access-pressure and care-communication analytics. They are not diagnosis, treatment selection, emergency triage or personal survival prediction.",
+  "datasets": [
+    {
+      "id": "nhs_cancer_waiting_times",
+      "label": "NHS Cancer Waiting Times",
+      "layer": "Access pressure",
+      "summary_file": "nhs_cancer_waiting_times_summary_v14.json"
+    },
+    {
+      "id": "cancer_treatment_performance",
+      "label": "Cancer Treatment Performance KPIs",
+      "layer": "Treatment performance",
+      "summary_file": "cancer_treatment_performance_summary_v14.json"
+    },
+    {
+      "id": "colorectal_lifestyle",
+      "label": "Colorectal Lifestyle & Dietary Risk Context",
+      "layer": "Lifestyle / prevention",
+      "summary_file": "colorectal_lifestyle_summary_v14.json"
+    }
+  ],
+  "graph_layers": [
+    {
+      "layer": "Access pressure",
+      "evidence": "NHS waiting-time performance",
+      "insight": "Where provider/pathway delay can affect patient/caregiver communication urgency."
+    },
+    {
+      "layer": "Treatment performance",
+      "evidence": "diagnosis/stage/outcome/regimen KPIs",
+      "insight": "Which treatment journey context should be shown as cohort-level evidence."
+    },
+    {
+      "layer": "Lifestyle and prevention",
+      "evidence": "CRC lifestyle, BMI, diet, family history and comorbidity fields",
+      "insight": "Which modifiable factors should become screening and prevention discussion prompts."
+    }
+  ]
+}

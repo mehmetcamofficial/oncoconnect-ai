@@ -1,0 +1,168 @@
+{
+  "name": "Cancer Treatment Performance Global KPIs Dataset",
+  "role_in_oncoconnect": "Treatment performance and outcome-context layer for dashboard KPIs; not a personal treatment recommendation engine.",
+  "source_file": "Cancer_Treatment_Performance_Global_KPIs_Dataset.xlsx",
+  "rows": 450,
+  "columns": [
+    "Patient_ID",
+    "Diagnosis",
+    "Stage",
+    "Start_Date",
+    "End_Date",
+    "Outcome",
+    "Treatment_Response_Score",
+    "Drug_Regimen",
+    "Hospital",
+    "Doctor",
+    "Survival_Status",
+    "Treatment_Cost_USD",
+    "Number_of_Cycles",
+    "Time_to_Response_Days",
+    "Follow_Up_Visits"
+  ],
+  "sha256_prefix": "679dfa7e76e0c0a5",
+  "kpis": {
+    "avg_response_score": 69.69,
+    "avg_cycles": 6.88,
+    "avg_time_to_response_days": 62.18,
+    "avg_follow_up_visits": 5.12,
+    "avg_cost_usd": 35166.07
+  },
+  "diagnosis_distribution": [
+    {
+      "label": "Colorectal Cancer",
+      "count": 76,
+      "percent": 16.89
+    },
+    {
+      "label": "Leukemia",
+      "count": 68,
+      "percent": 15.11
+    },
+    {
+      "label": "Melanoma",
+      "count": 67,
+      "percent": 14.89
+    },
+    {
+      "label": "Prostate Cancer",
+      "count": 63,
+      "percent": 14.0
+    },
+    {
+      "label": "Breast Cancer",
+      "count": 61,
+      "percent": 13.56
+    },
+    {
+      "label": "Lung Cancer",
+      "count": 58,
+      "percent": 12.89
+    },
+    {
+      "label": "Pancreatic Cancer",
+      "count": 57,
+      "percent": 12.67
+    }
+  ],
+  "stage_distribution": [
+    {
+      "label": "Stage IV",
+      "count": 119,
+      "percent": 26.44
+    },
+    {
+      "label": "Stage I",
+      "count": 118,
+      "percent": 26.22
+    },
+    {
+      "label": "Stage III",
+      "count": 113,
+      "percent": 25.11
+    },
+    {
+      "label": "Stage II",
+      "count": 100,
+      "percent": 22.22
+    }
+  ],
+  "outcome_distribution": [
+    {
+      "label": "Stable",
+      "count": 120,
+      "percent": 26.67
+    },
+    {
+      "label": "Progression",
+      "count": 118,
+      "percent": 26.22
+    },
+    {
+      "label": "Deceased",
+      "count": 114,
+      "percent": 25.33
+    },
+    {
+      "label": "Remission",
+      "count": 98,
+      "percent": 21.78
+    }
+  ],
+  "regimen_distribution": [
+    {
+      "label": "Regimen A",
+      "count": 122,
+      "percent": 27.11
+    },
+    {
+      "label": "Regimen D",
+      "count": 120,
+      "percent": 26.67
+    },
+    {
+      "label": "Regimen B",
+      "count": 104,
+      "percent": 23.11
+    },
+    {
+      "label": "Regimen C",
+      "count": 104,
+      "percent": 23.11
+    }
+  ],
+  "survival_status_distribution": [
+    {
+      "label": "Alive",
+      "count": 277,
+      "percent": 61.56
+    },
+    {
+      "label": "Deceased",
+      "count": 173,
+      "percent": 38.44
+    }
+  ],
+  "graph_edges": [
+    {
+      "from": "Diagnosis",
+      "to": "Treatment response score",
+      "why": "Shows cohort-level response context by cancer group."
+    },
+    {
+      "from": "Stage",
+      "to": "Outcome",
+      "why": "Stage is used as an explanatory context for outcome dashboards."
+    },
+    {
+      "from": "Drug regimen",
+      "to": "Cycles and time-to-response",
+      "why": "Supports treatment journey comparison, not treatment selection."
+    },
+    {
+      "from": "Follow-up visits",
+      "to": "Care plan intensity",
+      "why": "More follow-up visits can indicate care coordination need."
+    }
+  ]
+}

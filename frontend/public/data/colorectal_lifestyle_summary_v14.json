@@ -1,0 +1,261 @@
+{
+  "name": "Colorectal Cancer Dietary and Lifestyle Dataset",
+  "role_in_oncoconnect": "Prevention, lifestyle awareness and screening-discussion context for colorectal cancer; non-diagnostic.",
+  "source_file": "crc_dataset.csv",
+  "rows": 1000,
+  "columns": [
+    "Participant_ID",
+    "Age",
+    "Gender",
+    "BMI",
+    "Lifestyle",
+    "Ethnicity",
+    "Family_History_CRC",
+    "Pre-existing Conditions",
+    "Carbohydrates (g)",
+    "Proteins (g)",
+    "Fats (g)",
+    "Vitamin A (IU)",
+    "Vitamin C (mg)",
+    "Iron (mg)",
+    "CRC_Risk"
+  ],
+  "sha256_prefix": "7005917d51cca254",
+  "numeric_summary": {
+    "Participant_ID": {
+      "mean": 1500.5,
+      "median": 1500.5,
+      "min": 1001.0,
+      "max": 2000.0
+    },
+    "Age": {
+      "mean": 52.44,
+      "median": 53.0,
+      "min": 25.0,
+      "max": 79.0
+    },
+    "BMI": {
+      "mean": 26.8,
+      "median": 27.0,
+      "min": 18.6,
+      "max": 35.0
+    },
+    "Carbohydrates (g)": {
+      "mean": 275.87,
+      "median": 276.0,
+      "min": 150.0,
+      "max": 399.0
+    },
+    "Proteins (g)": {
+      "mean": 85.05,
+      "median": 86.0,
+      "min": 50.0,
+      "max": 119.0
+    },
+    "Fats (g)": {
+      "mean": 69.58,
+      "median": 70.0,
+      "min": 40.0,
+      "max": 99.0
+    },
+    "Vitamin A (IU)": {
+      "mean": 5922.54,
+      "median": 5905.0,
+      "min": 3020.0,
+      "max": 8997.0
+    },
+    "Vitamin C (mg)": {
+      "mean": 75.95,
+      "median": 77.0,
+      "min": 30.0,
+      "max": 119.0
+    },
+    "Iron (mg)": {
+      "mean": 12.69,
+      "median": 12.8,
+      "min": 5.0,
+      "max": 20.0
+    },
+    "CRC_Risk": {
+      "mean": 0.15,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 1.0
+    }
+  },
+  "risk_group_breakdowns": {
+    "Lifestyle": [
+      {
+        "label": "Smoker",
+        "count": 251,
+        "crc_risk_rate_percent": 37.85
+      },
+      {
+        "label": "Active",
+        "count": 230,
+        "crc_risk_rate_percent": 10.43
+      },
+      {
+        "label": "Moderate Exercise",
+        "count": 261,
+        "crc_risk_rate_percent": 8.05
+      },
+      {
+        "label": "Sedentary",
+        "count": 258,
+        "crc_risk_rate_percent": 5.81
+      }
+    ],
+    "Family_History_CRC": [
+      {
+        "label": "Yes",
+        "count": 503,
+        "crc_risk_rate_percent": 23.46
+      },
+      {
+        "label": "No",
+        "count": 497,
+        "crc_risk_rate_percent": 7.44
+      }
+    ],
+    "Pre-existing Conditions": [
+      {
+        "label": "Hypertension",
+        "count": 251,
+        "crc_risk_rate_percent": 19.52
+      },
+      {
+        "label": "nan",
+        "count": 238,
+        "crc_risk_rate_percent": 15.55
+      },
+      {
+        "label": "Diabetes",
+        "count": 253,
+        "crc_risk_rate_percent": 15.42
+      },
+      {
+        "label": "Obesity",
+        "count": 258,
+        "crc_risk_rate_percent": 11.63
+      }
+    ],
+    "Gender": [
+      {
+        "label": "Female",
+        "count": 479,
+        "crc_risk_rate_percent": 16.49
+      },
+      {
+        "label": "Male",
+        "count": 521,
+        "crc_risk_rate_percent": 14.59
+      }
+    ],
+    "Ethnicity": [
+      {
+        "label": "Hispanic",
+        "count": 240,
+        "crc_risk_rate_percent": 19.17
+      },
+      {
+        "label": "African American",
+        "count": 251,
+        "crc_risk_rate_percent": 16.73
+      },
+      {
+        "label": "Caucasian",
+        "count": 272,
+        "crc_risk_rate_percent": 14.34
+      },
+      {
+        "label": "Asian",
+        "count": 237,
+        "crc_risk_rate_percent": 11.81
+      }
+    ]
+  },
+  "lifestyle_distribution": [
+    {
+      "label": "Moderate Exercise",
+      "count": 261,
+      "percent": 26.1
+    },
+    {
+      "label": "Sedentary",
+      "count": 258,
+      "percent": 25.8
+    },
+    {
+      "label": "Smoker",
+      "count": 251,
+      "percent": 25.1
+    },
+    {
+      "label": "Active",
+      "count": 230,
+      "percent": 23.0
+    }
+  ],
+  "family_history_distribution": [
+    {
+      "label": "Yes",
+      "count": 503,
+      "percent": 50.3
+    },
+    {
+      "label": "No",
+      "count": 497,
+      "percent": 49.7
+    }
+  ],
+  "pre_existing_conditions_distribution": [
+    {
+      "label": "Obesity",
+      "count": 258,
+      "percent": 25.8
+    },
+    {
+      "label": "Diabetes",
+      "count": 253,
+      "percent": 25.3
+    },
+    {
+      "label": "Hypertension",
+      "count": 251,
+      "percent": 25.1
+    },
+    {
+      "label": "nan",
+      "count": 238,
+      "percent": 23.8
+    }
+  ],
+  "graph_edges": [
+    {
+      "from": "Lifestyle",
+      "to": "CRC awareness score",
+      "why": "Lifestyle is used as a prevention-awareness signal."
+    },
+    {
+      "from": "BMI",
+      "to": "Lifestyle risk context",
+      "why": "BMI supports non-diagnostic lifestyle conversation prompts."
+    },
+    {
+      "from": "Family history",
+      "to": "Screening discussion",
+      "why": "Family history strengthens the recommendation to discuss screening with a clinician."
+    },
+    {
+      "from": "Dietary nutrients",
+      "to": "Diet pattern context",
+      "why": "Carbohydrate/protein/fat and micronutrient fields add dietary context."
+    },
+    {
+      "from": "Pre-existing conditions",
+      "to": "Care conversation priority",
+      "why": "Comorbidities can shape the questions patients should ask."
+    }
+  ]
+}

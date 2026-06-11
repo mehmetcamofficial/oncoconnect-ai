@@ -1,0 +1,945 @@
+{
+  "name": "NHS England Cancer Waiting Times 2025-26",
+  "period": "Sep-25 Final provider-based files uploaded by user",
+  "role_in_oncoconnect": "Access pressure and care pathway context; not a clinical diagnosis or personal risk prediction.",
+  "source_files": [
+    {
+      "file": "2.-28-Day-Faster-Diagnosis-All-Routes-Provider-Data (1).csv",
+      "rows": 143,
+      "columns": [
+        "Unnamed_0",
+        "ODS_CODE",
+        "ACCOUNTABLE_PROVIDER",
+        "REFERRAL_ROUTE",
+        "TOTAL",
+        "WITHIN_28_DAYS",
+        "AFTER_28_DAYS",
+        "TOLD_WITHIN_28_DAYS",
+        "BLANK",
+        "WITHIN_14_DAYS",
+        "IN_15_TO_28_DAYS",
+        "IN_29_TO_42_DAYS",
+        "IN_43_TO_62_DAYS",
+        "AFTER_62_DAYS"
+      ],
+      "sha256_prefix": "3f376458e457f40a"
+    },
+    {
+      "file": "3.-28-Day-Faster-Diagnosis-By-Route-and-Suspected-Cancer-Provider-Data.csv",
+      "rows": 2009,
+      "columns": [
+        "Unnamed_0",
+        "ODS_CODE",
+        "ACCOUNTABLE_PROVIDER",
+        "REFERRAL_ROUTE",
+        "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC",
+        "TOTAL",
+        "WITHIN_28_DAYS",
+        "AFTER_28_DAYS",
+        "TOLD_WITHIN_28_DAYS",
+        "BLANK",
+        "WITHIN_14_DAYS",
+        "IN_15_TO_28_DAYS",
+        "IN_29_TO_42_DAYS",
+        "IN_43_TO_62_DAYS",
+        "AFTER_62_DAYS"
+      ],
+      "sha256_prefix": "74ff34db99edc6d8"
+    },
+    {
+      "file": "4.-31-Day-Combined-All-Cancers-Provider-Data.csv",
+      "rows": 416,
+      "columns": [
+        "Unnamed_0",
+        "ODS_CODE",
+        "ACCOUNTABLE_PROVIDER",
+        "TREATMENT_STAGE",
+        "CANCER_TYPE",
+        "TOTAL",
+        "WITHIN_31_DAYS",
+        "AFTER_31_DAYS",
+        "TREATED_WITHIN_31_DAYS",
+        "BLANK",
+        "WITHIN_31_DAYS_2",
+        "IN_32_TO_38_DAYS",
+        "IN_39_TO_48_DAYS",
+        "IN_49_TO_62_DAYS",
+        "AFTER_62_DAYS"
+      ],
+      "sha256_prefix": "bb70911e3f69bf40"
+    },
+    {
+      "file": "5.-31-Day-Combined-By-Cancer-Provider-Data.csv",
+      "rows": 4250,
+      "columns": [
+        "Unnamed_0",
+        "ODS_CODE",
+        "ACCOUNTABLE_PROVIDER",
+        "TREATMENT_STAGE",
+        "CANCER_TYPE",
+        "TOTAL",
+        "WITHIN_31_DAYS",
+        "AFTER_31_DAYS",
+        "TREATED_WITHIN_31_DAYS",
+        "BLANK",
+        "WITHIN_31_DAYS_2",
+        "IN_32_TO_38_DAYS",
+        "IN_39_TO_48_DAYS",
+        "IN_49_TO_62_DAYS",
+        "AFTER_62_DAYS"
+      ],
+      "sha256_prefix": "e303b46498ee235b"
+    },
+    {
+      "file": "6.-31-Day-Combined-By-Treatment-Modality-Provider-Data.csv",
+      "rows": 1293,
+      "columns": [
+        "Unnamed_0",
+        "ODS_CODE",
+        "ACCOUNTABLE_PROVIDER",
+        "TREATMENT_STAGE",
+        "TREATMENT_MODALITY",
+        "TOTAL",
+        "WITHIN_31_DAYS",
+        "AFTER_31_DAYS",
+        "TREATED_WITHIN_31_DAYS",
+        "BLANK",
+        "WITHIN_31_DAYS_2",
+        "IN_32_TO_38_DAYS",
+        "IN_39_TO_48_DAYS",
+        "IN_49_TO_62_DAYS",
+        "AFTER_62_DAYS"
+      ],
+      "sha256_prefix": "58458fac416ec9e7"
+    }
+  ],
+  "tables": {
+    "28_day_all_routes": {
+      "description": "28-day faster diagnosis, all routes",
+      "rows": 143,
+      "total_patients_or_pathways": 295202,
+      "within_standard": 217972,
+      "after_standard": 77230,
+      "weighted_performance_percent": 73.84,
+      "lowest_performing_provider_rows": [
+        {
+          "provider": "HCRG CARE LTD",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 15,
+          "within": 4,
+          "after": 11,
+          "performance_percent": 26.67
+        },
+        {
+          "provider": "ROYAL UNITED HOSPITALS BATH NHS FOUNDATION TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 2222,
+          "within": 1186,
+          "after": 1036,
+          "performance_percent": 53.38
+        },
+        {
+          "provider": "NORTH CUMBRIA INTEGRATED CARE NHS FOUNDATION TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 1505,
+          "within": 822,
+          "after": 683,
+          "performance_percent": 54.62
+        },
+        {
+          "provider": "COUNTY DURHAM AND DARLINGTON NHS FOUNDATION TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 1889,
+          "within": 1071,
+          "after": 818,
+          "performance_percent": 56.7
+        },
+        {
+          "provider": "SOUTH WARWICKSHIRE UNIVERSITY NHS FOUNDATION TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 1767,
+          "within": 1006,
+          "after": 761,
+          "performance_percent": 56.93
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 2832,
+          "within": 1710,
+          "after": 1122,
+          "performance_percent": 60.38
+        },
+        {
+          "provider": "MID AND SOUTH ESSEX NHS FOUNDATION TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 7214,
+          "within": 4360,
+          "after": 2854,
+          "performance_percent": 60.44
+        },
+        {
+          "provider": "YORK AND SCARBOROUGH TEACHING HOSPITALS NHS FOUNDATION TRUST",
+          "route": "ALL ROUTES",
+          "cancer_or_modality": "",
+          "total": 2143,
+          "within": 1299,
+          "after": 844,
+          "performance_percent": 60.62
+        }
+      ],
+      "group_breakdowns": {
+        "by_route": [
+          {
+            "REFERRAL_ROUTE": "ALL ROUTES",
+            "total": 295202,
+            "within": 217972,
+            "after": 77230,
+            "performance_percent": 73.84
+          }
+        ]
+      },
+      "graph_nodes": [
+        "Access pressure",
+        "Provider performance",
+        "Referral route",
+        "All cancers",
+        "Patient/caregiver action"
+      ],
+      "graph_edges": [
+        {
+          "from": "Provider performance",
+          "to": "Access pressure",
+          "why": "Lower within-standard performance can indicate system-level access pressure."
+        },
+        {
+          "from": "Access pressure",
+          "to": "Patient/caregiver action",
+          "why": "If waiting pressure is high, patients/caregivers should clarify next appointment timing and escalation routes."
+        }
+      ]
+    },
+    "28_day_by_route_cancer": {
+      "description": "28-day faster diagnosis by route and suspected cancer",
+      "rows": 2009,
+      "total_patients_or_pathways": 295202,
+      "within_standard": 217972,
+      "after_standard": 77230,
+      "weighted_performance_percent": 73.84,
+      "lowest_performing_provider_rows": [
+        {
+          "provider": "UNIVERSITY HOSPITALS OF DERBY AND BURTON NHS FOUNDATION TRUST",
+          "route": "NATIONAL SCREENING PROGRAMME",
+          "cancer_or_modality": "Suspected gynaecological cancer",
+          "total": 15,
+          "within": 0,
+          "after": 15,
+          "performance_percent": 0.0
+        },
+        {
+          "provider": "NORTH TEES AND HARTLEPOOL NHS FOUNDATION TRUST",
+          "route": "URGENT SUSPECTED CANCER",
+          "cancer_or_modality": "Suspected haematological malignancies (excluding acute leukaemia)",
+          "total": 10,
+          "within": 0,
+          "after": 10,
+          "performance_percent": 0.0
+        },
+        {
+          "provider": "LEWISHAM AND GREENWICH NHS TRUST",
+          "route": "URGENT SUSPECTED CANCER",
+          "cancer_or_modality": "Suspected cancer - non-specific symptoms",
+          "total": 99,
+          "within": 1,
+          "after": 98,
+          "performance_percent": 1.01
+        },
+        {
+          "provider": "EPSOM AND ST HELIER UNIVERSITY HOSPITALS NHS TRUST",
+          "route": "URGENT SUSPECTED CANCER",
+          "cancer_or_modality": "Suspected skin cancer",
+          "total": 194,
+          "within": 4,
+          "after": 190,
+          "performance_percent": 2.06
+        },
+        {
+          "provider": "GUY'S AND ST THOMAS' NHS FOUNDATION TRUST",
+          "route": "NATIONAL SCREENING PROGRAMME",
+          "cancer_or_modality": "Suspected gynaecological cancer",
+          "total": 16,
+          "within": 1,
+          "after": 15,
+          "performance_percent": 6.25
+        },
+        {
+          "provider": "GEORGE ELIOT HOSPITAL NHS TRUST",
+          "route": "URGENT SUSPECTED CANCER",
+          "cancer_or_modality": "Suspected other cancer",
+          "total": 13,
+          "within": 1,
+          "after": 12,
+          "performance_percent": 7.69
+        },
+        {
+          "provider": "NOTTINGHAM UNIVERSITY HOSPITALS NHS TRUST",
+          "route": "NATIONAL SCREENING PROGRAMME",
+          "cancer_or_modality": "Suspected lung cancer",
+          "total": 12,
+          "within": 1,
+          "after": 11,
+          "performance_percent": 8.33
+        },
+        {
+          "provider": "MILTON KEYNES UNIVERSITY HOSPITAL NHS FOUNDATION TRUST",
+          "route": "URGENT SUSPECTED CANCER",
+          "cancer_or_modality": "Suspected haematological malignancies (excluding acute leukaemia)",
+          "total": 11,
+          "within": 1,
+          "after": 10,
+          "performance_percent": 9.09
+        }
+      ],
+      "group_breakdowns": {
+        "by_route": [
+          {
+            "REFERRAL_ROUTE": "URGENT SUSPECTED CANCER",
+            "total": 272926,
+            "within": 201102,
+            "after": 71824,
+            "performance_percent": 73.68
+          },
+          {
+            "REFERRAL_ROUTE": "NATIONAL SCREENING PROGRAMME",
+            "total": 13300,
+            "within": 9300,
+            "after": 4000,
+            "performance_percent": 69.92
+          },
+          {
+            "REFERRAL_ROUTE": "BREAST SYMPTOMATIC, CANCER NOT SUSPECTED",
+            "total": 8976,
+            "within": 7570,
+            "after": 1406,
+            "performance_percent": 84.34
+          }
+        ],
+        "by_cancer": [
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected skin cancer",
+            "total": 72504,
+            "within": 56655,
+            "after": 15849,
+            "performance_percent": 78.14
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected breast cancer",
+            "total": 50542,
+            "within": 42867,
+            "after": 7675,
+            "performance_percent": 84.81
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected lower gastrointestinal cancer",
+            "total": 47228,
+            "within": 29919,
+            "after": 17309,
+            "performance_percent": 63.35
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected gynaecological cancer",
+            "total": 28548,
+            "within": 18457,
+            "after": 10091,
+            "performance_percent": 64.65
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected head & neck cancer",
+            "total": 28071,
+            "within": 21071,
+            "after": 7000,
+            "performance_percent": 75.06
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected urological malignancies (excluding testicular)",
+            "total": 21763,
+            "within": 13479,
+            "after": 8284,
+            "performance_percent": 61.94
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected upper gastrointestinal cancer",
+            "total": 19931,
+            "within": 14932,
+            "after": 4999,
+            "performance_percent": 74.92
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Exhibited (non-cancer) breast symptoms - cancer not initially suspected",
+            "total": 8976,
+            "within": 7570,
+            "after": 1406,
+            "performance_percent": 84.34
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected lung cancer",
+            "total": 5564,
+            "within": 4388,
+            "after": 1176,
+            "performance_percent": 78.86
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected cancer - non-specific symptoms",
+            "total": 4940,
+            "within": 3382,
+            "after": 1558,
+            "performance_percent": 68.46
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected haematological malignancies (excluding acute leukaemia)",
+            "total": 1896,
+            "within": 1128,
+            "after": 768,
+            "performance_percent": 59.49
+          },
+          {
+            "SUSPECTED_CANCER_OR_BREAST_SYMPTOMATIC": "Suspected sarcoma",
+            "total": 1566,
+            "within": 1052,
+            "after": 514,
+            "performance_percent": 67.18
+          }
+        ]
+      },
+      "graph_nodes": [
+        "Access pressure",
+        "Provider performance",
+        "Referral route",
+        "Cancer type",
+        "Patient/caregiver action"
+      ],
+      "graph_edges": [
+        {
+          "from": "Provider performance",
+          "to": "Access pressure",
+          "why": "Lower within-standard performance can indicate system-level access pressure."
+        },
+        {
+          "from": "Access pressure",
+          "to": "Patient/caregiver action",
+          "why": "If waiting pressure is high, patients/caregivers should clarify next appointment timing and escalation routes."
+        }
+      ]
+    },
+    "31_day_all_cancers": {
+      "description": "31-day treatment wait, all cancers",
+      "rows": 416,
+      "total_patients_or_pathways": 122002,
+      "within_standard": 111276,
+      "after_standard": 10726,
+      "weighted_performance_percent": 91.21,
+      "lowest_performing_provider_rows": [
+        {
+          "provider": "BRIDGEWATER COMMUNITY HEALTHCARE NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 13,
+          "within": 3,
+          "after": 10,
+          "performance_percent": 23.08
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 546,
+          "within": 363,
+          "after": 183,
+          "performance_percent": 66.48
+        },
+        {
+          "provider": "UNIVERSITY HOSPITALS SUSSEX NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 334,
+          "within": 230,
+          "after": 104,
+          "performance_percent": 68.86
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 1000,
+          "within": 696,
+          "after": 304,
+          "performance_percent": 69.6
+        },
+        {
+          "provider": "WYE VALLEY NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 38,
+          "within": 27,
+          "after": 11,
+          "performance_percent": 71.05
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 454,
+          "within": 333,
+          "after": 121,
+          "performance_percent": 73.35
+        },
+        {
+          "provider": "UNIVERSITY HOSPITALS OF LEICESTER NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 409,
+          "within": 304,
+          "after": 105,
+          "performance_percent": 74.33
+        },
+        {
+          "provider": "UNIVERSITY HOSPITALS SUSSEX NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "ALL CANCERS",
+          "total": 960,
+          "within": 733,
+          "after": 227,
+          "performance_percent": 76.35
+        }
+      ],
+      "group_breakdowns": {
+        "by_cancer": [
+          {
+            "CANCER_TYPE": "ALL CANCERS",
+            "total": 122002,
+            "within": 111276,
+            "after": 10726,
+            "performance_percent": 91.21
+          }
+        ],
+        "by_stage": [
+          {
+            "TREATMENT_STAGE": "ALL STAGES",
+            "total": 61001,
+            "within": 55638,
+            "after": 5363,
+            "performance_percent": 91.21
+          },
+          {
+            "TREATMENT_STAGE": "First Treatment",
+            "total": 32976,
+            "within": 30153,
+            "after": 2823,
+            "performance_percent": 91.44
+          },
+          {
+            "TREATMENT_STAGE": "Subsequent Treatment",
+            "total": 28025,
+            "within": 25485,
+            "after": 2540,
+            "performance_percent": 90.94
+          }
+        ]
+      },
+      "graph_nodes": [
+        "Access pressure",
+        "Provider performance",
+        "Treatment stage",
+        "Cancer type",
+        "Patient/caregiver action"
+      ],
+      "graph_edges": [
+        {
+          "from": "Provider performance",
+          "to": "Access pressure",
+          "why": "Lower within-standard performance can indicate system-level access pressure."
+        },
+        {
+          "from": "Access pressure",
+          "to": "Patient/caregiver action",
+          "why": "If waiting pressure is high, patients/caregivers should clarify next appointment timing and escalation routes."
+        }
+      ]
+    },
+    "31_day_by_cancer": {
+      "description": "31-day treatment wait by cancer",
+      "rows": 4250,
+      "total_patients_or_pathways": 122002,
+      "within_standard": 111276,
+      "after_standard": 10726,
+      "weighted_performance_percent": 91.21,
+      "lowest_performing_provider_rows": [
+        {
+          "provider": "BRIDGEWATER COMMUNITY HEALTHCARE NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Skin",
+          "total": 13,
+          "within": 3,
+          "after": 10,
+          "performance_percent": 23.08
+        },
+        {
+          "provider": "CHESTERFIELD ROYAL HOSPITAL NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Skin",
+          "total": 30,
+          "within": 10,
+          "after": 20,
+          "performance_percent": 33.33
+        },
+        {
+          "provider": "LIVERPOOL UNIVERSITY HOSPITALS NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Urological - Prostate",
+          "total": 17,
+          "within": 6,
+          "after": 11,
+          "performance_percent": 35.29
+        },
+        {
+          "provider": "CHESTERFIELD ROYAL HOSPITAL NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Skin",
+          "total": 31,
+          "within": 11,
+          "after": 20,
+          "performance_percent": 35.48
+        },
+        {
+          "provider": "WORCESTERSHIRE ACUTE HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Skin",
+          "total": 24,
+          "within": 9,
+          "after": 15,
+          "performance_percent": 37.5
+        },
+        {
+          "provider": "SALISBURY NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Skin",
+          "total": 39,
+          "within": 15,
+          "after": 24,
+          "performance_percent": 38.46
+        },
+        {
+          "provider": "UNIVERSITY HOSPITALS SUSSEX NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Urological - Prostate",
+          "total": 71,
+          "within": 29,
+          "after": 42,
+          "performance_percent": 40.85
+        },
+        {
+          "provider": "SALISBURY NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Skin",
+          "total": 41,
+          "within": 17,
+          "after": 24,
+          "performance_percent": 41.46
+        }
+      ],
+      "group_breakdowns": {
+        "by_cancer": [
+          {
+            "CANCER_TYPE": "Breast",
+            "total": 26126,
+            "within": 23978,
+            "after": 2148,
+            "performance_percent": 91.78
+          },
+          {
+            "CANCER_TYPE": "Urological - Prostate",
+            "total": 18816,
+            "within": 17102,
+            "after": 1714,
+            "performance_percent": 90.89
+          },
+          {
+            "CANCER_TYPE": "Skin",
+            "total": 17810,
+            "within": 15142,
+            "after": 2668,
+            "performance_percent": 85.02
+          },
+          {
+            "CANCER_TYPE": "Lower Gastrointestinal",
+            "total": 11266,
+            "within": 10340,
+            "after": 926,
+            "performance_percent": 91.78
+          },
+          {
+            "CANCER_TYPE": "Lung",
+            "total": 10222,
+            "within": 9612,
+            "after": 610,
+            "performance_percent": 94.03
+          },
+          {
+            "CANCER_TYPE": "Urological - Other (a)",
+            "total": 6500,
+            "within": 5522,
+            "after": 978,
+            "performance_percent": 84.95
+          },
+          {
+            "CANCER_TYPE": "Gynaecological",
+            "total": 6192,
+            "within": 5706,
+            "after": 486,
+            "performance_percent": 92.15
+          },
+          {
+            "CANCER_TYPE": "Head & Neck",
+            "total": 4996,
+            "within": 4478,
+            "after": 518,
+            "performance_percent": 89.63
+          },
+          {
+            "CANCER_TYPE": "Other (a)",
+            "total": 4724,
+            "within": 4536,
+            "after": 188,
+            "performance_percent": 96.02
+          },
+          {
+            "CANCER_TYPE": "Haematological - Lymphoma",
+            "total": 4030,
+            "within": 3936,
+            "after": 94,
+            "performance_percent": 97.67
+          },
+          {
+            "CANCER_TYPE": "Haematological - Other (a)",
+            "total": 4010,
+            "within": 3968,
+            "after": 42,
+            "performance_percent": 98.95
+          },
+          {
+            "CANCER_TYPE": "Upper Gastrointestinal - Hepatobiliary",
+            "total": 3996,
+            "within": 3764,
+            "after": 232,
+            "performance_percent": 94.19
+          }
+        ],
+        "by_stage": [
+          {
+            "TREATMENT_STAGE": "ALL STAGES",
+            "total": 61001,
+            "within": 55638,
+            "after": 5363,
+            "performance_percent": 91.21
+          },
+          {
+            "TREATMENT_STAGE": "First Treatment",
+            "total": 32976,
+            "within": 30153,
+            "after": 2823,
+            "performance_percent": 91.44
+          },
+          {
+            "TREATMENT_STAGE": "Subsequent Treatment",
+            "total": 28025,
+            "within": 25485,
+            "after": 2540,
+            "performance_percent": 90.94
+          }
+        ]
+      },
+      "graph_nodes": [
+        "Access pressure",
+        "Provider performance",
+        "Treatment stage",
+        "Cancer type",
+        "Patient/caregiver action"
+      ],
+      "graph_edges": [
+        {
+          "from": "Provider performance",
+          "to": "Access pressure",
+          "why": "Lower within-standard performance can indicate system-level access pressure."
+        },
+        {
+          "from": "Access pressure",
+          "to": "Patient/caregiver action",
+          "why": "If waiting pressure is high, patients/caregivers should clarify next appointment timing and escalation routes."
+        }
+      ]
+    },
+    "31_day_by_treatment_modality": {
+      "description": "31-day treatment wait by treatment modality",
+      "rows": 1293,
+      "total_patients_or_pathways": 122002,
+      "within_standard": 111276,
+      "after_standard": 10726,
+      "weighted_performance_percent": 91.21,
+      "lowest_performing_provider_rows": [
+        {
+          "provider": "LEEDS TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Other",
+          "total": 21,
+          "within": 4,
+          "after": 17,
+          "performance_percent": 19.05
+        },
+        {
+          "provider": "BRIDGEWATER COMMUNITY HEALTHCARE NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Surgery",
+          "total": 13,
+          "within": 3,
+          "after": 10,
+          "performance_percent": 23.08
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Radiotherapy",
+          "total": 69,
+          "within": 20,
+          "after": 49,
+          "performance_percent": 28.99
+        },
+        {
+          "provider": "WORCESTERSHIRE ACUTE HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Surgery",
+          "total": 47,
+          "within": 20,
+          "after": 27,
+          "performance_percent": 42.55
+        },
+        {
+          "provider": "UNIVERSITY COLLEGE LONDON HOSPITALS NHS FOUNDATION TRUST",
+          "route": "",
+          "cancer_or_modality": "Other",
+          "total": 37,
+          "within": 18,
+          "after": 19,
+          "performance_percent": 48.65
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Radiotherapy",
+          "total": 313,
+          "within": 157,
+          "after": 156,
+          "performance_percent": 50.16
+        },
+        {
+          "provider": "HULL UNIVERSITY TEACHING HOSPITALS NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Surgery",
+          "total": 126,
+          "within": 65,
+          "after": 61,
+          "performance_percent": 51.59
+        },
+        {
+          "provider": "NORTHAMPTON GENERAL HOSPITAL NHS TRUST",
+          "route": "",
+          "cancer_or_modality": "Radiotherapy",
+          "total": 15,
+          "within": 8,
+          "after": 7,
+          "performance_percent": 53.33
+        }
+      ],
+      "group_breakdowns": {
+        "by_stage": [
+          {
+            "TREATMENT_STAGE": "ALL STAGES",
+            "total": 61001,
+            "within": 55638,
+            "after": 5363,
+            "performance_percent": 91.21
+          },
+          {
+            "TREATMENT_STAGE": "First Treatment",
+            "total": 32976,
+            "within": 30153,
+            "after": 2823,
+            "performance_percent": 91.44
+          },
+          {
+            "TREATMENT_STAGE": "Subsequent Treatment",
+            "total": 28025,
+            "within": 25485,
+            "after": 2540,
+            "performance_percent": 90.94
+          }
+        ],
+        "by_modality": [
+          {
+            "TREATMENT_MODALITY": "Surgery",
+            "total": 46712,
+            "within": 39460,
+            "after": 7252,
+            "performance_percent": 84.48
+          },
+          {
+            "TREATMENT_MODALITY": "Anti-cancer drug regimen",
+            "total": 36312,
+            "within": 35694,
+            "after": 618,
+            "performance_percent": 98.3
+          },
+          {
+            "TREATMENT_MODALITY": "Radiotherapy",
+            "total": 24330,
+            "within": 21706,
+            "after": 2624,
+            "performance_percent": 89.21
+          },
+          {
+            "TREATMENT_MODALITY": "Other",
+            "total": 14648,
+            "within": 14416,
+            "after": 232,
+            "performance_percent": 98.42
+          }
+        ]
+      },
+      "graph_nodes": [
+        "Access pressure",
+        "Provider performance",
+        "Treatment stage",
+        "Treatment modality",
+        "Patient/caregiver action"
+      ],
+      "graph_edges": [
+        {
+          "from": "Provider performance",
+          "to": "Access pressure",
+          "why": "Lower within-standard performance can indicate system-level access pressure."
+        },
+        {
+          "from": "Access pressure",
+          "to": "Patient/caregiver action",
+          "why": "If waiting pressure is high, patients/caregivers should clarify next appointment timing and escalation routes."
+        }
+      ]
+    }
+  }
+}
