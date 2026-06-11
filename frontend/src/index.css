@@ -15,3 +15,179 @@ body {
   font-family: Inter, Arial, sans-serif;
   background: #f5f7fb;
 }
+
+
+/* ONCOCONNECT_COMPACT_DASHBOARD_RESTORE_START */
+
+/* Keep the trend + score row compact. Do not let these cards stretch vertically. */
+body .cc-mid-v42 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 18px !important;
+  margin-bottom: 18px !important;
+}
+
+body .cc-mid-v42 > section,
+body .cc-trend-v42,
+body .cc-score-v42 {
+  height: 420px !important;
+  min-height: 420px !important;
+  max-height: 420px !important;
+  overflow: hidden !important;
+  align-self: start !important;
+}
+
+body .cc-trend-v42 {
+  padding: 22px 24px 18px !important;
+}
+
+body .cc-score-v42 {
+  padding: 24px 28px 18px !important;
+}
+
+/* Make trend chart readable inside compact card. */
+body .trend-chart-v51 {
+  width: 100% !important;
+  height: 210px !important;
+  max-height: 210px !important;
+  margin-top: 12px !important;
+  display: block !important;
+}
+
+body .trend-head-v51 {
+  margin-bottom: 8px !important;
+}
+
+body .trend-legend-v51 {
+  margin-top: 8px !important;
+}
+
+/* Prevent score card from reserving empty space. */
+body .cc-score-body-v42 {
+  align-items: center !important;
+  gap: 26px !important;
+  margin-top: 16px !important;
+}
+
+body .cc-score-guide-v42 {
+  margin-top: 18px !important;
+}
+
+/* Keep AI Reasoning Network visible but not oversized. */
+body .cc-network-v42 {
+  margin-top: 0 !important;
+  margin-bottom: 18px !important;
+  min-height: 330px !important;
+  height: auto !important;
+  overflow: hidden !important;
+}
+
+/* Journey should not create huge bottom gaps. */
+body .cc-journey-v42 {
+  margin-top: 0 !important;
+  min-height: 110px !important;
+  padding: 18px 26px !important;
+}
+
+/* ONCOCONNECT_COMPACT_DASHBOARD_RESTORE_END */
+
+
+/* ONCOCONNECT_RESEARCH_CARDS_INTERACTIVE_V1 */
+.landing-research-card {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  transform: translateY(0);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.landing-research-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.04),
+      rgba(20, 184, 166, 0.04)
+    );
+  transition: opacity 180ms ease;
+}
+
+.landing-research-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(37, 99, 235, 0.42);
+  box-shadow:
+    0 22px 45px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(37, 99, 235, 0.06);
+}
+
+.landing-research-card:hover::after {
+  opacity: 1;
+}
+
+.landing-research-card:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 4px;
+}
+
+.landing-research-card-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.landing-research-card-bottom > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.landing-research-card-arrow {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 50%;
+  color: #2563eb;
+  background: rgba(239, 246, 255, 0.86);
+  font-size: 1.1rem;
+  font-style: normal;
+  line-height: 1;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.landing-research-card:hover .landing-research-card-arrow {
+  transform: translate(3px, -3px);
+  border-color: rgba(37, 99, 235, 0.38);
+  background: rgba(219, 234, 254, 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-research-card,
+  .landing-research-card::after,
+  .landing-research-card-arrow {
+    transition: none;
+  }
+
+  .landing-research-card:hover {
+    transform: none;
+  }
+}

@@ -887,7 +887,8 @@ function App() {
         source: trText("ClinicalTrials.gov", "ClinicalTrials.gov"),
         badge: trText("Trials", "Klinik çalışmalar"),
         summary: trText("Tracks oncology studies involving checkpoint inhibitors, combination regimens and biomarker-selected treatment arms.", "Kontrol noktası inhibitörleri, kombinasyon rejimleri ve biyobelirteç seçimli tedavi kollarını içeren onkoloji çalışmalarını izler."),
-        meta: trText("Solid tumors · Hematology · Recruitment", "Solid tümörler · Hematoloji · Hasta alımı")
+        meta: trText("Solid tumors · Hematology · Recruitment", "Solid tümörler · Hematoloji · Hasta alımı"),
+        url: "https://clinicaltrials.gov/find-studies"
       },
       {
         type: "Innovative drug",
@@ -895,7 +896,8 @@ function App() {
         source: trText("ESMO / ASCO coverage", "ESMO / ASCO kapsamı"),
         badge: trText("Drug updates", "İlaç güncellemeleri"),
         summary: trText("Emerging ADC strategies across breast, lung, gastric and colorectal cancer, including HER2-low and target-specific approaches.", "Meme, akciğer, mide ve kolorektal kanserde HER2-low ve hedefe özgü yaklaşımlar dahil yeni ADC stratejileri."),
-        meta: trText("ADC · HER2 · Trop-2 · Breast · Lung", "ADC · HER2 · Trop-2 · Meme · Akciğer")
+        meta: trText("ADC · HER2 · Trop-2 · Breast · Lung", "ADC · HER2 · Trop-2 · Meme · Akciğer"),
+        url: "https://www.esmo.org/press-releases/new-generation-of-antibody-drug-conjugates-adcs-shows-unprecedented-promise-in-early-stage-disease"
       },
       {
         type: "Research article",
@@ -903,7 +905,8 @@ function App() {
         source: trText("Nature Medicine / NEJM", "Nature Medicine / NEJM"),
         badge: trText("Research", "Araştırma"),
         summary: trText("Liquid biopsy, minimal residual disease, recurrence monitoring and stratified follow-up pathways.", "Sıvı biyopsi, minimal rezidüel hastalık, nüks izleme ve katmanlı takip yolları."),
-        meta: trText("ctDNA · MRD · Screening · Follow-up", "ctDNA · MRD · Tarama · Takip")
+        meta: trText("ctDNA · MRD · Screening · Follow-up", "ctDNA · MRD · Tarama · Takip"),
+        url: "https://www.nature.com/articles/s41591-024-03216-y"
       },
       {
         type: "Funding call",
@@ -911,7 +914,8 @@ function App() {
         source: trText("EU4Health / Horizon Europe / Mission Cancer", "EU4Health / Horizon Europe / Kanser Misyonu"),
         badge: trText("Funding", "Fonlama"),
         summary: trText("Potential grant and consortium opportunities for prevention, screening, data infrastructure and patient-support innovation.", "Önleme, tarama, veri altyapısı ve hasta destek inovasyonu için potansiyel hibe ve konsorsiyum fırsatları."),
-        meta: trText("EU grants · Mission Cancer · NGOs · Research", "AB hibeleri · Kanser Misyonu · STK’lar · Araştırma")
+        meta: trText("EU grants · Mission Cancer · NGOs · Research", "AB hibeleri · Kanser Misyonu · STK’lar · Araştırma"),
+        url: "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/eu-missions-horizon-europe/eu-mission-cancer_en"
       },
       {
         type: "Precision medicine",
@@ -919,7 +923,8 @@ function App() {
         source: trText("ESMO Precision Medicine", "ESMO Hassas Tıp"),
         badge: trText("Precision", "Hassas tıp"),
         summary: trText("Clinical decision pathways using genomic profiling, molecular boards and targeted therapy matching.", "Genomik profilleme, moleküler konseyler ve hedefe yönelik tedavi eşleştirmesi kullanan klinik karar yolları."),
-        meta: trText("NGS · Biomarkers · Targeted therapy", "NGS · Biyobelirteçler · Hedefe yönelik tedavi")
+        meta: trText("NGS · Biomarkers · Targeted therapy", "NGS · Biyobelirteçler · Hedefe yönelik tedavi"),
+        url: "https://oncologypro.esmo.org/publications/esmo-recommendations-in-precision-medicine"
       },
       {
         type: "AI oncology",
@@ -927,7 +932,8 @@ function App() {
         source: trText("Digital health research", "Dijital sağlık araştırması"),
         badge: "AI",
         summary: trText("Decision-support tools for symptom burden, care navigation, research awareness and operational monitoring.", "Semptom yükü, bakım yönlendirme, araştırma farkındalığı ve operasyonel izleme için karar destek araçları."),
-        meta: trText("AI copilot · Triage · Monitoring", "AI yardımcı pilot · Triyaj · İzleme")
+        meta: trText("AI copilot · Triage · Monitoring", "AI yardımcı pilot · Triyaj · İzleme"),
+        url: "https://www.cancer.gov/research/infrastructure/artificial-intelligence"
       },
       {
         type: "Screening innovation",
@@ -935,7 +941,8 @@ function App() {
         source: trText("CanScreen5 / WHO / IARC", "CanScreen5 / WHO / IARC"),
         badge: trText("Screening", "Tarama"),
         summary: trText("Organized screening pathways, participation indicators, early diagnosis and public-health coordination.", "Organize tarama yolları, katılım göstergeleri, erken tanı ve halk sağlığı koordinasyonu."),
-        meta: trText("Breast · Cervical · Colorectal", "Meme · Serviks · Kolorektal")
+        meta: trText("Breast · Cervical · Colorectal", "Meme · Serviks · Kolorektal"),
+        url: "https://www.who.int/europe/news-room/fact-sheets/item/cancer-screening-and-early-detection-of-cancer"
       },
       {
         type: "Supportive care",
@@ -943,7 +950,8 @@ function App() {
         source: trText("JCO / Lancet Oncology", "JCO / Lancet Oncology"),
         badge: trText("Care", "Bakım"),
         summary: trText("Fatigue, pain, appetite, psycho-oncology and caregiver support pathways for better quality of life.", "Yorgunluk, ağrı, iştah, psiko-onkoloji ve bakım veren destek yollarıyla daha iyi yaşam kalitesi."),
-        meta: trText("Survivorship · Quality of life · Caregiver", "Sağkalım sonrası bakım · Yaşam kalitesi · Bakım veren")
+        meta: trText("Survivorship · Quality of life · Caregiver", "Sağkalım sonrası bakım · Yaşam kalitesi · Bakım veren"),
+        url: "https://prevention.cancer.gov/research-areas/symptom-science-and-cancer-care-research"
       }
     ];
 
@@ -1404,10 +1412,19 @@ function App() {
           </div>
 
           <div className="landing-research-feed-grid">
+            {/* ONCOCONNECT_RESEARCH_CARDS_LINKS_V1 */}
             {researchFeed.map((item, index) => (
-              <article
+              <a
                 className="landing-research-card"
                 key={`${item.title}-${index}`}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${item.title} — ${item.source}`}
+                title={trText(
+                  `Open verified source: ${item.source}`,
+                  `Doğrulanmış kaynağı aç: ${item.source}`
+                )}
                 style={{ animationDelay: `${index * 0.07}s` }}
               >
                 <div className="landing-research-card-top">
@@ -1419,10 +1436,19 @@ function App() {
                 <p>{item.summary}</p>
 
                 <div className="landing-research-card-bottom">
-                  <b>{item.source}</b>
-                  <em>{item.meta}</em>
+                  <div>
+                    <b>{item.source}</b>
+                    <em>{item.meta}</em>
+                  </div>
+
+                  <span
+                    className="landing-research-card-arrow"
+                    aria-hidden="true"
+                  >
+                    ↗
+                  </span>
                 </div>
-              </article>
+              </a>
             ))}
           </div>
         </section>
