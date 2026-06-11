@@ -75,3 +75,10 @@ translate_*.py
 tune_*.py
 ultra_*.py
 upgrade_*.py
+
+# Repository root development artifacts
+/*.py
+/*.py.save
+/*.csv
+/.DS_Store
+
