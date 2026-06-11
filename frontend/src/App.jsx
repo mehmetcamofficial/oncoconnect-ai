@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 
 
@@ -9918,15 +9919,15 @@ const OncoKidsPage = () => {
 
 
 
-  if (page === "landing") return <LandingPage />;
-  if (page === "copilot") return <CopilotPage />;
-  if (page === "knowledge") return <KnowledgeGraphPage />;
-  if (page === "graph") return <KnowledgeGraphPage />;
-  if (page === "map") return <MapPage />;
-  if (page === "admin") return <AdminPanel />;
-  if (page === "kids") return <OncoKidsPage />;
+  if (page === "landing") return (<><LandingPage /><Analytics /></>);
+  if (page === "copilot") return (<><CopilotPage /><Analytics /></>);
+  if (page === "knowledge") return (<><KnowledgeGraphPage /><Analytics /></>);
+  if (page === "graph") return (<><KnowledgeGraphPage /><Analytics /></>);
+  if (page === "map") return (<><MapPage /><Analytics /></>);
+  if (page === "admin") return (<><AdminPanel /><Analytics /></>);
+  if (page === "kids") return (<><OncoKidsPage /><Analytics /></>);
 
-  return <LandingPage />;
+  return (<><LandingPage /><Analytics /></>);
 }
 
 export default App;
