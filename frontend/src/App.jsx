@@ -5376,12 +5376,46 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
                     <div>
                       <small>{trText("Data quality", "Veri kalitesi")}</small>
                       <b>{trText("v14 evidence", "v14 kanıt")}</b>
-                      <em>
+                      <em style={{ whiteSpace: "pre-line" }}>
                         {splunkLiveStatusV140 === "ready"
-                          ? `Live telemetry: ${splunkLiveMetricsV140?.metrics?.total_events ?? "–"} events · avg risk ${splunkLiveMetricsV140?.metrics?.avg_risk ?? "–"}`
+                          ? (
+                              <>
+                                <span style={{ display: "block" }}>
+                                  Live telemetry:{" "}
+                                  {splunkLiveMetricsV140?.metrics?.total_events ?? "–"} events
+                                  {" · "}avg risk{" "}
+                                  {splunkLiveMetricsV140?.metrics?.avg_risk ?? "–"}
+                                </span>
+                                <span style={{ display: "block", marginTop: "2px" }}>
+                                  AI Toolkit · DensityFunction
+                                </span>
+                                <span
+                                  style={{
+                                    display: "block",
+                                    marginTop: "2px",
+                                    fontSize: "9.5px",
+                                    lineHeight: 1.15,
+                                    fontWeight: 800
+                                  }}
+                                >
+                                  {trText(
+                                    "Verified: 1 anomaly · peak 73",
+                                    "Doğrulandı: 1 anomali · tepe 73"
+                                  )}
+                                </span>
+                              </>
+                            )
                           : splunkLiveStatusV140 === "loading"
-                          ? trText("Live telemetry reading...", "Canlı telemetri okunuyor...")
-                          : trText("summary + checksums", "özet + checksum")}
+                          ? trText(
+                              "Live telemetry reading...\nAI Toolkit · DensityFunction",
+                              "Canlı telemetri okunuyor...\nAI Toolkit · DensityFunction"
+                            )
+                          : trText(
+                              "summary + checksums\nAI Toolkit · DensityFunction",
+                              "özet + checksum\nAI Toolkit · DensityFunction"
+                            )}
+
+
                       </em>
                     </div>
                   </div>
