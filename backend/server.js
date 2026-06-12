@@ -1797,7 +1797,114 @@ module.exports = app;
 if (require.main === module) {
   const port = Number(process.env.PORT || 5050);
 
-  app.listen(port, () => {
+  
+// ONCOCONNECT_PUBLIC_VISITOR_COUNTER_V1
+// Privacy-preserving public platform counter.
+// Stores only aggregate counts. No IP, email, patient or symptom data is stored.
+const { createClient: createPublicStatsRedisClient } = require("redis");
+
+let publicStatsRedisClient = null;
+let publicStatsRedisConnectionPromise = null;
+
+async function getPublicStatsRedisClient() {
+  const redisUrl = process.env.REDIS_URL;
+
+  if (!redisUrl) {
+    const error = new Error("REDIS_URL is not configured.");
+    error.code = "REDIS_NOT_CONFIGURED";
+    throw error;
+  }
+
+  if (publicStatsRedisClient?.isOpen) {
+    return publicStatsRedisClient;
+  }
+
+  if (!publicStatsRedisConnectionPromise) {
+    publicStatsRedisClient = createPublicStatsRedisClient({
+      url: redisUrl,
+      socket: {
+        connectTimeout: 8000,
+        reconnectStrategy: (retries) => {
+          if (retries > 3) return false;
+          return Math.min(retries * 250, 1000);
+        }
+      }
+    });
+
+    publicStatsRedisClient.on("error", (error) => {
+      console.error("Public stats Redis error:", error.message);
+    });
+
+    publicStatsRedisConnectionPromise = publicStatsRedisClient
+      .connect()
+      .then(() => publicStatsRedisClient)
+      .catch((error) => {
+        publicStatsRedisConnectionPromise = null;
+        publicStatsRedisClient = null;
+        throw error;
+      });
+  }
+
+  return publicStatsRedisConnectionPromise;
+}
+
+const PUBLIC_VISIT_TOTAL_KEY = "oncoconnect:public:visits:total";
+
+app.post("/public/visit", async (req, res) => {
+  try {
+    const redisClient = await getPublicStatsRedisClient();
+    const totalVisits = await redisClient.incr(PUBLIC_VISIT_TOTAL_KEY);
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json({
+      success: true,
+      counted: true,
+      total_visits: Number(totalVisits)
+    });
+  } catch (error) {
+    const notConfigured = error.code === "REDIS_NOT_CONFIGURED";
+
+    return res.status(notConfigured ? 503 : 500).json({
+      success: false,
+      counted: false,
+      message: notConfigured
+        ? "Public visitor counter is not configured."
+        : "Public visitor counter is temporarily unavailable."
+    });
+  }
+});
+
+app.get("/public/stats", async (req, res) => {
+  try {
+    const redisClient = await getPublicStatsRedisClient();
+    const storedValue = await redisClient.get(PUBLIC_VISIT_TOTAL_KEY);
+    const totalVisits = Number.parseInt(storedValue || "0", 10);
+
+    res.set("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=60");
+
+    return res.json({
+      success: true,
+      source: "redis_cloud",
+      metrics: {
+        total_visits: Number.isFinite(totalVisits) ? totalVisits : 0
+      }
+    });
+  } catch (error) {
+    const notConfigured = error.code === "REDIS_NOT_CONFIGURED";
+
+    return res.status(notConfigured ? 503 : 500).json({
+      success: false,
+      source: "redis_cloud",
+      message: notConfigured
+        ? "Public visitor counter is not configured."
+        : "Public visitor statistics are temporarily unavailable.",
+      metrics: null
+    });
+  }
+});
+
+app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
 }

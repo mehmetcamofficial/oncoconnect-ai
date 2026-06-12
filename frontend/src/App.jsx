@@ -1725,6 +1725,187 @@ function App() {
 
 
 
+
+  // ONCOCONNECT_PUBLIC_REACH_COUNTER_V207
+  const PublicReachCounter = () => {
+    const [publicVisitTotalV207, setPublicVisitTotalV207] = useState(null);
+    const [publicVisitStatusV207, setPublicVisitStatusV207] = useState("loading");
+
+    useEffect(() => {
+      let cancelled = false;
+
+      const visitStorageKey = "oncoconnect_public_visit_counted_at_v1";
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+
+      async function loadPublicReachV207() {
+        try {
+          const now = Date.now();
+          const previousValue = window.localStorage.getItem(visitStorageKey);
+          const previousTimestamp = Number(previousValue || 0);
+
+          const shouldCountVisit =
+            !Number.isFinite(previousTimestamp) ||
+            previousTimestamp <= 0 ||
+            now - previousTimestamp >= twentyFourHours;
+
+          if (shouldCountVisit) {
+            const response = await fetch(`${API}/public/visit`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data?.success) {
+              throw new Error(
+                data?.message ||
+                `Public visit request failed with status ${response.status}`
+              );
+            }
+
+            if (cancelled) return;
+
+            window.localStorage.setItem(visitStorageKey, String(now));
+            setPublicVisitTotalV207(Number(data.total_visits || 0));
+            setPublicVisitStatusV207("ready");
+            return;
+          }
+
+          const response = await fetch(
+            `${API}/public/stats?refresh=${Date.now()}`
+          );
+
+          const data = await response.json();
+
+          if (!response.ok || !data?.success || !data?.metrics) {
+            throw new Error(
+              data?.message ||
+              `Public stats request failed with status ${response.status}`
+            );
+          }
+
+          if (cancelled) return;
+
+          setPublicVisitTotalV207(
+            Number(data.metrics.total_visits || 0)
+          );
+          setPublicVisitStatusV207("ready");
+        } catch (error) {
+          console.warn("Public reach counter unavailable:", error.message);
+
+          if (!cancelled) {
+            setPublicVisitStatusV207("unavailable");
+          }
+        }
+      }
+
+      loadPublicReachV207();
+
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    return (
+      <section
+        className="public-reach-v207"
+        aria-label={trText(
+          "Live platform reach",
+          "Canlı platform erişimi"
+        )}
+      >
+        <div className="public-reach-head-v207">
+          <div>
+            <span>
+              {trText(
+                "LIVE PLATFORM REACH",
+                "CANLI PLATFORM ERİŞİMİ"
+              )}
+            </span>
+            <h2>
+              {trText(
+                "Open, measurable and privacy-safe",
+                "Açık, ölçülebilir ve gizlilik odaklı"
+              )}
+            </h2>
+          </div>
+
+          <b className="public-reach-live-v207">
+            <i aria-hidden="true"></i>
+            {publicVisitStatusV207 === "ready"
+              ? trText("LIVE", "CANLI")
+              : publicVisitStatusV207 === "loading"
+              ? trText("SYNCING", "EŞİTLENİYOR")
+              : trText("AVAILABLE SOON", "YAKINDA")}
+          </b>
+        </div>
+
+        <div className="public-reach-grid-v207">
+          <article>
+            <small>
+              {trText("Platform visits", "Platform ziyaretleri")}
+            </small>
+            <strong>
+              {publicVisitStatusV207 === "ready"
+                ? publicVisitTotalV207?.toLocaleString()
+                : "—"}
+            </strong>
+            <span>
+              {trText(
+                "Privacy-safe aggregate counter",
+                "Gizlilik odaklı toplam sayaç"
+              )}
+            </span>
+          </article>
+
+          <article>
+            <small>
+              {trText("Splunk observability", "Splunk gözlemlenebilirliği")}
+            </small>
+            <strong>LIVE</strong>
+            <span>
+              {trText(
+                "HEC ingestion and telemetry",
+                "HEC veri alımı ve telemetri"
+              )}
+            </span>
+          </article>
+
+          <article>
+            <small>
+              {trText("Verified anomaly", "Doğrulanmış anomali")}
+            </small>
+            <strong>1</strong>
+            <span>DensityFunction · peak 73</span>
+          </article>
+
+          <article>
+            <small>
+              {trText("Source code", "Kaynak kodu")}
+            </small>
+            <strong>OPEN</strong>
+            <span>
+              {trText(
+                "Public repository · MIT",
+                "Herkese açık depo · MIT"
+              )}
+            </span>
+          </article>
+        </div>
+
+        <p className="public-reach-privacy-v207">
+          {trText(
+            "Only an aggregate visit count is stored. No IP address, identity, patient information or symptom data is collected by this counter.",
+            "Bu sayaçta yalnızca toplam ziyaret sayısı tutulur. IP adresi, kimlik, hasta bilgisi veya semptom verisi toplanmaz."
+          )}
+        </p>
+      </section>
+    );
+  };
+
+
   const LandingPage = () => (
     <div className="old-home-page">
       <nav className="old-home-nav">
@@ -1788,6 +1969,8 @@ function App() {
           </div>
         </div>
       </section>
+
+      <PublicReachCounter />
 
       <section id="what-is-it" className="old-section">
         <div className="old-section-head">
