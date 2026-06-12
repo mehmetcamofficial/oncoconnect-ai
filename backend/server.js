@@ -1788,16 +1788,6 @@ app.get("/splunk/metrics", async (req, res) => {
   }
 });
 
-
-// ONCOCONNECT_VERCEL_ENTRY_V1
-// Export the Express app for Vercel and tests.
-module.exports = app;
-
-// Keep the existing local development workflow.
-if (require.main === module) {
-  const port = Number(process.env.PORT || 5050);
-
-  
 // ONCOCONNECT_PUBLIC_VISITOR_COUNTER_V1
 // Privacy-preserving public platform counter.
 // Stores only aggregate counts. No IP, email, patient or symptom data is stored.
@@ -1904,7 +1894,17 @@ app.get("/public/stats", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+
+// ONCOCONNECT_VERCEL_ENTRY_V2
+// Export the fully configured Express app after every route is registered.
+module.exports = app;
+
+// Keep the existing local development workflow.
+// Vercel imports this file through backend/api/index.js and will not open a port.
+if (require.main === module) {
+  const port = Number(process.env.PORT || 5050);
+
+  app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
 }
