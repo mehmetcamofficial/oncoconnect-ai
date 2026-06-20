@@ -4093,7 +4093,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
     const exportDetailedReportPdf = () => {
       setReportGenerated(true);
       setActiveInsight("report");
-      setLastCopilotAction(trText("PDF report export opened.", "PDF rapor dışa aktarma açıldı."));
+      setLastCopilotAction(trText("Premium PDF report export opened.", "Premium PDF rapor dışa aktarma açıldı."));
 
       const reportWindow = window.open("", "_blank", "width=980,height=1200");
 
@@ -4102,103 +4102,270 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
         return;
       }
 
+      const normalizeReportLocation = (value) => {
+        const raw = String(value || "").trim();
+
+        if (!raw) return trText("All locations", "Tüm lokasyonlar");
+
+        const locationMap = {
+          Italya: trText("Italy", "İtalya"),
+          Italy: trText("Italy", "İtalya"),
+          Turkiye: trText("Türkiye", "Türkiye"),
+          Turkey: trText("Türkiye", "Türkiye")
+        };
+
+        return locationMap[raw] || raw;
+      };
+
+      const numberValue = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+
+      const publicDataRows = Math.max(
+        0,
+        Number.parseInt(
+          splunkEventPayload?.public_data_rows ?? filteredRows.length ?? 0,
+          10
+        ) || 0
+      );
+      const publicDataHasMatch = publicDataRows > 0;
+
+      const formatPublicMetric = (value, digits = 1, suffix = "") => {
+        if (!publicDataHasMatch) return trText("Unavailable", "Yok");
+        const parsed = numberValue(value);
+        return parsed === null ? trText("Unavailable", "Yok") : `${parsed.toFixed(digits)}${suffix}`;
+      };
+
+      const reportLocationLabel = normalizeReportLocation(city);
+      const topSymptom = [
+        [trText("Fatigue", "Yorgunluk"), fatigue],
+        [trText("Pain", "Ağrı"), pain],
+        [trText("Nausea", "Bulantı"), nausea],
+        [trText("Mood", "Ruh hali"), mood]
+      ].sort((a, b) => b[1] - a[1])[0];
+
+      const pct = (value, max) =>
+        Math.max(0, Math.min(100, Math.round(((Number(value) || 0) / Math.max(1, max)) * 100)));
+
+      const compactTelemetryPayload = {
+        source: "oncoconnect_ai_copilot",
+        event_type: "patient_support_case_flow",
+        scenario_label: splunkEventPayload?.scenario_label || selectedScenarioLabel,
+        clinical_level: clinicalRiskLevel,
+        support_score: supportScore,
+        support_level: splunkEventPayload?.support_level || reportRiskCategory,
+        city: reportLocationLabel,
+        age_group: ageGroup,
+        cancer_type: splunkEventPayload?.cancer_type || cancerType,
+        treatment_stage: splunkEventPayload?.treatment_stage || treatmentStage,
+        main_concern: splunkEventPayload?.main_concern || topSymptom[0],
+        red_flags: redFlags,
+        public_data_rows: publicDataRows,
+        incidence: publicDataHasMatch ? numberValue(incidenceAvg) : null,
+        mortality: publicDataHasMatch ? numberValue(mortalityAvg) : null,
+        survival: publicDataHasMatch ? numberValue(survivalAvg) : null,
+        timestamp: splunkEventPayload?.timestamp || new Date().toISOString()
+      };
+
+      const publicDataMessage = publicDataHasMatch
+        ? trText(
+            "Exact public context was found for the selected filters and is shown as population-level context only.",
+            "Seçilen filtreler için public veri bağlamı bulundu ve yalnızca nüfus düzeyi bağlam olarak gösteriliyor."
+          )
+        : trText(
+            "No exact public statistics row was found for the selected filters, so the report uses broader dataset and workflow context without showing incidence, mortality or survival as matched values.",
+            "Seçilen filtreler için birebir public istatistik satırı bulunamadı; rapor bu yüzden insidans, mortalite veya sağkalımı eşleşmiş değer gibi göstermeden daha geniş veri ve iş akışı bağlamını kullanır."
+          );
+
       const reportHtml = `
 <!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>OncoConnect AI Copilot Report</title>
+  <title>OncoConnect AI Copilot Premium Report</title>
   <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
     * {
       box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
     }
 
     body {
       margin: 0;
-      padding: 34px;
-      font-family: Inter, Arial, sans-serif;
-      background: #eef2f7;
+      background: #e5edf7;
       color: #0f172a;
+      font-family: Inter, Arial, sans-serif;
     }
 
-    .page {
-      max-width: 1040px;
+    .report-shell {
+      width: 210mm;
       margin: 0 auto;
       background: #ffffff;
-      border: 1px solid #dbeafe;
-      border-radius: 30px;
+    }
+
+    .pdf-page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 16mm;
+      page-break-after: always;
+      background: #ffffff;
+      position: relative;
       overflow: hidden;
-      box-shadow: 0 30px 90px rgba(15,23,42,.14);
+    }
+
+    .pdf-page:last-of-type {
+      page-break-after: auto;
+    }
+
+    .page-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
     }
 
     .hero {
-      padding: 34px;
+      min-height: 255mm;
+      padding: 20mm 17mm;
+      border-radius: 28px;
       color: #ffffff;
       background:
-        radial-gradient(circle at 80% 20%, rgba(34,197,94,.28), transparent 30%),
-        radial-gradient(circle at 20% 0%, rgba(14,165,233,.24), transparent 32%),
+        radial-gradient(circle at 82% 16%, rgba(34,197,94,.34), transparent 28%),
+        radial-gradient(circle at 12% 4%, rgba(14,165,233,.32), transparent 34%),
         linear-gradient(135deg, #0f172a, #1e3a8a 54%, #312e81);
     }
 
     .kicker {
-      letter-spacing: .16em;
-      text-transform: uppercase;
       color: #93c5fd;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-size: 11px;
       font-weight: 950;
-      font-size: 12px;
     }
 
     h1 {
-      margin: 10px 0 10px;
-      font-size: 38px;
+      margin: 12px 0 10px;
+      font-size: 34px;
       line-height: 1.08;
-      letter-spacing: -.04em;
+      letter-spacing: -.045em;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: -.025em;
+      color: #0f172a;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: #0f172a;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.55;
     }
 
     .sub {
-      max-width: 760px;
-      margin: 0;
+      max-width: 165mm;
       color: #dbeafe;
-      line-height: 1.6;
       font-weight: 650;
+      line-height: 1.55;
+      font-size: 13px;
     }
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 22px;
-      margin-top: 26px;
-      align-items: stretch;
+      grid-template-columns: 1.12fr .88fr;
+      gap: 12mm;
+      margin-top: 18mm;
     }
 
-    .risk-card {
+    .risk-card,
+    .hero-meta div {
       border: 1px solid rgba(255,255,255,.18);
-      border-radius: 24px;
-      padding: 22px;
-      background: rgba(255,255,255,.10);
+      border-radius: 22px;
+      background: rgba(255,255,255,.11);
       backdrop-filter: blur(10px);
     }
 
-    .risk-card small {
+    .risk-card {
+      padding: 17px;
+    }
+
+    .hero-meta {
+      display: grid;
+      gap: 10px;
+    }
+
+    .hero-meta div {
+      padding: 13px;
+    }
+
+    .mini-label,
+    .hero-meta small,
+    .risk-card small,
+    .card small {
       display: block;
-      color: #bfdbfe;
+      color: #64748b;
+      font-size: 10px;
       font-weight: 900;
-      text-transform: uppercase;
       letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .hero-meta small,
+    .risk-card small {
+      color: #bfdbfe;
+    }
+
+    .hero-meta b {
+      display: block;
+      color: #ffffff;
+      line-height: 1.35;
+      font-size: 13px;
     }
 
     .risk-score {
       display: flex;
       align-items: baseline;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .risk-score strong {
-      font-size: 64px;
-      line-height: 1;
-      font-weight: 1000;
+      font-size: 58px;
+      line-height: .95;
       letter-spacing: -.06em;
+      font-weight: 1000;
     }
 
     .risk-score span {
@@ -4209,131 +4376,131 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
     .risk-badge {
       display: inline-flex;
       margin-top: 12px;
-      padding: 9px 13px;
+      padding: 8px 11px;
       border-radius: 999px;
-      background: rgba(34,197,94,.16);
+      background: rgba(34,197,94,.17);
       color: #bbf7d0;
       font-weight: 950;
+      font-size: 12px;
     }
 
-    .safety-note {
-      margin-top: 14px;
+    .hero-note {
+      margin-top: 13px;
       color: #e0f2fe;
-      line-height: 1.55;
+      line-height: 1.52;
       font-weight: 650;
+      font-size: 12px;
     }
 
-    .hero-meta {
+    .snapshot-grid {
       display: grid;
-      gap: 10px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-top: 15mm;
     }
 
-    .hero-meta div {
-      border: 1px solid rgba(255,255,255,.16);
+    .snapshot-grid .hero-kpi {
+      padding: 12px;
       border-radius: 18px;
-      padding: 14px;
-      background: rgba(255,255,255,.09);
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
     }
 
-    .hero-meta small {
+    .hero-kpi small {
       display: block;
       color: #bfdbfe;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
+      font-size: 9px;
       font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
       margin-bottom: 5px;
     }
 
-    .hero-meta b {
-      display: block;
+    .hero-kpi strong {
       color: #ffffff;
-      line-height: 1.35;
-    }
-
-    .content {
-      padding: 30px 34px 34px;
-    }
-
-    .section {
-      margin-top: 24px;
-      padding: 22px;
-      border: 1px solid #e2e8f0;
-      border-radius: 24px;
-      background: #ffffff;
-      break-inside: avoid;
-    }
-
-    .section.soft {
-      background: linear-gradient(135deg, #f8fafc, #eff6ff);
-    }
-
-    .section h2 {
-      margin: 0 0 14px;
-      color: #0f172a;
-      font-size: 22px;
-      letter-spacing: -.02em;
+      font-size: 20px;
+      font-weight: 1000;
     }
 
     .section-label {
       display: inline-flex;
       margin-bottom: 8px;
       color: #2563eb;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: .14em;
       text-transform: uppercase;
       font-weight: 950;
     }
 
-    .kpi-grid {
+    .page-title {
+      margin-bottom: 14px;
+    }
+
+    .grid-2 {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
-    .kpi {
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .card {
       border: 1px solid #e2e8f0;
       border-radius: 18px;
-      padding: 16px;
-      background: #f8fafc;
+      padding: 13px;
+      background: #ffffff;
+      break-inside: avoid;
     }
 
-    .kpi small {
-      display: block;
-      color: #64748b;
-      font-weight: 850;
-      margin-bottom: 7px;
+    .card.soft {
+      background: linear-gradient(135deg, #f8fafc, #eff6ff);
     }
 
-    .kpi strong {
+    .card.green {
+      background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+      border-color: #bbf7d0;
+    }
+
+    .card.orange {
+      background: linear-gradient(135deg, #fff7ed, #fffbeb);
+      border-color: #fed7aa;
+    }
+
+    .card strong {
       display: block;
-      font-size: 24px;
-      color: #0f172a;
-      font-weight: 1000;
+      font-size: 19px;
       letter-spacing: -.03em;
+      color: #0f172a;
     }
 
-    .chart-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
+    .card p,
+    .muted {
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.55;
     }
 
     .bar-row {
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
-    .bar-row .top {
+    .bar-top {
       display: flex;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10px;
+      margin-bottom: 6px;
       color: #334155;
       font-weight: 850;
-      margin-bottom: 7px;
+      font-size: 12px;
     }
 
     .track {
-      height: 13px;
+      height: 11px;
       border-radius: 999px;
       background: #e2e8f0;
       overflow: hidden;
@@ -4350,35 +4517,9 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       background: linear-gradient(90deg, #f97316, #ef4444);
     }
 
-    .stack {
-      height: 22px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: #e2e8f0;
-      display: flex;
-      margin-top: 10px;
-    }
-
-    .stack span,
-    .stack b {
-      display: grid;
-      place-items: center;
-      color: white;
-      font-size: 11px;
-      font-weight: 950;
-    }
-
-    .stack span {
-      background: #2563eb;
-    }
-
-    .stack b {
-      background: #059669;
-    }
-
     .recommendations {
       display: grid;
-      gap: 10px;
+      gap: 8px;
       margin: 0;
       padding: 0;
       list-style: none;
@@ -4386,38 +4527,40 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
 
     .recommendations li {
       position: relative;
-      padding: 13px 14px 13px 42px;
-      border-radius: 16px;
-      background: #f8fafc;
+      padding: 11px 12px 11px 36px;
+      border-radius: 15px;
       border: 1px solid #e2e8f0;
+      background: #f8fafc;
       color: #334155;
-      font-weight: 760;
+      font-size: 12px;
       line-height: 1.45;
+      font-weight: 780;
     }
 
     .recommendations li::before {
       content: "✓";
       position: absolute;
-      left: 13px;
-      top: 12px;
-      width: 22px;
-      height: 22px;
+      left: 10px;
+      top: 10px;
+      width: 19px;
+      height: 19px;
       display: grid;
       place-items: center;
       border-radius: 999px;
       background: #dcfce7;
       color: #16a34a;
       font-weight: 1000;
+      font-size: 12px;
     }
 
     .doctor-note {
       display: grid;
-      gap: 10px;
+      gap: 9px;
     }
 
     .doctor-note div {
-      padding: 14px;
-      border-radius: 16px;
+      padding: 11px;
+      border-radius: 15px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
     }
@@ -4425,69 +4568,84 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
     .doctor-note small {
       display: block;
       color: #64748b;
-      font-weight: 850;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .1em;
       margin-bottom: 4px;
     }
 
     .doctor-note b {
       display: block;
       color: #0f172a;
-      line-height: 1.45;
+      line-height: 1.42;
+      font-size: 12px;
     }
 
     .questions {
       margin: 0;
       padding-left: 18px;
       color: #334155;
+      font-size: 12.5px;
+      font-weight: 760;
       line-height: 1.55;
-      font-weight: 750;
     }
 
     .questions li {
       margin-top: 8px;
     }
 
+    .data-status {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 15px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 780;
+    }
+
     pre {
       white-space: pre-wrap;
       word-break: break-word;
+      margin: 0;
       background: #0f172a;
       color: #e5e7eb;
-      border-radius: 18px;
-      padding: 20px;
-      line-height: 1.55;
-      font-size: 12.5px;
-      overflow: visible;
-    }
-
-    .payload-note {
-      margin-top: 10px;
-      color: #64748b;
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1.5;
+      border-radius: 16px;
+      padding: 14px;
+      line-height: 1.48;
+      font-size: 10.5px;
+      max-height: 150mm;
+      overflow: hidden;
     }
 
     .footer-note {
-      margin-top: 22px;
-      padding: 16px;
-      border-radius: 18px;
+      margin-top: 12px;
+      padding: 13px;
+      border-radius: 16px;
       background: #fff7ed;
       border: 1px solid #fed7aa;
       color: #7c2d12;
-      font-weight: 800;
-      line-height: 1.55;
+      font-size: 12px;
+      font-weight: 820;
+      line-height: 1.52;
     }
 
     .actions {
-      margin: 24px 34px 34px;
+      width: 210mm;
+      margin: 0 auto;
+      padding: 12px 16mm 18px;
       display: flex;
       gap: 10px;
+      background: #ffffff;
     }
 
     button {
       border: 0;
       border-radius: 999px;
-      padding: 13px 20px;
+      padding: 12px 18px;
       background: #2563eb;
       color: white;
       font-weight: 950;
@@ -4501,181 +4659,282 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
     @media print {
       body {
         background: white;
-        padding: 0;
       }
 
-      .page {
-        box-shadow: none;
-        border: 0;
-        border-radius: 0;
+      .report-shell {
+        margin: 0;
       }
 
       .actions {
         display: none;
       }
 
-      .section {
-        break-inside: avoid;
+      .pdf-page {
+        box-shadow: none;
       }
+
+      .hero,
+      .risk-card,
+      .hero-meta div,
+      .hero-kpi,
+      .card,
+      .brand-pill,
+      .data-status,
+      .footer-note,
+      pre,
+      .track,
+      .fill {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .hero {
+        background:
+          radial-gradient(circle at 82% 16%, rgba(34,197,94,.34), transparent 28%),
+          radial-gradient(circle at 12% 4%, rgba(14,165,233,.32), transparent 34%),
+          linear-gradient(135deg, #0f172a, #1e3a8a 54%, #312e81) !important;
+      }
+
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="kicker">OncoConnect AI Copilot</div>
-      <h1>Detailed Case Intelligence Report</h1>
-      <p class="sub">
-        A structured support report generated from patient/caregiver inputs, symptom statistics,
-        red flag screening, public cancer data context, case playbook logic and Splunk-ready telemetry.
-      </p>
+  <main class="report-shell">
+    <section class="pdf-page">
+      <div class="hero">
+        <div class="kicker">OncoConnect AI Copilot</div>
+        <h1>Premium Case Intelligence Report</h1>
+        <p class="sub">
+          A doctor-ready support report generated from patient/caregiver inputs, symptom signals,
+          public data context and audit-ready AI workflow telemetry.
+        </p>
 
-      <div class="hero-grid">
-        <div class="risk-card">
-          <small>Support priority score</small>
-          <div class="risk-score">
-            <strong>${supportScore}</strong>
-            <span>/100</span>
+        <div class="hero-grid">
+          <div class="risk-card">
+            <small>Support priority score</small>
+            <div class="risk-score">
+              <strong>${supportScore}</strong>
+              <span>/100</span>
+            </div>
+            <div class="risk-badge">${escapeReportHtml(reportRiskCategory)}</div>
+            <p class="hero-note">${escapeReportHtml(safetyMessage)}</p>
           </div>
-          <div class="risk-badge">${escapeReportHtml(reportRiskCategory)}</div>
-          <p class="safety-note">${escapeReportHtml(safetyMessage)}</p>
+
+          <div class="hero-meta">
+            <div><small>Scenario</small><b>${escapeReportHtml(selectedScenarioLabel)}</b></div>
+            <div><small>Clinical level</small><b>${escapeReportHtml(clinicalRiskLevel)}</b></div>
+            <div><small>Location / age</small><b>${escapeReportHtml(reportLocationLabel)} · ${escapeReportHtml(ageGroup)}</b></div>
+          </div>
         </div>
 
-        <div class="hero-meta">
-          <div><small>Scenario</small><b>${escapeReportHtml(selectedScenarioLabel)}</b></div>
-          <div><small>Clinical level</small><b>${escapeReportHtml(clinicalRiskLevel)}</b></div>
-          <div><small>Location / age</small><b>${escapeReportHtml(city || "All locations")} · ${escapeReportHtml(ageGroup)}</b></div>
+        <div class="snapshot-grid">
+          <div class="hero-kpi"><small>Support score</small><strong>${supportScore}/100</strong></div>
+          <div class="hero-kpi"><small>Symptom signal</small><strong>${symptomScore}/70</strong></div>
+          <div class="hero-kpi"><small>Dataset signal</small><strong>${dataSignal}/30</strong></div>
+          <div class="hero-kpi"><small>Red flags</small><strong>${redFlags.length}</strong></div>
         </div>
       </div>
     </section>
 
-    <section class="content">
-      <section class="section soft">
-        <span class="section-label">Executive summary</span>
-        <h2>Current case snapshot</h2>
+    <section class="pdf-page">
+      <div class="page-topline">
+        <span class="brand-pill">OncoConnect AI</span>
+        <span>Page 2 · Symptom & AI recommendation</span>
+      </div>
 
-        <div class="kpi-grid">
-          <div class="kpi"><small>Support score</small><strong>${supportScore}/100</strong></div>
-          <div class="kpi"><small>Symptom signal</small><strong>${symptomScore}/70</strong></div>
-          <div class="kpi"><small>Dataset signal</small><strong>${dataSignal}/30</strong></div>
-          <div class="kpi"><small>Red flags</small><strong>${redFlags.length}</strong></div>
+      <div class="page-title">
+        <span class="section-label">Symptom burden</span>
+        <h2>Current symptom signal and support guidance</h2>
+        <p class="muted">This page keeps the patient/caregiver view readable and focused on what to track next.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card soft">
+          <h3>Symptom sliders</h3>
+          ${[
+            [trText("Fatigue / weakness", "Yorgunluk / halsizlik"), fatigue],
+            [trText("Pain", "Ağrı"), pain],
+            [trText("Nausea / appetite", "Bulantı / iştah"), nausea],
+            [trText("Fear, worry or low mood", "Korku, endişe veya düşük ruh hali"), mood]
+          ].map(([label, value]) => `
+            <div class="bar-row">
+              <div class="bar-top"><span>${escapeReportHtml(label)}</span><b>${value}/10</b></div>
+              <div class="track"><i class="fill ${value >= 7 ? "warning" : ""}" style="width:${pct(value, 10)}%"></i></div>
+            </div>
+          `).join("")}
         </div>
-      </section>
 
-      <section class="section">
-        <span class="section-label">Statistics and charts</span>
-        <h2>Symptom burden and risk composition</h2>
-
-        <div class="chart-grid">
-          <div>
-            ${[
-              [trText("Fatigue / weakness", "Yorgunluk / halsizlik"), fatigue],
-              [trText("Pain", "Ağrı"), pain],
-              [trText("Nausea / appetite", "Bulantı / iştah"), nausea],
-              [trText("Fear, worry or low mood", "Korku, endişe veya düşük ruh hali"), mood]
-            ].map(([label, value]) => `
-              <div class="bar-row">
-                <div class="top"><span>${escapeReportHtml(label)}</span><b>${value}/10</b></div>
-                <div class="track"><i class="fill ${value >= 7 ? "warning" : ""}" style="width:${value * 10}%"></i></div>
-              </div>
-            `).join("")}
-          </div>
-
-          <div>
-            <div class="bar-row">
-              <div class="top"><span>Symptom signal</span><b>${symptomScore}/70</b></div>
-              <div class="track"><i class="fill" style="width:${Math.min(100, Math.round((symptomScore / 70) * 100))}%"></i></div>
-            </div>
-
-            <div class="bar-row">
-              <div class="top"><span>Dataset signal</span><b>${dataSignal}/30</b></div>
-              <div class="track"><i class="fill" style="width:${Math.min(100, Math.round((dataSignal / 30) * 100))}%"></i></div>
-            </div>
-
-            <div class="bar-row">
-              <div class="top"><span>Risk composition</span><b>${supportScore}/100</b></div>
-              <div class="stack">
-                <span style="width:${Math.min(100, Math.round((symptomScore / Math.max(1, supportScore)) * 100))}%">symptoms</span>
-                <b style="width:${Math.min(100, Math.round((dataSignal / Math.max(1, supportScore)) * 100))}%">data</b>
-              </div>
-            </div>
+        <div class="card green">
+          <h3>Main support interpretation</h3>
+          <p>${escapeReportHtml(aiRecommendation)}</p>
+          <br />
+          <div class="card">
+            <small>Top symptom burden</small>
+            <strong>${escapeReportHtml(topSymptom[0])} · ${topSymptom[1]}/10</strong>
           </div>
         </div>
-      </section>
+      </div>
 
-      <section class="section soft">
-        <span class="section-label">Public data context</span>
-        <h2>Selected cancer data signal</h2>
+      <div class="grid-3" style="margin-top:12px;">
+        <div class="card"><small>Symptom signal</small><strong>${symptomScore}/70</strong><div class="track" style="margin-top:9px;"><i class="fill" style="width:${pct(symptomScore, 70)}%"></i></div></div>
+        <div class="card"><small>Dataset signal</small><strong>${dataSignal}/30</strong><div class="track" style="margin-top:9px;"><i class="fill" style="width:${pct(dataSignal, 30)}%"></i></div></div>
+        <div class="card"><small>Overall priority</small><strong>${supportScore}/100</strong><div class="track" style="margin-top:9px;"><i class="fill" style="width:${pct(supportScore, 100)}%"></i></div></div>
+      </div>
 
-        <div class="kpi-grid">
-          <div class="kpi"><small>Matching rows</small><strong>${filteredRows.length}</strong></div>
-          <div class="kpi"><small>Incidence</small><strong>${incidenceAvg ? incidenceAvg.toFixed(1) : "N/A"}</strong></div>
-          <div class="kpi"><small>Mortality</small><strong>${mortalityAvg ? mortalityAvg.toFixed(1) : "N/A"}</strong></div>
-          <div class="kpi"><small>5-year survival</small><strong>${survivalAvg ? survivalAvg.toFixed(0) + "%" : "N/A"}</strong></div>
-        </div>
+      <div class="card orange" style="margin-top:12px;">
+        <h3>Doctor-ready next action</h3>
+        <p>${escapeReportHtml(scenarioPlan.immediate)}</p>
+      </div>
 
-        <p class="payload-note">
-          Public data indicators are used as context only. They are not personal medical risk scores.
-        </p>
-      </section>
-
-      <section class="section">
-        <span class="section-label">Category-based recommendations</span>
-        <h2>Recommended next steps</h2>
-
+      <div class="card" style="margin-top:12px;">
+        <h3>Key support actions</h3>
         <ul class="recommendations">
           ${reportCategoryRecommendations.map((item) => `<li>${escapeReportHtml(item)}</li>`).join("")}
         </ul>
-      </section>
+      </div>
+    </section>
 
-      <section class="section soft">
-        <span class="section-label">Doctor note</span>
-        <h2>Visit preparation summary</h2>
+    <section class="pdf-page">
+      <div class="page-topline">
+        <span class="brand-pill">OncoConnect AI</span>
+        <span>Page 3 · Doctor note</span>
+      </div>
 
-        <div class="doctor-note">
-          ${doctorNoteHighlights.map((item) => {
-            const [label, ...rest] = String(item).split(":");
-            return `<div><small>${escapeReportHtml(label)}</small><b>${escapeReportHtml(rest.join(":").trim())}</b></div>`;
-          }).join("")}
-          <div><small>Immediate check</small><b>${escapeReportHtml(scenarioPlan.immediate)}</b></div>
-          <div><small>Track today</small><b>${escapeReportHtml(scenarioPlan.track)}</b></div>
-          <div><small>Ask doctor</small><b>${escapeReportHtml(scenarioPlan.ask)}</b></div>
+      <div class="page-title">
+        <span class="section-label">Visit preparation</span>
+        <h2>Doctor note and care-team questions</h2>
+        <p class="muted">A concise summary the patient or caregiver can use during the next care-team contact.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card soft">
+          <h3>Visit preparation summary</h3>
+          <div class="doctor-note">
+            ${doctorNoteHighlights.map((item) => {
+              const [label, ...rest] = String(item).split(":");
+              return `<div><small>${escapeReportHtml(label)}</small><b>${escapeReportHtml(rest.join(":").trim())}</b></div>`;
+            }).join("")}
+          </div>
         </div>
-      </section>
 
-      <section class="section">
-        <span class="section-label">Questions for the care team</span>
-        <h2>Suggested doctor questions</h2>
+        <div class="card">
+          <h3>Immediate check and tracking</h3>
+          <div class="doctor-note">
+            <div><small>Immediate check</small><b>${escapeReportHtml(scenarioPlan.immediate)}</b></div>
+            <div><small>Track today</small><b>${escapeReportHtml(scenarioPlan.track)}</b></div>
+            <div><small>Ask doctor</small><b>${escapeReportHtml(scenarioPlan.ask)}</b></div>
+          </div>
+        </div>
+      </div>
 
+      <div class="card green" style="margin-top:12px;">
+        <h3>Suggested doctor questions</h3>
         <ol class="questions">
           ${doctorQuestions.map((question) => `<li>${escapeReportHtml(question)}</li>`).join("")}
         </ol>
-      </section>
+      </div>
+    </section>
 
-      <section class="section">
-        <span class="section-label">AI recommendation</span>
-        <h2>Generated support guidance</h2>
-        <p style="color:#334155; font-weight:750; line-height:1.6;">${escapeReportHtml(aiRecommendation)}</p>
-      </section>
+    <section class="pdf-page">
+      <div class="page-topline">
+        <span class="brand-pill">OncoConnect AI</span>
+        <span>Page 4 · Data & evidence signal</span>
+      </div>
 
-                ${buildAccessLifestylePerformanceHtmlV14()}
+      <div class="page-title">
+        <span class="section-label">Evidence context</span>
+        <h2>Data signal without contradiction</h2>
+        <p class="muted">Public indicators are shown only when the selected filters have a matching public data row.</p>
+      </div>
 
-          ${buildDataToMeaningHtmlV15()}
+      <div class="grid-2">
+        <div class="card soft">
+          <h3>Public data context</h3>
+          <div class="grid-2">
+            <div class="card"><small>Matching rows</small><strong>${publicDataRows}</strong></div>
+            <div class="card"><small>Incidence</small><strong>${formatPublicMetric(incidenceAvg, 1)}</strong></div>
+            <div class="card"><small>Mortality</small><strong>${formatPublicMetric(mortalityAvg, 1)}</strong></div>
+            <div class="card"><small>5-year survival</small><strong>${formatPublicMetric(survivalAvg, 0, "%")}</strong></div>
+          </div>
+          <div class="data-status">${escapeReportHtml(publicDataMessage)}</div>
+        </div>
 
-          ${buildRelationalEvidenceHtml()}
+        <div class="card green">
+          <h3>Treatment and access context</h3>
+          <p>
+            Treatment, waiting-time and access-pressure signals are presented as cohort-level context.
+            They help prepare better questions, but they do not recommend treatment or calculate personal prognosis.
+          </p>
+          <br />
+          <div class="doctor-note">
+            <div><small>Treatment KPI</small><b>Used for response timing, side-effect monitoring and follow-up questions.</b></div>
+            <div><small>Access pressure</small><b>Used to ask what happens if appointment, diagnostic result or treatment decision is delayed.</b></div>
+          </div>
+        </div>
+      </div>
 
-          ${buildRealDataEvidenceHtml()}\n\n<section class="section">
-        <span class="section-label">Splunk-ready telemetry</span>
-        <h2>Event payload preview</h2>
-        <pre>${escapeReportHtml(JSON.stringify(splunkEventPayload, null, 2))}</pre>
-        <p class="payload-note">
-          This event can be used to demonstrate observability, auditability and workflow monitoring in the AI Copilot.
-        </p>
-      </section>
+      <div class="grid-2" style="margin-top:12px;">
+        <div class="card">
+          <h3>Lifestyle / CRC prevention context</h3>
+          <p>
+            Lifestyle, family-history and prevention fields are converted into non-diagnostic conversation prompts.
+            They should be discussed with a clinician when relevant.
+          </p>
+        </div>
+
+        <div class="card orange">
+          <h3>Data quality and v14 evidence</h3>
+          <p>
+            CSV summaries, public data filters, support-score logic and telemetry fields are kept audit-ready.
+            If public data is unavailable, the report says so consistently instead of showing conflicting match messages.
+          </p>
+        </div>
+      </div>
 
       <div class="footer-note">
-        Medical safety note: This report is not a diagnosis, treatment plan or emergency triage decision.
-        It is a structured support and communication aid. Medical decisions should be made with qualified healthcare professionals.
+        Public data indicators are population-level context only. They are not diagnosis, personal risk scores,
+        treatment selection, emergency triage or survival prediction.
+      </div>
+    </section>
+
+    <section class="pdf-page">
+      <div class="page-topline">
+        <span class="brand-pill">OncoConnect AI</span>
+        <span>Page 5 · Audit & safety</span>
+      </div>
+
+      <div class="page-title">
+        <span class="section-label">Auditability</span>
+        <h2>Telemetry preview and safety boundary</h2>
+        <p class="muted">A compact event preview for observability, demo review and workflow monitoring.</p>
+      </div>
+
+      <div class="card soft">
+        <h3>Splunk-ready telemetry preview</h3>
+        <pre>${escapeReportHtml(JSON.stringify(compactTelemetryPayload, null, 2))}</pre>
+      </div>
+
+      <div class="grid-2" style="margin-top:12px;">
+        <div class="card green">
+          <h3>Audit explanation</h3>
+          <p>
+            This event can demonstrate how patient/caregiver inputs become a structured support score,
+            report action and monitoring payload without storing diagnostic claims in the PDF.
+          </p>
+        </div>
+
+        <div class="card orange">
+          <h3>Medical safety note</h3>
+          <p>
+            This report is not a diagnosis, treatment plan, emergency triage decision or personal survival prediction.
+            It is a structured support and communication aid. Medical decisions should be made with qualified healthcare professionals.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        If symptoms are severe, new, worsening or difficult to tolerate, follow local clinical guidance and contact
+        the oncology team, clinic or emergency services as appropriate.
       </div>
     </section>
 
@@ -4700,7 +4959,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
           id: `${Date.now()}-pdf`,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
           type: "pdf_export",
-          label: trText("PDF report export opened.", "PDF rapor dışa aktarma açıldı."),
+          label: trText("Premium PDF report export opened.", "Premium PDF rapor dışa aktarma açıldı."),
           insight: "report"
         },
         ...current
