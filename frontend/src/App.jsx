@@ -4253,10 +4253,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       padding: 20mm 17mm;
       border-radius: 28px;
       color: #ffffff;
-      background:
-        radial-gradient(circle at 82% 16%, rgba(34,197,94,.34), transparent 28%),
-        radial-gradient(circle at 12% 4%, rgba(14,165,233,.32), transparent 34%),
-        linear-gradient(135deg, #0f172a, #1e3a8a 54%, #312e81);
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 56%, #312e81 100%);
     }
 
     .kicker {
@@ -4313,7 +4310,6 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       border: 1px solid rgba(255,255,255,.18);
       border-radius: 22px;
       background: rgba(255,255,255,.11);
-      backdrop-filter: blur(10px);
     }
 
     .risk-card {
@@ -4689,10 +4685,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       }
 
       .hero {
-        background:
-          radial-gradient(circle at 82% 16%, rgba(34,197,94,.34), transparent 28%),
-          radial-gradient(circle at 12% 4%, rgba(14,165,233,.32), transparent 34%),
-          linear-gradient(135deg, #0f172a, #1e3a8a 54%, #312e81) !important;
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 56%, #312e81 100%) !important;
       }
 
     }
