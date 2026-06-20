@@ -1744,6 +1744,7 @@ function App() {
       let cancelled = false;
 
       const visitStorageKey = "oncoconnect_public_visit_counted_in_session_v2";
+      const visitTotalCacheKey = "oncoconnect_public_visit_total_cache_v1";
 
       async function loadPublicReachV207() {
         try {
@@ -1770,7 +1771,9 @@ function App() {
             if (cancelled) return;
 
             window.sessionStorage.setItem(visitStorageKey, "1");
-            setPublicVisitTotalV207(Number(data.total_visits || 0));
+            const nextTotal = Number(data.total_visits || 0);
+            window.localStorage.setItem(visitTotalCacheKey, String(nextTotal));
+            setPublicVisitTotalV207(nextTotal);
             setPublicVisitStatusV207("ready");
             return;
           }
@@ -1790,15 +1793,24 @@ function App() {
 
           if (cancelled) return;
 
-          setPublicVisitTotalV207(
-            Number(data.metrics.total_visits || 0)
-          );
+          const nextTotal = Number(data.metrics.total_visits || 0);
+          window.localStorage.setItem(visitTotalCacheKey, String(nextTotal));
+          setPublicVisitTotalV207(nextTotal);
           setPublicVisitStatusV207("ready");
         } catch (error) {
           console.warn("Public reach counter unavailable:", error.message);
 
           if (!cancelled) {
-            setPublicVisitStatusV207("counter_unavailable");
+            const cachedTotal = Number(
+              window.localStorage.getItem(visitTotalCacheKey) || ""
+            );
+
+            if (Number.isFinite(cachedTotal) && cachedTotal >= 0) {
+              setPublicVisitTotalV207(cachedTotal);
+              setPublicVisitStatusV207("ready");
+            } else {
+              setPublicVisitStatusV207("counter_unavailable");
+            }
           }
         }
       }
