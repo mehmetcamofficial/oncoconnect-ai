@@ -1744,25 +1744,15 @@ function App() {
       let cancelled = false;
 
       const visitStorageKey = "oncoconnect_public_visit_counted_in_session_v2";
-      const visitTotalCacheKey = "oncoconnect_public_visit_total_cache_v1";
 
       async function loadPublicReachV207() {
         try {
-          const cachedTotal = Number(
-            window.localStorage.getItem(visitTotalCacheKey) || ""
-          );
-          const safeCachedTotal = Number.isFinite(cachedTotal)
-            ? Math.max(0, cachedTotal)
-            : null;
-          const hasCountedThisSession =
-            window.sessionStorage.getItem(visitStorageKey) === "1";
           const shouldCountVisit =
-            !hasCountedThisSession || safeCachedTotal === null || safeCachedTotal <= 0;
+            window.sessionStorage.getItem(visitStorageKey) !== "1";
 
           if (shouldCountVisit) {
             const response = await fetch(`${API}/public/visit`, {
               method: "POST",
-              cache: "no-store",
               headers: {
                 "Content-Type": "application/json"
               }
@@ -1780,21 +1770,13 @@ function App() {
             if (cancelled) return;
 
             window.sessionStorage.setItem(visitStorageKey, "1");
-            const nextTotal = Math.max(
-              Number(data.total_visits || 0),
-              safeCachedTotal || 0
-            );
-            window.localStorage.setItem(visitTotalCacheKey, String(nextTotal));
-            setPublicVisitTotalV207(nextTotal);
+            setPublicVisitTotalV207(Number(data.total_visits || 0));
             setPublicVisitStatusV207("ready");
             return;
           }
 
           const response = await fetch(
-            `${API}/public/stats?refresh=${Date.now()}`,
-            {
-              cache: "no-store"
-            }
+            `${API}/public/stats?refresh=${Date.now()}`
           );
 
           const data = await response.json();
@@ -1808,27 +1790,15 @@ function App() {
 
           if (cancelled) return;
 
-          const nextTotal = Math.max(
-            Number(data.metrics.total_visits || 0),
-            safeCachedTotal || 0
+          setPublicVisitTotalV207(
+            Number(data.metrics.total_visits || 0)
           );
-          window.localStorage.setItem(visitTotalCacheKey, String(nextTotal));
-          setPublicVisitTotalV207(nextTotal);
           setPublicVisitStatusV207("ready");
         } catch (error) {
           console.warn("Public reach counter unavailable:", error.message);
 
           if (!cancelled) {
-            const cachedTotal = Number(
-              window.localStorage.getItem(visitTotalCacheKey) || ""
-            );
-
-            if (Number.isFinite(cachedTotal) && cachedTotal > 0) {
-              setPublicVisitTotalV207(cachedTotal);
-              setPublicVisitStatusV207("ready");
-            } else {
-              setPublicVisitStatusV207("counter_unavailable");
-            }
+            setPublicVisitStatusV207("counter_unavailable");
           }
         }
       }
