@@ -2031,7 +2031,7 @@ button:disabled {
   background:
     linear-gradient(90deg, rgba(4, 16, 38, 0.72), rgba(4, 16, 38, 0.38), rgba(4, 16, 38, 0.20)),
     linear-gradient(180deg, rgba(4, 16, 38, 0.30), rgba(248,251,255,0.08)),
-    url("/onco-sea-hero.png") center / cover no-repeat !important;
+    url("./assets/onco-sea-hero.png") center / cover no-repeat !important;
 }
 
 .calm-sea-hero::before {
@@ -6941,7 +6941,7 @@ button:disabled {
   align-items: center;
   background:
     linear-gradient(90deg, rgba(15,23,42,0.88), rgba(15,23,42,0.34)),
-    url("/cosmic_digital_network_and_waves.png"),
+    url("./assets/onco-sea-hero.png"),
     radial-gradient(circle at 70% 20%, rgba(56,189,248,0.25), transparent 35%),
     linear-gradient(135deg, #0f172a, #164e63);
   background-size: cover;
@@ -51392,4 +51392,3 @@ body .cc-left-v42 .cc-run-v42 {
     text-overflow: ellipsis !important;
   }
 }
-

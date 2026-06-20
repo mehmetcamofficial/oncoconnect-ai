@@ -443,9 +443,18 @@ function App() {
 
     const originalFetch = window.fetch.bind(window);
     const PUBLISHED_ROWS_KEY = "oncoconnect_published_cancer_rows_v1";
+    const ADMIN_SESSION_KEY = "oncoconnect_admin_session_v1";
 
     const getAdminPublishedRows = () => {
       try {
+        const hasActiveAdminSession = Boolean(
+          window.sessionStorage.getItem(ADMIN_SESSION_KEY)
+        );
+
+        if (!hasActiveAdminSession) {
+          return null;
+        }
+
         const raw = localStorage.getItem(PUBLISHED_ROWS_KEY);
 
         if (raw === null) {
@@ -1734,19 +1743,12 @@ function App() {
     useEffect(() => {
       let cancelled = false;
 
-      const visitStorageKey = "oncoconnect_public_visit_counted_at_v1";
-      const twentyFourHours = 24 * 60 * 60 * 1000;
+      const visitStorageKey = "oncoconnect_public_visit_counted_in_session_v2";
 
       async function loadPublicReachV207() {
         try {
-          const now = Date.now();
-          const previousValue = window.localStorage.getItem(visitStorageKey);
-          const previousTimestamp = Number(previousValue || 0);
-
           const shouldCountVisit =
-            !Number.isFinite(previousTimestamp) ||
-            previousTimestamp <= 0 ||
-            now - previousTimestamp >= twentyFourHours;
+            window.sessionStorage.getItem(visitStorageKey) !== "1";
 
           if (shouldCountVisit) {
             const response = await fetch(`${API}/public/visit`, {
@@ -1767,7 +1769,7 @@ function App() {
 
             if (cancelled) return;
 
-            window.localStorage.setItem(visitStorageKey, String(now));
+            window.sessionStorage.setItem(visitStorageKey, "1");
             setPublicVisitTotalV207(Number(data.total_visits || 0));
             setPublicVisitStatusV207("ready");
             return;
@@ -1796,7 +1798,7 @@ function App() {
           console.warn("Public reach counter unavailable:", error.message);
 
           if (!cancelled) {
-            setPublicVisitStatusV207("unavailable");
+            setPublicVisitStatusV207("counter_unavailable");
           }
         }
       }
@@ -1834,7 +1836,8 @@ function App() {
 
           <b className="public-reach-live-v207">
             <i aria-hidden="true"></i>
-            {publicVisitStatusV207 === "ready"
+            {publicVisitStatusV207 === "ready" ||
+            publicVisitStatusV207 === "counter_unavailable"
               ? trText("LIVE", "CANLI")
               : publicVisitStatusV207 === "loading"
               ? trText("SYNCING", "EŞİTLENİYOR")
@@ -1853,10 +1856,15 @@ function App() {
                 : "—"}
             </strong>
             <span>
-              {trText(
-                "Privacy-safe aggregate counter",
-                "Gizlilik odaklı toplam sayaç"
-              )}
+              {publicVisitStatusV207 === "counter_unavailable"
+                ? trText(
+                    "Counter temporarily unavailable",
+                    "Sayaç geçici olarak kullanılamıyor"
+                  )
+                : trText(
+                    "Privacy-safe aggregate counter",
+                    "Gizlilik odaklı toplam sayaç"
+                  )}
             </span>
           </article>
 
@@ -8460,8 +8468,8 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
 
   const AdminPanel = () => {
     const ADMIN_DATASETS_KEY = "oncoconnect_admin_datasets_v2";
-    const ADMIN_PASSWORD_KEY = "oncoconnect_admin_password_v1";
     const PUBLISHED_ROWS_KEY = "oncoconnect_published_cancer_rows_v1";
+    const ADMIN_SESSION_KEY = "oncoconnect_admin_session_v1";
 
     const [datasets, setDatasets] = useState(() => {
       try {
@@ -8476,10 +8484,18 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
     const [loading, setLoading] = useState(false);
     const [tab, setTab] = useState("datasets");
     const [previewDataset, setPreviewDataset] = useState(null);
-    const [oldPassword, setOldPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
+    const [loginUsername, setLoginUsername] = useState("admin");
     const [loginPassword, setLoginPassword] = useState("");
-    const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+    const [adminSessionToken, setAdminSessionToken] = useState(() => {
+      if (typeof window === "undefined") return "";
+
+      return window.sessionStorage.getItem(ADMIN_SESSION_KEY) || "";
+    });
+    const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+      if (typeof window === "undefined") return false;
+
+      return Boolean(window.sessionStorage.getItem(ADMIN_SESSION_KEY));
+    });
     const [officialDataUrl, setOfficialDataUrl] = useState("https://ghoapi.azureedge.net/api/NCDMORT3070?$filter=SpatialDimType%20eq%20%27COUNTRY%27%20and%20TimeDim%20ge%202015");
     const [officialDataName, setOfficialDataName] = useState("WHO GHO NCD Mortality Risk Dataset");
     const [officialSourceName, setOfficialSourceName] = useState("WHO_Global_Health_Observatory_OData_API");
@@ -8503,6 +8519,37 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
 
       localStorage.setItem(PUBLISHED_ROWS_KEY, JSON.stringify(publishedRows));
       window.dispatchEvent(new Event("oncoconnect-admin-data-updated"));
+    };
+
+    const getAdminHeaders = (headers = {}) => ({
+      ...headers,
+      ...(adminSessionToken
+        ? { Authorization: `Bearer ${adminSessionToken}` }
+        : {})
+    });
+
+    const handleAdminUnauthorized = () => {
+      handleAdminLogout("Admin session expired. Please sign in again.");
+    };
+
+    const readLocalDatasets = () => {
+      try {
+        return JSON.parse(localStorage.getItem(ADMIN_DATASETS_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    };
+
+    const handleAdminLogout = (nextStatus = "") => {
+      setIsAdminAuthenticated(false);
+      setAdminSessionToken("");
+      setLoginPassword("");
+
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      }
+
+      setStatus(nextStatus);
     };
 
     const parseCsvLine = (line) => {
@@ -8577,13 +8624,51 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       };
     };
 
-    const loadDatasets = () => {
-      try {
-        const stored = JSON.parse(localStorage.getItem(ADMIN_DATASETS_KEY) || "[]");
+    const loadDatasets = async ({ silent = false, token = adminSessionToken } = {}) => {
+      if (!token) {
+        const stored = readLocalDatasets();
         setDatasets(stored);
-        setStatus(`Reloaded ${stored.length} dataset(s) from local admin storage.`);
+
+        if (!silent) {
+          setStatus(`Reloaded ${stored.length} dataset(s) from local admin storage.`);
+        }
+
+        return stored;
+      }
+
+      try {
+        const response = await fetch(`${API}/admin/datasets`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.status === 401) {
+          handleAdminUnauthorized();
+          return [];
+        }
+
+        if (!response.ok || !data?.success || !Array.isArray(data.datasets)) {
+          throw new Error(data?.error || `Dataset refresh failed with status ${response.status}`);
+        }
+
+        saveDatasets(data.datasets);
+
+        if (!silent) {
+          setStatus(`Reloaded ${data.datasets.length} dataset(s) from secure backend storage.`);
+        }
+
+        return data.datasets;
       } catch {
-        setStatus("Could not reload local datasets.");
+        const stored = readLocalDatasets();
+        setDatasets(stored);
+
+        if (!silent) {
+          setStatus(`Backend refresh unavailable. Using ${stored.length} locally cached dataset(s).`);
+        }
+
+        return stored;
       }
     };
 
@@ -8594,9 +8679,35 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       }
 
       setLoading(true);
-      setStatus("Reading CSV locally...");
+      setStatus("Uploading CSV to secure backend...");
 
       try {
+        if (adminSessionToken) {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch(`${API}/admin/upload`, {
+            method: "POST",
+            headers: getAdminHeaders(),
+            body: formData
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            handleAdminUnauthorized();
+            return;
+          }
+
+          if (!response.ok || !data?.success) {
+            throw new Error(data?.error || `Upload failed with status ${response.status}`);
+          }
+
+          await loadDatasets({ silent: true });
+          setFile(null);
+          setStatus(`Uploaded to secure backend: ${data.dataset?.name || file.name}.`);
+          return;
+        }
+
         const text = await file.text();
         const dataset = createDatasetFromCsv({
           text,
@@ -8652,7 +8763,45 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       }
     };
 
-    const updateDataset = (id, patch) => {
+    const updateDataset = async (id, patch) => {
+      if (adminSessionToken) {
+        setLoading(true);
+
+        try {
+          const response = await fetch(`${API}/admin/datasets/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: getAdminHeaders({
+              "Content-Type": "application/json"
+            }),
+            body: JSON.stringify(patch)
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            handleAdminUnauthorized();
+            return;
+          }
+
+          if (!response.ok || !data?.success) {
+            throw new Error(data?.error || data?.detail || `Dataset update failed with status ${response.status}`);
+          }
+
+          await loadDatasets({ silent: true });
+          setStatus(
+            patch.published === true
+              ? "Dataset published in secure backend storage."
+              : patch.published === false
+              ? "Dataset unpublished in secure backend storage."
+              : "Dataset updated in secure backend storage."
+          );
+          return;
+        } catch (error) {
+          setStatus(error.message || "Backend dataset update failed. Falling back to local admin storage.");
+        } finally {
+          setLoading(false);
+        }
+      }
+
       const next = datasets.map((dataset) =>
         dataset.id === id ? { ...dataset, ...patch } : dataset
       );
@@ -8661,8 +8810,37 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       setStatus(patch.published === true ? "Dataset published." : patch.published === false ? "Dataset unpublished." : "Dataset updated.");
     };
 
-    const deleteDataset = (id) => {
+    const deleteDataset = async (id) => {
       if (!confirm("Delete this dataset from Admin?")) return;
+
+      if (adminSessionToken) {
+        setLoading(true);
+
+        try {
+          const response = await fetch(`${API}/admin/datasets/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+            headers: getAdminHeaders()
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            handleAdminUnauthorized();
+            return;
+          }
+
+          if (!response.ok || !data?.success) {
+            throw new Error(data?.error || `Dataset delete failed with status ${response.status}`);
+          }
+
+          await loadDatasets({ silent: true });
+          setStatus("Dataset deleted from secure backend storage.");
+          return;
+        } catch (error) {
+          setStatus(error.message || "Backend dataset delete failed. Falling back to local admin storage.");
+        } finally {
+          setLoading(false);
+        }
+      }
 
       const next = datasets.filter((dataset) => dataset.id !== id);
       saveDatasets(next);
@@ -8821,7 +8999,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
 
         const response = await fetch(`${API}/admin/official-search`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAdminHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             officialDataUrl: officialDataUrl.trim(),
             officialDataName: officialDataName.trim() || "Official Cancer Dataset Draft",
@@ -8830,6 +9008,11 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
         });
 
         const data = await response.json();
+
+        if (response.status === 401) {
+          handleAdminLogout("Admin session expired. Please sign in again.");
+          return;
+        }
 
         if (!data.success) {
           throw new Error(data.error || "Official source search failed.");
@@ -8857,7 +9040,41 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       }
     };
 
-    const runAutoResearch = () => {
+    const runAutoResearch = async () => {
+      if (adminSessionToken) {
+        setLoading(true);
+        setStatus("Generating backend research draft...");
+
+        try {
+          const response = await fetch(`${API}/admin/auto-research`, {
+            method: "POST",
+            headers: getAdminHeaders({
+              "Content-Type": "application/json"
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            handleAdminUnauthorized();
+            return;
+          }
+
+          if (!response.ok || !data?.success || !data?.dataset) {
+            throw new Error(data?.error || data?.detail || `Research draft failed with status ${response.status}`);
+          }
+
+          await loadDatasets({ silent: true });
+          setPreviewDataset(data.dataset);
+          setTab("datasets");
+          setStatus(data.message || "Research draft generated in secure backend storage.");
+          return;
+        } catch (error) {
+          setStatus(error.message || "Backend research draft failed. Falling back to local draft mode.");
+        } finally {
+          setLoading(false);
+        }
+      }
+
       const draft = {
         id: `research_${Date.now()}`,
         name: "Research Pulse Draft Dataset",
@@ -8886,8 +9103,42 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       setStatus("Research draft generated. Review it, then publish if suitable.");
     };
 
-    const runOfficialIngest = () => {
-      loadCurrentSiteCsv();
+    const runOfficialIngest = async () => {
+      if (adminSessionToken) {
+        setLoading(true);
+        setStatus("Generating secure backend ingestion draft...");
+
+        try {
+          const response = await fetch(`${API}/admin/auto-ingest`, {
+            method: "POST",
+            headers: getAdminHeaders({
+              "Content-Type": "application/json"
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            handleAdminUnauthorized();
+            return;
+          }
+
+          if (!response.ok || !data?.success || !data?.dataset) {
+            throw new Error(data?.error || data?.detail || `Official ingest failed with status ${response.status}`);
+          }
+
+          await loadDatasets({ silent: true });
+          setPreviewDataset(data.dataset);
+          setTab("datasets");
+          setStatus(data.message || "Official ingestion draft generated in secure backend storage.");
+          return;
+        } catch (error) {
+          setStatus(error.message || "Backend official ingest failed. Falling back to local CSV mode.");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      await loadCurrentSiteCsv();
     };
 
     const clearAllDatasets = () => {
@@ -8898,38 +9149,60 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
       setStatus("All local admin datasets cleared.");
     };
 
-    const changePassword = () => {
-      const current = localStorage.getItem(ADMIN_PASSWORD_KEY) || "admin123";
-
-      if (oldPassword !== current) {
-        setStatus("Old password is incorrect. Default is admin123 if you never changed it.");
+    const handleAdminLogin = async () => {
+      if (!loginUsername.trim() || !loginPassword) {
+        setStatus("Enter the backend admin username and password.");
         return;
       }
 
-      if (!newPassword || newPassword.length < 6) {
-        setStatus("New password must be at least 6 characters.");
-        return;
-      }
+      setLoading(true);
+      setStatus("Signing in to secure admin session...");
 
-      localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword);
-      setOldPassword("");
-      setNewPassword("");
-      setStatus("Admin password changed locally.");
+      try {
+        const response = await fetch(`${API}/admin/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username: loginUsername.trim(),
+            password: loginPassword
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data?.success || !data?.token) {
+          throw new Error(
+            data?.message ||
+            data?.error ||
+            `Admin login failed with status ${response.status}`
+          );
+        }
+
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(ADMIN_SESSION_KEY, data.token);
+        }
+
+        setAdminSessionToken(data.token);
+        setIsAdminAuthenticated(true);
+        setLoginPassword("");
+        await loadDatasets({ silent: true, token: data.token });
+        setStatus("Secure admin session started.");
+      } catch (error) {
+        handleAdminLogout(error.message || "Admin login failed.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-
-    const handleAdminLogin = () => {
-      const currentPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || "admin123";
-
-      if (loginPassword !== currentPassword) {
-        setStatus("Wrong admin password. Default password is admin123 if you never changed it.");
+    useEffect(() => {
+      if (!isAdminAuthenticated || !adminSessionToken) {
         return;
       }
 
-      setIsAdminAuthenticated(true);
-      setLoginPassword("");
-      setStatus("");
-    };
+      loadDatasets({ silent: true, token: adminSessionToken });
+    }, [isAdminAuthenticated, adminSessionToken]);
 
     const totalRows = datasets.reduce((sum, dataset) => {
       return sum + safeNumber(dataset.rowCount || dataset.rows?.length || 0);
@@ -8955,12 +9228,19 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
             <small>ADMIN ACCESS</small>
             <h1>OncoConnect Command Center</h1>
             <p>
-              Enter the admin password to control datasets, publishing, sources and demo settings.
+              Sign in with the backend-managed admin credentials to control datasets, publishing, sources and demo settings.
             </p>
 
             <input
+              type="text"
+              placeholder="Admin username"
+              value={loginUsername}
+              onChange={(event) => setLoginUsername(event.target.value)}
+            />
+
+            <input
               type="password"
-              placeholder="Admin password"
+              placeholder="Backend admin password"
               value={loginPassword}
               onChange={(event) => setLoginPassword(event.target.value)}
               onKeyDown={(event) => {
@@ -8968,14 +9248,14 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
               }}
             />
 
-            <button type="button" onClick={handleAdminLogin}>
-              Login to Admin
+            <button type="button" onClick={handleAdminLogin} disabled={loading}>
+              {loading ? "Signing in..." : "Login to Admin"}
             </button>
 
             {status && <div className="admin-status-v35">{status}</div>}
 
             <p className="admin-login-hint-v36">
-              Default password: <b>admin123</b>
+              Configure <b>ADMIN_PASSWORD</b> and <b>ADMIN_SESSION_SECRET</b> in <b>backend/.env</b>. The old default password has been removed.
             </p>
           </div>
         </div>
@@ -8993,10 +9273,7 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
             <button type="button" onClick={loadDatasets}>Refresh</button>
             <button
               type="button"
-              onClick={() => {
-                setIsAdminAuthenticated(false);
-                setStatus("");
-              }}
+              onClick={() => handleAdminLogout("")}
             >
               Logout
             </button>
@@ -9224,24 +9501,10 @@ Medical safety note: This report is not a diagnosis, treatment plan or emergency
         {tab === "settings" && (
           <section className="admin-card-v35">
             <h2>Settings</h2>
-            <p>Control local admin password and reset demo data.</p>
+            <p>Admin credentials are managed by backend environment variables, not by local browser storage anymore.</p>
 
-            <div className="admin-upload-row-v35">
-              <input
-                type="password"
-                placeholder="Old password"
-                value={oldPassword}
-                onChange={(event) => setOldPassword(event.target.value)}
-              />
-              <input
-                type="password"
-                placeholder="New password"
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-              />
-              <button type="button" onClick={changePassword}>
-                Change Password
-              </button>
+            <div className="admin-status-v35">
+              Set <b>ADMIN_USERNAME</b>, <b>ADMIN_PASSWORD</b> and <b>ADMIN_SESSION_SECRET</b> in <b>backend/.env</b>, then restart the backend to rotate access.
             </div>
 
             <div className="admin-tab-actions-v39">
@@ -10876,4 +11139,3 @@ if (typeof window !== "undefined") {
   window.setTimeout(applyDownloadReportCompactV148, 900);
   window.addEventListener("load", applyDownloadReportCompactV148);
 }
-

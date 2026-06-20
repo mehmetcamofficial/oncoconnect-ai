@@ -3,20 +3,356 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const https = require("https");
-require("dotenv").config();
+const crypto = require("crypto");
+const path = require("path");
+const { URL } = require("url");
+const dotenv = require("dotenv");
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.disable("x-powered-by");
+
+const TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
+const DEFAULT_CORS_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173"
+];
+const DEFAULT_OFFICIAL_DATA_ALLOWED_HOSTS = [
+  "gco.iarc.who.int",
+  "ecis.jrc.ec.europa.eu",
+  "ghoapi.azureedge.net",
+  "who.int",
+  "www.who.int"
+];
+
+function readEnvBoolean(value, defaultValue = false) {
+  if (value === undefined || value === null || value === "") {
+    return defaultValue;
+  }
+
+  return TRUE_VALUES.has(String(value).trim().toLowerCase());
+}
+
+function readEnvList(value, fallback = []) {
+  const raw = String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return raw.length ? raw : fallback;
+}
+
+function normalizeHostname(hostname) {
+  return String(hostname || "")
+    .trim()
+    .replace(/\.$/, "")
+    .toLowerCase();
+}
+
+function normalizeOrigin(origin) {
+  try {
+    return new URL(String(origin || "").trim()).origin;
+  } catch {
+    return "";
+  }
+}
+
+function isPrivateHostname(hostname) {
+  const normalized = normalizeHostname(hostname);
+
+  if (
+    !normalized ||
+    normalized === "localhost" ||
+    normalized === "::1" ||
+    normalized.endsWith(".local")
+  ) {
+    return true;
+  }
+
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(normalized)) {
+    const octets = normalized.split(".").map((part) => Number(part));
+
+    if (octets.some((value) => value < 0 || value > 255)) {
+      return true;
+    }
+
+    if (octets[0] === 10 || octets[0] === 127) return true;
+    if (octets[0] === 169 && octets[1] === 254) return true;
+    if (octets[0] === 192 && octets[1] === 168) return true;
+    if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) return true;
+  }
+
+  return normalized.startsWith("fc") || normalized.startsWith("fd");
+}
+
+const ALLOW_INSECURE_TLS = readEnvBoolean(process.env.ALLOW_INSECURE_TLS, false);
+const CORS_ALLOWED_ORIGINS = new Set(
+  readEnvList(process.env.CORS_ALLOWED_ORIGINS, DEFAULT_CORS_ORIGINS)
+);
+const OFFICIAL_DATA_ALLOWED_HOSTS = new Set(
+  readEnvList(
+    process.env.OFFICIAL_DATA_ALLOWED_HOSTS,
+    DEFAULT_OFFICIAL_DATA_ALLOWED_HOSTS
+  ).map(normalizeHostname)
+);
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || "";
+const ADMIN_SESSION_TTL_MS = Math.max(
+  5 * 60 * 1000,
+  Number.parseInt(
+    process.env.ADMIN_SESSION_TTL_MS || `${12 * 60 * 60 * 1000}`,
+    10
+  ) || 12 * 60 * 60 * 1000
+);
+const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_LOGIN_MAX_ATTEMPTS = 5;
+const adminLoginAttempts = new Map();
+
+function createHttpsAgent() {
+  return new https.Agent({
+    rejectUnauthorized: !ALLOW_INSECURE_TLS
+  });
+}
+
+function safeEqualText(left, right) {
+  const leftBuffer = Buffer.from(String(left || ""), "utf8");
+  const rightBuffer = Buffer.from(String(right || ""), "utf8");
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function getRequestIp(req) {
+  return (
+    req.ip ||
+    req.headers["x-forwarded-for"] ||
+    req.socket?.remoteAddress ||
+    "unknown"
+  );
+}
+
+function pruneExpiredLoginAttempts(now = Date.now()) {
+  for (const [ip, state] of adminLoginAttempts.entries()) {
+    if (!state || now - state.firstAttemptAt > ADMIN_LOGIN_WINDOW_MS) {
+      adminLoginAttempts.delete(ip);
+    }
+  }
+}
+
+function registerAdminFailure(ip) {
+  const now = Date.now();
+  pruneExpiredLoginAttempts(now);
+  const current = adminLoginAttempts.get(ip);
+
+  if (!current || now - current.firstAttemptAt > ADMIN_LOGIN_WINDOW_MS) {
+    adminLoginAttempts.set(ip, {
+      count: 1,
+      firstAttemptAt: now
+    });
+    return 1;
+  }
+
+  current.count += 1;
+  adminLoginAttempts.set(ip, current);
+  return current.count;
+}
+
+function clearAdminFailures(ip) {
+  adminLoginAttempts.delete(ip);
+}
+
+function isAdminLoginRateLimited(ip) {
+  pruneExpiredLoginAttempts();
+  const state = adminLoginAttempts.get(ip);
+
+  if (!state) return false;
+  return state.count >= ADMIN_LOGIN_MAX_ATTEMPTS;
+}
+
+function createAdminSessionToken() {
+  const payload = {
+    sub: "admin",
+    exp: Date.now() + ADMIN_SESSION_TTL_MS,
+    nonce: crypto.randomBytes(16).toString("hex")
+  };
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = crypto
+    .createHmac("sha256", ADMIN_SESSION_SECRET)
+    .update(encodedPayload)
+    .digest("base64url");
+
+  return `${encodedPayload}.${signature}`;
+}
+
+function verifyAdminSessionToken(token) {
+  if (!token || !ADMIN_SESSION_SECRET) {
+    return null;
+  }
+
+  const [encodedPayload, providedSignature] = String(token).split(".");
+
+  if (!encodedPayload || !providedSignature) {
+    return null;
+  }
+
+  const expectedSignature = crypto
+    .createHmac("sha256", ADMIN_SESSION_SECRET)
+    .update(encodedPayload)
+    .digest("base64url");
+
+  if (!safeEqualText(providedSignature, expectedSignature)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(encodedPayload, "base64url").toString("utf8")
+    );
+
+    if (!payload?.exp || payload.exp <= Date.now() || payload.sub !== "admin") {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function requireAdminAuth(req, res, next) {
+  const authHeader = String(req.headers.authorization || "");
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  const token = match?.[1];
+  const session = verifyAdminSessionToken(token);
+
+  if (!session) {
+    return res.status(401).json({
+      success: false,
+      error: "ADMIN_AUTH_REQUIRED",
+      message: "A valid admin session is required for this endpoint."
+    });
+  }
+
+  req.adminSession = session;
+  return next();
+}
+
+function validateOfficialDataUrl(rawUrl) {
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(String(rawUrl || "").trim());
+  } catch {
+    return {
+      ok: false,
+      statusCode: 400,
+      error: "Official data URL is invalid."
+    };
+  }
+
+  const hostname = normalizeHostname(parsedUrl.hostname);
+
+  if (parsedUrl.protocol !== "https:") {
+    return {
+      ok: false,
+      statusCode: 400,
+      error: "Only HTTPS official data URLs are allowed."
+    };
+  }
+
+  if (isPrivateHostname(hostname)) {
+    return {
+      ok: false,
+      statusCode: 400,
+      error: "Private, local or loopback hosts are not allowed for official data imports."
+    };
+  }
+
+  if (!OFFICIAL_DATA_ALLOWED_HOSTS.has(hostname)) {
+    return {
+      ok: false,
+      statusCode: 400,
+      error:
+        `Host "${hostname}" is not in the official data allowlist.`,
+      allowedHosts: Array.from(OFFICIAL_DATA_ALLOWED_HOSTS)
+    };
+  }
+
+  return {
+    ok: true,
+    url: parsedUrl,
+    hostname
+  };
+}
+
+async function safeOfficialFetch(rawUrl, options = {}) {
+  const validation = validateOfficialDataUrl(rawUrl);
+
+  if (!validation.ok) {
+    const error = new Error(validation.error);
+    error.statusCode = validation.statusCode;
+    error.allowedHosts = validation.allowedHosts;
+    throw error;
+  }
+
+  return fetch(validation.url.toString(), {
+    ...options,
+    method: options.method || "GET",
+    redirect: "error"
+  });
+}
+
+app.use(cors((req, callback) => {
+  const requestOrigin = req.headers.origin;
+  const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+  const forwardedHost = String(req.headers["x-forwarded-host"] || "")
+    .split(",")[0]
+    .trim();
+  const requestHost = normalizeHostname(
+    forwardedHost || String(req.headers.host || "").split(",")[0]
+  );
+  const requestOriginHost = normalizedRequestOrigin
+    ? new URL(normalizedRequestOrigin).host.toLowerCase()
+    : "";
+  const originAllowed =
+    !requestOrigin ||
+    CORS_ALLOWED_ORIGINS.has(normalizedRequestOrigin) ||
+    (requestHost && requestOriginHost === requestHost);
+
+  if (!originAllowed) {
+    return callback(new Error("Origin is not allowed by CORS policy."));
+  }
+
+  return callback(null, {
+    origin: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
+  });
+}));
+app.use(express.json({ limit: "256kb" }));
+app.use((req, res, next) => {
+  res.set("X-Content-Type-Options", "nosniff");
+  res.set("X-Frame-Options", "DENY");
+  res.set("Referrer-Policy", "same-origin");
+  next();
+});
 
 const splunkClient = axios.create({
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: false
-  }),
+  httpsAgent: createHttpsAgent(),
   headers: {
     Authorization: `Splunk ${process.env.SPLUNK_HEC_TOKEN}`
-  }
+  },
+  timeout: 12000
 });
 
 app.get("/", (req, res) => {
@@ -505,7 +841,6 @@ app.post("/ai-summary", async (req, res) => {
 ================================ */
 
 const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
 
 // ONCOCONNECT_VERCEL_READ_ONLY_ADMIN_V1
@@ -535,7 +870,13 @@ if (IS_VERCEL_RUNTIME) {
   }
 }
 
-const upload = multer({ dest: ADMIN_UPLOAD_DIR });
+const upload = multer({
+  dest: ADMIN_UPLOAD_DIR,
+  limits: {
+    fileSize: 2 * 1024 * 1024,
+    files: 1
+  }
+});
 
 // Production deployment exposes admin data as read-only demo content.
 // Login remains available, but persistent write operations are disabled.
@@ -555,6 +896,14 @@ app.use((req, res, next) => {
   }
 
   next();
+});
+
+app.use("/admin", (req, res, next) => {
+  if (req.path === "/login") {
+    return next();
+  }
+
+  return requireAdminAuth(req, res, next);
 });
 
 function readDatasets() {
@@ -654,6 +1003,10 @@ app.post("/admin/upload", upload.single("file"), (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  } finally {
+    if (req.file?.path) {
+      fs.unlink(req.file.path, () => {});
+    }
   }
 });
 
@@ -850,21 +1203,41 @@ app.get("/public/map-data.csv", (req, res) => {
    Admin Authentication
 ================================ */
 
-const ADMIN_USER = "admin";
-const ADMIN_PASSWORD = "OncoConnect2026!";
-
 app.post("/admin/login", (req, res) => {
+  const requestIp = getRequestIp(req);
   const { username, password } = req.body || {};
 
-  if (
-    username === ADMIN_USER &&
-    password === ADMIN_PASSWORD
-  ) {
-    return res.json({
-      success: true,
-      token: "oncoconnect-admin-session"
+  if (isAdminLoginRateLimited(requestIp)) {
+    return res.status(429).json({
+      success: false,
+      error: "ADMIN_LOGIN_RATE_LIMITED",
+      message: "Too many failed admin login attempts. Please try again later."
     });
   }
+
+  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+    return res.status(503).json({
+      success: false,
+      error: "ADMIN_AUTH_NOT_CONFIGURED",
+      message:
+        "Admin authentication is not configured. Set ADMIN_PASSWORD and ADMIN_SESSION_SECRET in backend/.env."
+    });
+  }
+
+  if (
+    safeEqualText(username, ADMIN_USERNAME) &&
+    safeEqualText(password, ADMIN_PASSWORD)
+  ) {
+    clearAdminFailures(requestIp);
+
+    return res.json({
+      success: true,
+      token: createAdminSessionToken(),
+      expires_in_ms: ADMIN_SESSION_TTL_MS
+    });
+  }
+
+  registerAdminFailure(requestIp);
 
   return res.status(401).json({
     success: false,
@@ -1190,10 +1563,10 @@ async function checkOfficialSources() {
 
   for (const source of OFFICIAL_SOURCE_REGISTRY) {
     try {
-      const response = await axios.get(source.url, {
-        timeout: 12000,
+      const response = await safeOfficialFetch(source.url, {
         headers: {
-          "User-Agent": "OncoConnect-AI-Research-Agent/1.0"
+          "User-Agent": "OncoConnect-AI-Research-Agent/1.0",
+          Accept: "text/html, application/json, text/plain;q=0.9, */*;q=0.8"
         }
       });
 
@@ -1523,8 +1896,7 @@ app.post("/admin/official-search", async (req, res) => {
         };
       }
 
-      const response = await fetch(source.url, {
-        method: "GET",
+      const response = await safeOfficialFetch(source.url, {
         headers: {
           "User-Agent": "OncoConnectAI/1.0 official-source-check"
         }
@@ -1570,8 +1942,7 @@ app.post("/admin/official-search", async (req, res) => {
       });
     }
 
-    const response = await fetch(officialDataUrl, {
-      method: "GET",
+    const response = await safeOfficialFetch(officialDataUrl, {
       headers: {
         "User-Agent": "OncoConnectAI/1.0 official-data-import",
         "Accept": "text/csv, application/json, text/plain;q=0.9, */*;q=0.8"
@@ -1666,10 +2037,11 @@ app.post("/admin/official-search", async (req, res) => {
       sources: sourceChecks
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
       officialDataCreated: false,
       error: error.message || "Configured official data import failed.",
+      allowedHosts: error.allowedHosts || undefined,
       sources: []
     });
   }
@@ -1702,16 +2074,13 @@ app.get("/splunk/metrics", async (req, res) => {
       });
     }
 
-    const https = require("https");
     const searchClient = axios.create({
       baseURL: searchUrl,
       auth: {
         username,
         password
       },
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
-      }),
+      httpsAgent: createHttpsAgent(),
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       },
