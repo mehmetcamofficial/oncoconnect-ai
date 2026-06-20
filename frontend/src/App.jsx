@@ -1748,12 +1748,21 @@ function App() {
 
       async function loadPublicReachV207() {
         try {
+          const cachedTotal = Number(
+            window.localStorage.getItem(visitTotalCacheKey) || ""
+          );
+          const safeCachedTotal = Number.isFinite(cachedTotal)
+            ? Math.max(0, cachedTotal)
+            : null;
+          const hasCountedThisSession =
+            window.sessionStorage.getItem(visitStorageKey) === "1";
           const shouldCountVisit =
-            window.sessionStorage.getItem(visitStorageKey) !== "1";
+            !hasCountedThisSession || safeCachedTotal === null || safeCachedTotal <= 0;
 
           if (shouldCountVisit) {
             const response = await fetch(`${API}/public/visit`, {
               method: "POST",
+              cache: "no-store",
               headers: {
                 "Content-Type": "application/json"
               }
@@ -1771,7 +1780,10 @@ function App() {
             if (cancelled) return;
 
             window.sessionStorage.setItem(visitStorageKey, "1");
-            const nextTotal = Number(data.total_visits || 0);
+            const nextTotal = Math.max(
+              Number(data.total_visits || 0),
+              safeCachedTotal || 0
+            );
             window.localStorage.setItem(visitTotalCacheKey, String(nextTotal));
             setPublicVisitTotalV207(nextTotal);
             setPublicVisitStatusV207("ready");
@@ -1779,7 +1791,10 @@ function App() {
           }
 
           const response = await fetch(
-            `${API}/public/stats?refresh=${Date.now()}`
+            `${API}/public/stats?refresh=${Date.now()}`,
+            {
+              cache: "no-store"
+            }
           );
 
           const data = await response.json();
@@ -1793,7 +1808,10 @@ function App() {
 
           if (cancelled) return;
 
-          const nextTotal = Number(data.metrics.total_visits || 0);
+          const nextTotal = Math.max(
+            Number(data.metrics.total_visits || 0),
+            safeCachedTotal || 0
+          );
           window.localStorage.setItem(visitTotalCacheKey, String(nextTotal));
           setPublicVisitTotalV207(nextTotal);
           setPublicVisitStatusV207("ready");
@@ -1805,7 +1823,7 @@ function App() {
               window.localStorage.getItem(visitTotalCacheKey) || ""
             );
 
-            if (Number.isFinite(cachedTotal) && cachedTotal >= 0) {
+            if (Number.isFinite(cachedTotal) && cachedTotal > 0) {
               setPublicVisitTotalV207(cachedTotal);
               setPublicVisitStatusV207("ready");
             } else {
